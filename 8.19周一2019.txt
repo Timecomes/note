@@ -1,0 +1,126 @@
+
+
+
+ftp ://192.168.4.254/co
+
+date
+
+ln -s 软连接
+
+creatrepo 生成仓库数据清单
+
+vim  yy  p  u dd C home end
+
+源码安装 
+rpm -r/-ivh
+yum -y install
+wget 
+make
+gcc
+
+
+
+
+cpu  支持虚拟化  >>>>  进入BIOS开启  virtualization 类似手游模拟器的开启虚拟化
+
+
+   在    /etc/yum.repos.d/下存在有之前配置文件时 可以新建文件夹来保存之前文件 在创建自己的yum仓库
+    cd /etc/yum.repos.d/
+    ls
+     mkdir repo
+     mv *.repo repo
+     vim xx.repo
+
+
+
+安装虚拟化平台
+   qemu-kvm         //底层
+   libvirt-daemon    //守护进程
+   libvirt-client    //客户端管理命令
+   libvirt-daemon-driver-qemu   //qemu驱动
+   virt-manager   图形管理
+  ---------------------------------------------------------------------------   
+      virsh  控制虚拟机状态    控制
+
+  #virsh  dominfo 虚拟机名称/list --all/nodeinfo
+     virsh autostart [--disable]  虚拟机名    // 自动启动
+         virsh start | reboot | shutdown  虚拟机名
+               virsh destory    虚拟机机名
+
+
+ls /etc/libvirt/qemu
+virsh dumpxml
+
+ls /var/lib/libvirt/images
+
+
+
+             虚拟机三合一制作
+   cp /var/lib/libvirt/images/.node_base.qcow2  /var/lib/libvirt/images/nsd04.img
+           virsh edit  虚拟机名(之前有的主机名 用来启用格式)
+
+
+[student@room9pc01 ~]$ cp /var/lib/libvirt/images/.node_base.qcow2  /var/lib/libvirt/images/nsd04.img
+[student@room9pc01 ~]$ virsh edit nsd01      //改名字 删uuid 改虚拟磁盘位置 删mac地址
+编辑了域 nsd04 XML 配置。
+
+[student@room9pc01 ~]$ virsh start nsd04
+域 nsd04 已开始
+
+[student@room9pc01 ~]$ virt-manager 
+[student@room9pc01 ~]$ 
+
+删除虚拟机  
+      virsh undefine 虚拟机名
+      rm -rf /var/lib/libvirt/images/nsd04.img
+
+
+
+
+前端盘   快捷方式      前盘大原盘  多5G
+   写时复制  >>>原始盘从创建前端盘开始永远不变
+                       //改变前端盘时 原始盘不发生改变
+                       一但产生前端盘 原始盘不可改变 一旦改变 前端盘自然崩溃
+
+            qemu-img creat -f  qcow2(格式) -b 原始盘  前端盘 大小
+-------------------------------------------------------------------------------------------------------------------------------------
+[student@room9pc01 images]$ qemu-img create  -f   qcow2   -b  .node_base.qcow2   abc01.img 5G
+--------------------------------------------------------------------------------------------------------------------------------------
+
+Formatting 'abc01.img', fmt=qcow2 size=5368709120 backing_file='.node_base.qcow2' encryption=off cluster_size=65536 lazy_refcounts=off 
+
+-------------------------------------------------------------------------------------------------
+[student@room9pc01 images]$ qemu-img info abc01.img
+--------------------------------------------------------------------------------------------------
+
+image: abc01.img
+file format: qcow2
+virtual size: 5.0G (5368709120 bytes)
+disk size: 196K
+cluster_size: 65536
+backing file: .node_base.qcow2
+Format specific information:
+    compat: 1.1
+    lazy refcounts: false
+
+
+地址 /etc/passwd/    定义为变量a   再把要用的文件用其他便量定义
+           ab           b=1.txt
+
+
+grep running 
+
+[   -n "$id"     ]    -n 有输出为真
+
+
+
+
+
+
+
+
+
+
+
+
+

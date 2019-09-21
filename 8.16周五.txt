@@ -1,0 +1,72 @@
+[student@room9pc01 ~]$ systemctl status vsftpd
+                                //查看服务状态
+
+[root@svr7 ~]# ln -s /opt/A /opt/B      //软连接  类似快捷方式
+[root@svr7 ~]# ln /opt/A /opt/C         //硬连接 类似复制粘贴
+
+[root@svr7 ~]# yum -y install zip
+[root@svr7 ~]# zip -r /opt/test.zip /etc/passwd /home
+                 //-r 递归
+[root@svr7 ~]# yum -y install unzip
+[root@svr7 ~]# unzip /opt/nsd.zip -d /nsd03
+                                  -d目标文件夹
+
+       传输数据
+pc01 ~]$ scp /linux-soft/01/tools.tar.gz (要传输的文件位置     root@192.168.4.7:/root/   (目标文件位置
+//以root身份
+
+
+--------------------------------------------------------------------------------------------------------
+
+创建自定义yum仓库
+
+
+root@svr7 ~]# yum -y install createrepo  //下载生成仓库数据文件
+
+[root@svr7 ~]# createrepo /tools/other/   (生成仓库数据文件
+
+[root@svr7 ~]# ls /tools/other/
+boxes-1.1.1-4.el7.x86_64.rpm        oneko-1.2-19.fc24.x86_64.rpm
+cmatrix-1.2a-1.i386.rpm             repodata/
+ntfs-3g-2014.2.15-6.el6.x86_64.rpm  sl-5.02-1.el7.x86_64.rpm
+
+[root@svr7 ~]# ls /tools/other/repodata/
+
+
+[root@svr7 ~]# vim /etc/yum.repos.d/local.repo 
+[local_repo]
+name=CentOS-$releasever - Base
+baseurl="ftp://192.168.4.254/centos-1804"
+enabled=1
+gpgcheck=0
+[myrpm]
+name=q_q
+baseurl=file:///tools/other
+enabled=1
+gpgcheck=0
+~                 
+[root@svr7 ~]# yum repolist
+已加载插件：fastestmirror
+
+
+
+哇 这是啥 忘了 完全没备注
+[root@svr7 ~]# yum -y install gcc make
+[root@svr7 ~]# rpm -q gcc
+gcc-4.8.5-28.el7.x86_64
+[root@svr7 ~]# rpm -q make
+make-3.82-23.el7.x86_64
+
+[root@svr7 ~]# tar -xf /tools/inotify-tools-3.13.tar.gz  -C /
+
+[root@svr7 ~]# vim /inotify-tools-3.13/config.guess
+[root@svr7 ~]# cd /inotify-tools-3.13/
+[root@svr7 inotify-tools-3.13]# ./configure --prefix=/opt/myrpm
+
+[root@svr7 inotify-tools-3.13]# make
+[root@svr7 inotify-tools-3.13]# make install
+
+
+
+
+

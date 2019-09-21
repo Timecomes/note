@@ -1,0 +1,167 @@
+
+
+224.1.1.10 多播地址
+
+
+VLAN 虚拟局域网
+
+ 主要作用是 划分广播域 实现广播控制
+
+ 安全性
+ 提高带宽利用
+ 降低延迟
+
+划完后ping不通 广播也不通 要实现广播不通 可以单独ping通 |
+                                                                                   ?  |
+
+中继链路         trunk
+连接路线 上  两端 交换机 
+ 指定连接线 端口 数据修改
+ int g0/0/1           #链路 trunk 的连接端口
+  port link-type trunk    #修改链路模式
+   port trunk allow-pass vlan all   #允许所有vlan通过
+
+中继链路主要在交换机之间
+中继链路不属于任何vlan 但允许所有vlan的数据通过
+
+
+
+所有端口默认 在 vlan1中
+
+vlan 10   //创建vlan 10
+description pos  //vlan10 定义名字
+display this    //查看当前vlan中的信息
+vlan batch 10 to 20  //创建多个vlan 10到20 共10个
+vlan batch 10 20    //创建2个vlan
+
+
+接入端口 : 接入端口仅属于一个vlan
+ 
+中继端口 : 不属于任何vlan 但可以承载所有vlan数据
+
+
+批量 端口加入vlan
+
+ prot-group 1    #创建端口组
+ group-menmber g0/0/5 g0/0/8   #将不连续的端口加入组
+ group-menmber g0/0/10 to g0/0/15   
+ prot link-type access  
+ port default vlan 10
+
+
+
+
+  链路聚合
+   多条合成一条逻辑端口
+    注意 参与捆绑的所有端口需要有一致的物理状态,都是1000Mb/s
+
+     clear configuration int g0/0/23  //清除参与端口参数
+     interface Eth-trunk 1        #创建逻辑端口
+       trunkport ethernet 0/0/1 0/0/2   #把物理端口加入到逻辑端口
+               port link-type trunk
+               port trunk allow-pass vlan all
+
+       interface gigabit  0/0/1
+       undo shutdown    重启
+
+
+       ip地址
+                   私有地址
+                     10.0.0.0/8
+                   172.16.0.0 - 172.31.0.0/16
+                  192.168.0.0 - 192.168.255/24
+
+            路由: 路径
+            路由器: 负责路径选择的设备
+ 
+       ARP: 地址解析协议
+               三层需要IP地址
+               二层需要MAC地址
+           ARP协议用于将ip地址解析为MAC地址
+                          交换机不管ip
+  所有数据最终都需要MAC地址 否则底层传输不可达
+
+
+工作原理 
+       如果目的地不在路由表中.则将数据包丢弃
+         路由器不允许广播通过
+          路由表 可以使管理员手工配置静态路由
+                     也可以通过路由协议自动学习
+            路由表中保存的是最优路径 ,而不是全部路径
+            最优路径 为 一个路由器 到下一个路由器的最优路径
+                  不是全局最优
+
+display interface brief      //查看端口简要信息
+display ip routing-table       //查看路由表
+int g0/0/0
+ ip address 192.168.1.1 24     //配置ip地址
+
+
+缺省路由  ( 默认路由 ) 不管目标在哪 下一跳一样 -----> 默认路由
+
+ip route-static 0.0.0.0 0
+ip route-static 0.0.0.0 0 192.168.2.2
+                                      ----{-}-----
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

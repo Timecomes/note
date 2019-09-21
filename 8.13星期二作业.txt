@@ -1,0 +1,155 @@
+[student@room9pc01 ~]$ rht-vmctl reset classroom
+classroom [OK]
+域 classroom 已开始
+
+[student@room9pc01 ~]$ rht-vmctl reset server
+^[[Aserver [OK]
+域 server 已开始
+
+[student@room9pc01 ~]$ rht-vmctl reset desktop
+desktop [OK]
+域 desktop 已开始
+
+
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted
+success
+
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+222222222222222222222222222222222222222222222222222222222222222
+[root@server0 ~]# mkdir /public
+[root@server0 ~]# yum -y install nfs-utils
+已加载插件：langpacks
+rhel_dvd                                                 | 4.1 kB     00:00     
+(1/2): rhel_dvd/group_gz                                   | 134 kB   00:00     
+(2/2): rhel_dvd/primary_db                                 | 3.4 MB   00:00     
+软件包 1:nfs-utils-1.3.0-0.el7.x86_64 已安装并且是最新版本
+无须任何处理
+
+
+
+[root@server0 ~]# vim /etc/exports
+/public  *(ro)
+[root@server0 ~]# systemctl restart nfs-server 
+[root@server0 ~]# touch /public/{1..20}.txt
+[root@server0 ~]# systemctl restart nfs-server 
+
+
+[root@desktop0 ~]# mkdir /mnt/nsd01
+[root@desktop0 ~]# mount 172.25.0.11:/public /mnt/nsd01/
+[root@desktop0 ~]# ls /mnt/nsd01/
+10.txt  12.txt  14.txt  16.txt  18.txt  1.txt   2.txt  4.txt  6.txt  8.txt
+11.txt  13.txt  15.txt  17.txt  19.txt  20.txt  3.txt  5.txt  7.txt  9.txt
+[root@desktop0 ~]# 
+
+[root@desktop0 ~]# vim /etc/fstab 
+[root@desktop0 ~]# umount /mnt/nsd01/
+[root@desktop0 ~]# mount -a
+[root@desktop0 ~]# 
+
+[root@desktop0 ~]# mkdir /mnt/test
+[root@desktop0 ~]# mount -a
+[root@desktop0 ~]# 
+
+[root@desktop0 ~]# ls /mnt/test/
+10.txt  12.txt  14.txt  16.txt  18.txt  1.txt   2.txt  4.txt  6.txt  8.txt
+11.txt  13.txt  15.txt  17.txt  19.txt  20.txt  3.txt  5.txt  7.txt  9.txt
+
+
+33333333333333333333333333333333333333333
+[root@server0 ~]# yum -y install httpd
+已加载插件：langpacks
+正在解决依赖关系
+--> 正在检查事务
+---> 软件包 httpd.x86_64.0.2.4.6-17.el7 将被 安装
+--> 正在处理依赖关系 httpd-tools = 2.4.6-17.el7，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在处理依赖关系 /etc/mime.types，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在处理依赖关系 libapr-1.so.0()(64bit)，它被[root@server0 ~]# mkdir /var/www/html/a/
+[root@server0 ~]# echo 奔跑吧骆驼 > /var/www/html/a/index.html
+[root@server0 ~]# mkdir /var/www/html/b
+[root@server0 ~]# echo 20里春风不如你 > /var/www/html/b/index.html
+[root@server0 ~]# echo <好>20里春风不如你 > /var/www/html/b/index.html
+-bash: 好: 没有那个文件或目录
+[root@server0 ~]# echo <h1>20里春风不如你 > /var/www/html/b/index.html
+-bash: h1: 没有那个文件或目录
+[root@server0 ~]# echo <h1>奔跑吧骆驼 > /var/www/html/a/index.html
+-bash: h1: 没有那个文件或目录
+[root@server0 ~]# echo '<h1>奔跑吧骆驼' > /var/www/html/a/index.html
+[root@server0 ~]# echo '<h1>20里春风不如你' > /var/www/html/b/index.html
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+
+
+[root@server0 ~]# mkdir /var/www/a
+[root@server0 ~]# echo '<h1>奔跑吧骆驼' > /var/www/a/index.html
+[root@server0 ~]# mkdir /var/www/b
+[root@server0 ~]# echo '<h1>20里春风不如你' > /var/www/b/index.html
+[root@server0 ~]# systemctl restart httpd
+
+[root@server0 ~]# vim /etc/httpd/conf.d/1.conf 
+
+<VirtualHost *:80>
+  ServerName server0.example.com
+  DocumentRoot /var/www/html/
+</VirtualHost>
+
+<VirtualHost *:80>
+  ServerName www0.example.com
+  DocumentRoot /var/www/a
+</VirtualHost>
+
+<VirtualHost *:80>
+  ServerName webapp0.example.com
+  DocumentRoot /var/www/b
+</VirtualHost>
+
+~                                                                               
+~                                                                               
+~                                                                               
+~                                         
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# 
+
+
+
+
+
+
+44444444444444444444444444444444
+
+
+[root@server0 ~]# vim /etc/httpd/conf.d/2.conf 
+
+<Directory  "/webroot">
+    Require all granted
+</Directory>
+~                                                                                                               
+~                                                                                                               
+~                              
+
+
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# setenforce 0
+[root@server0 ~]# 
+
+
+
+
+
+[root@desktop0 ~]# setenforce 0
+[root@desktop0 ~]# firefox 172.25.0.11
+
+(process:1769): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@desktop0 ~]# 
+
+
+
+
+
+
+
+
+
+
+
+
+

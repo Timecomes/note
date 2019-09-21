@@ -1,0 +1,720 @@
+
+
+
+
+
+
+
+
+
+
+[root@server0 ~]# fdisk /dev/vdc             //第一步划出分区以供使用
+欢迎使用 fdisk (util-linux 2.23.2)。
+
+更改将停留在内存中，直到您决定将更改写入磁盘。
+使用写入命令前请三思。
+
+
+
+
+[root@server0 ~]# lsblk                            //查看分区
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  10G  0 disk 
+└─vda1 253:1    0  10G  0 part /
+vdb    253:16   0  10G  0 disk 
+vdc    253:32   0  80G  0 disk 
+├─vdc1 253:33   0  10G  0 part 
+├─vdc2 253:34   0  10G  0 part 
+├─vdc3 253:35   0  10G  0 part 
+├─vdc4 253:36   0   1K  0 part 
+├─vdc5 253:37   0  10G  0 part 
+└─vdc6 253:38   0  10G  0 part 
+
+
+
+
+
+
+
+
+
+[root@server0 ~]# vgcreate systemvg /dev/vdb /dev/vdc1
+                   
+       //新建卷组/  /vgcreate + 卷组名 + /设备位置/ /设备位置/ /.../
+
+  Physical volume "/dev/vdb" successfully created
+  Physical volume "/dev/vdc1" successfully created
+  Volume group "systemvg" successfully created
+
+[root@server0 ~]# pvs           //简化版查看物理卷
+
+  PV         VG       Fmt  Attr PSize  PFree 
+  /dev/vdb   systemvg lvm2 a--  10.00g 10.00g
+  /dev/vdc1  systemvg lvm2 a--  10.00g 10.00g
+
+
+
+ =========  pvcreate // 新建物理组   pvdisplay  //显示
+
+ =========  pvremove // 删除物理组   pvs  //显示   
+
+ =========  pvscan  //
+
+
+
+-------------------------------------------
+
+[root@server0 ~]# lvcreate -n vo -L 16G systemvg
+                     //lvcreate -n 逻辑卷名字 -L 逻辑卷大小G 基于的卷组名
+
+  Logical volume "vo" created
+
+[root@server0 ~]# vgs   //查看卷组信息
+
+  VG       #PV #LV #SN Attr   VSize  VFree
+  systemvg   2   1   0 wz--n- 19.99g 3.99g
+
+[root@server0 ~]# lvs    //查看逻辑卷信息
+
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  vo   systemvg -wi-a----- 16.00g      
+
+[root@server0 ~]# ls /dev/dm-0
+/dev/dm-0
+
+[root@server0 ~]# ls /dev/systemvg/vo
+/dev/systemvg/vo
+[root@server0 ~]# ls -l /dev/systemvg/vo
+lrwxrwxrwx. 1 root root 7 8月   7 09:50 /dev/systemvg/vo -> ../dm-0
+
+
+[root@server0 ~]# mkfs.xfs /dev/systemvg/vo
+                            //格式化                      
+
+meta-data=/dev/systemvg/vo       isize=256    agcount=4, agsize=1048576 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=4194304, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal log           bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@server0 ~]# blkid /dev/systemvg/vo
+/dev/systemvg/vo: UUID="859552f7-341e-4f72-a293-1bf8719d2ad9" TYPE="xfs" 
+
+
+[root@server0 ~]# vim /etc/fstab   //自动挂载
+[root@server0 ~]# mount -a
+mount: 挂载点 /mylv 不存在
+[root@server0 ~]# mkdir /mylv
+[root@server0 ~]# mount -a 
+[root@server0 ~]# df -h
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.0G  7.1G   30% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo   16G   33M   16G    1% /mylv
+
+
+[root@server0 ~]# vgs          //查看vg信息
+
+  VG       #PV #LV #SN Attr   VSize  VFree
+  systemvg   2   1   0 wz--n- 19.99g 3.99g
+
+[root@server0 ~]# lvs            查看lv信息
+
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  vo   systemvg -wi-ao---- 16.00g
+
+                                             
+[root@server0 ~]# lvextend -L 18G /dev/systemvg/vo 
+                     //改变逻辑卷空间大小 /lvextend
+
+  Extending logical volume vo to 18.00 GiB
+  Logical volume vo successfully resized
+[root@server0 ~]# lvs
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  vo   systemvg -wi-ao---- 18.00g  
+
+                                           
+[root@server0 ~]# df -h                  //查看挂载信息
+
+
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.0G  7.1G   30% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo   16G   33M   16G    1% /mylv
+                           #----------16G //逻辑卷文件系统空间大小没有改变
+                              //原因 只改变逻辑卷空间大小 文件系统大小没有改变
+
+[root@server0 ~]# xfs_growfs /dev/systemvg/vo
+                     //刷新文件系统  xfs_growfs--xfs类型文件系统  
+
+meta-data=/dev/mapper/systemvg-vo isize=256    agcount=4, agsize=1048576 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=4194304, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 4194304 to 4718592
+
+
+[root@server0 ~]# df -h              //再查看时空间改变
+
+
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.0G  7.1G   30% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo   18G   33M   18G    1% /mylv
+
+
+[root@server0 ~]# vgextend systemvg /dev/vdc2
+
+-----------------------------  //当逻辑卷内存不够时 -------->拓展卷组  vgextend
+
+  Physical volume "/dev/vdc2" successfully created
+  Volume group "systemvg" successfully extended
+
+[root@server0 ~]# vgs     //卷组信息
+
+  VG       #PV #LV #SN Attr   VSize  VFree 
+  systemvg   3   1   0 wz--n- 29.99g 11.99g
+[root@server0 ~]# lvextend -L 25G /dev/systemvg/vo 
+
+  Extending logical volume vo to 25.00 GiB
+  Logical volume vo successfully resized
+
+[root@server0 ~]# lvs        //逻辑卷信息
+
+  LV   VG       Attr       LSize  Pool Origin Data%  Move Log Cpy%Sync Convert
+  vo   systemvg -wi-ao---- 25.00g   
+                                          
+[root@server0 ~]# df -h
+
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.0G  7.1G   30% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo   18G   33M   18G    1% /mylv
+
+[root@server0 ~]# xfs_growfs /dev/systemvg/vo 
+
+meta-data=/dev/mapper/systemvg-vo isize=256    agcount=5, agsize=1048576 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=0
+data     =                       bsize=4096   blocks=4718592, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0 ftype=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+data blocks changed from 4718592 to 6553600
+
+[root@server0 ~]# df -h      
+
+文件系统                 容量  已用  可用 已用% 挂载点
+/dev/vda1                 10G  3.0G  7.1G   30% /
+devtmpfs                 906M     0  906M    0% /dev
+tmpfs                    921M   80K  921M    1% /dev/shm
+tmpfs                    921M   17M  904M    2% /run
+tmpfs                    921M     0  921M    0% /sys/fs/cgroup
+/dev/mapper/systemvg-vo   25G   33M   25G    1% /mylv
+
+
+
+[root@server0 ~]# vgdisplay systemvg
+  --- Volume group ---
+  VG Name               systemvg
+  System ID             
+  Format                lvm2
+  Metadata Areas        3
+  Metadata Sequence No  5
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               1
+  Max PV                0
+  Cur PV                3
+  Act PV                3
+  VG Size               29.99 GiB
+  PE Size               4.00 MiB      //4M
+  Total PE              7677
+  Alloc PE / Size       6400 / 25.00 GiB
+  Free  PE / Size       1277 / 4.99 GiB
+  VG UUID               vech1b-EryV-wIqL-SNBX-tzte-oudq-D9MQGh
+   
+[root@server0 ~]# vgchange -s 1M systemvg   //修改PE大小
+  Volume group "systemvg" successfully changed
+[root@server0 ~]# vgdisplay systemvg       //查看卷组详细信息
+  --- Volume group ---
+  VG Name               systemvg
+  System ID             
+  Format                lvm2
+  Metadata Areas        3
+  Metadata Sequence No  6
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               1
+  Max PV                0
+  Cur PV                3
+  Act PV                3
+  VG Size               29.99 GiB
+  PE Size               1.00 MiB
+  Total PE              30708
+  Alloc PE / Size       25600 / 25.00 GiB
+  Free  PE / Size       5108 / 4.99 GiB
+  VG UUID               vech1b-EryV-wIqL-SNBX-tzte-oudq-D9MQGh
+   
+[root@server0 ~]# lvs
+  LV       VG       Attr       LSize   Pool Origin Data%  Move Log Cpy%Sync Convert
+  
+lvredhat systemvg -wi--a -      -  --- 250. 00 m 
+
+                                         
+  
+vo       systemvg -wi-ao----  25.00g          
+
+
+[root@server0 ~]# lvcreate -l 987 -n lvlest systemvg
+  Logical volume "lvlest" created
+[root@server0 ~]# lvs
+  LV       VG       Attr       LSize   Pool Origin Data%  Move Log Cpy%Sync Convert
+  lvlest   systemvg -wi-a----- 987.00m                                             
+  lvredhat systemvg -wi-a----- 250.00m                                             
+  vo       systemvg -wi-ao----  25.00g    
+
+
+[root@server0 ~]# find /boot/ -type d      //查找目录
+
+/boot/
+/boot/grub2
+/boot/grub2/themes
+/boot/grub2/themes/system
+/boot/grub2/i386-pc
+/boot/grub2/locale
+/boot/grub2/fonts
+/boot/grub
+
+[root@server0 ~]# find /boot/ -type l     //查找快捷方式
+
+/boot/grub/menu.lst
+
+
+[root@server0 ~]# find /boot/ -type f     //查找文件
+
+/boot/grub2/device.map
+/boot/grub2/i386-pc/acpi.mod
+/boot/grub2/i386-pc/date.mod
+/boot/grub2/i386-pc/adler32.mod
+/boot/grub2/i386-pc/datehook.mod
+/boot/grub2/i386-pc/affs.mod
+
+
+--------------------------------==================------------------
+
+[root@server0 ~]# find /boot/ -type d      //查找目录
+[root@server0 ~]# find /boot/ -type l     //查找快捷方式
+[root@server0 ~]# find /boot/ -type f     //查找文件
+
+-----------------------------===================---------------------
+
+[root@server0 ~]# find /etc/ -name "passwd"
+
+/etc/passwd
+/etc/pam.d/passwd
+
+[root@server0 ~]# find /etc/ -name "*tab"
+
+/etc/fstab
+/etc/crypttab
+/etc/mtab
+/etc/inittab
+/etc/rwtab
+
+[root@server0 ~]# find /etc/ -name "*tab*"
+
+/etc/fstab
+/etc/crypttab
+/etc/mtab
+/etc/inittab
+/etc/rwtab
+/etc/rwtab.d
+/etc/statetab
+
+[root@server0 ~]# find /etc/ -name "*.conf"
+
+/etc/yum/protected.d/systemd.conf
+/etc/yum/pluginconf.d/rhnplugin.conf
+/etc/yum/pluginconf.d/product-id.conf
+/etc/yum/pluginconf.d/subscription-manager.conf
+/etc/yum/pluginconf.d/langpacks.conf
+
+
+
+--------------------------===============------------------------
+
+[root@server0 ~]# find /etc/ -name "*.conf"
+
+
+root@server0 ~]# find /root/ -name "nsd*" -type f
+
+[root@server0 ~]# find /root/ -name "nsd*" -type d
+
+-----------------------------=================-----------------------------
+
+
+[root@server0 ~]# mkdir /root/nsd1907
+[root@server0 ~]# touch /root/nsd01.txt
+[root@server0 ~]# touch /root/nsd02.txt
+[root@server0 ~]# ls /root
+
+anaconda-ks.cfg  Documents  Music      nsd02.txt  Pictures  Templates
+Desktop          Downloads  nsd01.txt  nsd1907    Public    Videos
+
+[root@server0 ~]# find /root/ -name "nsd*" 
+
+/root/nsd1907
+/root/nsd01.txt
+/root/nsd02.txt
+
+[root@server0 ~]# find /root/ -name "nsd*" -type f  //默认可以接另一个参数
+                                                             //默认 -a  (and并列)
+
+/root/nsd01.txt
+/root/nsd02.txt
+
+[root@server0 ~]# find /root/ -name "nsd*" -type d
+/root/nsd1907
+
+
+[root@server0 ~]# find /boot/ -size +300k        //-size +或- 文件大小(k/M/G)
+/boot/grub2/fonts/unicode.pf2
+/boot/System.map-3.10.0-123.el7.x86_64
+/boot/vmlinuz-3.10.0-123.el7.x86_64
+/boot/initramfs-0-rescue-946cb0e817ea4adb916183df8c4fc817.img
+/boot/vmlinuz-0-rescue-946cb0e817ea4adb916183df8c4fc817
+/boot/initramfs-3.10.0-123.el7.x86_64.img
+/boot/initrd-plymouth.img
+[root@server0 ~]# find /boot/ -size +10M
+/boot/initramfs-0-rescue-946cb0e817ea4adb916183df8c4fc817.img
+/boot/initramfs-3.10.0-123.el7.x86_64.img
+
+[root@server0 ~]# find /boot/ -size -10M
+/boot/
+/boot/grub2
+/boot/grub2/themes
+/boot/grub2/themes/system
+/boot/grub2/device.map
+/boot/grub2/i386-pc
+/boot/grub2/i386-pc/acpi.mod
+/boot/grub2/i386-pc/date.mod
+/boot/grub2/i386-pc/adler32.mod
+/boot/grub2/i386-pc/datehook.mod
+
+[root@server0 ~]# find /home/ -user student       //按照所有者查找
+/home/student
+/home/student/.bash_logout
+/home/student/.bash_profile
+/home/student/.bashrc
+/home/student/.ssh
+/home/student/.ssh/authorized_keys
+/home/student/.config
+/home/student/.config/gnome-initial-setup-done
+/home/student/.config/monitors.xml
+[root@server0 ~]# find / -user student
+find: ‘/proc/657/task/657/fd/6’: 没有那个文件或目录
+find: ‘/proc/657/task/657/fdinfo/6’: 没有那个文件或目录
+find: ‘/proc/657/fd/6’: 没有那个文件或目录
+find: ‘/proc/657/fdinfo/6’: 没有那个文件或目录
+/var/spool/mail/student
+/home/student
+/home/student/.bash_logout
+/home/student/.bash_profile
+/home/student/.bashrc
+/home/student/.ssh
+/home/student/.ssh/authorized_keys
+/home/student/.config
+/home/student/.config/gnome-initial-setup-done
+/home/student/.config/monitors.xml
+
+
+
+[root@server0 ~]# find /root/ -mtime +1000   //-mtime 根据文件修改时间,过去时间
+                                   //-10 最近10天             //+10  10天之前 
+                                            //3个月  +90
+/root/.bash_logout
+/root/.bash_profile
+/root/.bashrc
+/root/.cshrc
+/root/.tcshrc
+/root/anaconda-ks.cfg
+/root/.config/gnome-initial-setup-done
+/root/.config/monitors.xml
+[root@server0 ~]# find /root/ -mtime -5
+/root/
+/root/.config/dconf
+/root/.config/dconf/user
+/root/.cache/abrt
+/root/.cache/abrt/lastnotification
+/root/.Xauthority
+/root/.viminfo
+/root/nsd1907
+/root/nsd01.txt
+/root/nsd02.txt
+
+[root@server0 ~]# date         //当前系统时间
+
+2019年 08月 07日 星期三 14:35:27 CST
+
+-----==========------------============--------------============-----------------
+
+[root@server0 ~]# find /etc/ -name "*tab" -exec cp -r {} /opt \;
+
+            //  -exec  -额外操作的开始
+               //    \;        额外操作的结束
+           //    {}     find每一个查询结果
+
+[root@server0 ~]# find /etc/ -name "*tab" 
+/etc/fstab
+/etc/crypttab
+/etc/mtab
+/etc/inittab
+/etc/rwtab
+/etc/statetab
+/etc/anacrontab
+/etc/crontab
+[root@server0 ~]# find /etc/ -name "*tab" -exec cp -r {} /opt/ \;
+[root@server0 ~]# ls /opt/
+anacrontab  crontab  crypttab  fstab  inittab  mtab  rh  rwtab  statetab
+
+-------------=-==================-------------===========---------------==========
+
+[root@server0 ~]# mkdir /root/findfiles
+[root@server0 ~]# find /  -user student -type f   
+                                   //所有者为stu 且为类型为文件
+
+find: ‘/proc/1248/task/1248/fdinfo/6’: 没有那个文件或目录  
+
+                                 //内存文件find只能查找磁盘上的文件
+
+find: ‘/proc/1248/fdinfo/6’: 没有那个文件或目录
+/var/spool/mail/student
+/home/student/.bash_logout
+/home/student/.bash_profile
+/home/student/.bashrc
+/home/student/.ssh/authorized_keys
+/home/student/.config/gnome-initial-setup-done
+/home/student/.config/monitors.xml
+
+rver0 ~]# find /  -user student -type f -exec cp {} /root/findfiles/ \;
+
+find: ‘/proc/1277/task/1277/fdinfo/6’: 没有那个文件或目录
+find: ‘/proc/1277/fdinfo/6’: 没有那个文件或目录
+
+[root@server0 ~]# ls -A /root/findfiles/
+
+authorized_keys  .bash_profile  gnome-initial-setup-done  student
+.bash_logout     .bashrc        monitors.xml
+
+
+
+[root@server0 ~]# grep root /etc/passwd           
+root:x:0:0:root:/root:/bin/bash
+operator:x:11:0:operator:/root:/sbin/nologin
+
+[root@server0 ~]# grep ^root /etc/passwd    //以XX开头
+
+root:x:0:0:root:/root:/bin/bash
+[root@server0 ~]# grep root$ /etc/passwd     //以XX结尾
+[root@server0 ~]# grep bash$ /etc/passwd
+
+root:x:0:0:root:/root:/bin/bash
+student:x:1000:1000:Student User:/home/student:/bin/bash
+
+                                           //-i   忽略大小写
+                                           //-v   取反查找
+                  //          ^$    匹配空行
+             //     -v 一般与  ^$   一起用 用于减少所看文件空行
+
+
+[root@server0 ~]# grep ^$ /etc/default/useradd 
+
+[root@server0 ~]# grep -v ^$ /etc/default/useradd
+# useradd defaults file
+GROUP=100
+HOME=/home
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/bash
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes
+[root@server0 ~]# cat /etc/default/useradd
+# useradd defaults file          //Linux中大多数配置文件中以#开头的行为注释
+GROUP=100
+HOME=/home
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/bash
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes
+
+[root@server0 ~]# 
+
+------------------------------------------------------------==========================
+
+
+
+
+[root@server0 ~]# grep -v ^$ /etc/default/useradd
+# useradd defaults file
+GROUP=100
+HOME=/home
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/bash
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes
+[root@server0 ~]# cat /etc/default/useradd
+# useradd defaults file
+GROUP=100
+HOME=/home
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/bash
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes
+
+[root@server0 ~]# 
+
+
+[root@server0 ~]# grep -v ^# /etc/login.defs 
+
+MAIL_DIR	/var/spool/mail
+
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_MIN_LEN	5
+PASS_WARN_AGE	7
+
+UID_MIN                  1000
+UID_MAX                 60000
+SYS_UID_MIN               201
+SYS_UID_MAX               999
+
+GID_MIN                  1000
+GID_MAX                 60000
+SYS_GID_MIN               201
+SYS_GID_MAX               999
+
+
+CREATE_HOME	yes
+
+UMASK           077
+
+USERGROUPS_ENAB yes
+
+ENCRYPT_METHOD SHA512 
+
+[root@server0 ~]# grep -v ^# /etc/login.defs  | grep -v ^$
+MAIL_DIR	/var/spool/mail
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_MIN_LEN	5
+PASS_WARN_AGE	7
+UID_MIN                  1000
+UID_MAX                 60000
+SYS_UID_MIN               201
+SYS_UID_MAX               999
+GID_MIN                  1000
+GID_MAX                 60000
+SYS_GID_MIN               201
+SYS_GID_MAX               999
+CREATE_HOME	yes
+UMASK           077
+USERGROUPS_ENAB yes
+ENCRYPT_METHOD SHA512 
+[root@server0 ~]# grep -v ^# /etc/login.defs | grep -v ^$ > /opt/l.txt
+[root@server0 ~]# cat /opt/l.txt
+MAIL_DIR	/var/spool/mail
+PASS_MAX_DAYS	99999
+PASS_MIN_DAYS	0
+PASS_MIN_LEN	5
+PASS_WARN_AGE	7
+UID_MIN                  1000
+UID_MAX                 60000
+SYS_UID_MIN               201
+SYS_UID_MAX               999
+GID_MIN                  1000
+GID_MAX                 60000
+SYS_GID_MIN               201
+SYS_GID_MAX               999
+CREATE_HOME	yes
+UMASK           077
+USERGROUPS_ENAB yes
+ENCRYPT_METHOD SHA512 
+
+-------------------------------====================-----------------------------------------
+     NTP
+   chrony软件 同步时间
+[root@server0 ~]# rpm -q chrony
+chrony-1.29.1-1.el7.x86_64
+[root@server0 ~]# vim /etc/chrony.conf
+[root@server0 ~]# 
+
+[root@server0 ~]# systemctl restart chronyd    //重启软件
+[root@server0 ~]# systemctl enable chronyd     //开机自启动
+
+
+[root@server0 ~]# systemctl restart chronyd
+[root@server0 ~]# systemctl enable chronyd
+[root@server0 ~]# date
+
+
+
+2019年 08月 07日 星期三 16:19:53 CST
+[root@server0 ~]# date -s "2102-1-1 11:11:11"  
+            
+      //date -s "年-月-日 时-分-秒"
+
+2102年 01月 01日 星期日 11:11:11 CST
+[root@server0 ~]# date
+2102年 01月 01日 星期日 11:11:21 CST
+[root@server0 ~]# systemctl restart chronyd    //重启程序
+[root@server0 ~]# date
+2102年 01月 01日 星期日 11:11:43 CST
+[root@server0 ~]# date
+2019年 08月 07日 星期三 16:21:55 CST
+[root@server0 ~]# 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

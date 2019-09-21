@@ -1,0 +1,480 @@
+      
+
+
+
+                rht-vmctl reset classroom
+                                /server
+                                /desktop
+               /虚拟机用户   server＆desktop   root 密码 redhat
+
+
+
+    [root@room9pc13 ~]# ssh -X root@server0.example.com  //远程控制主机
+
+    [root@server0 ~]# hostname     //查看主机名
+    server0.example.com
+
+
+
+
+
+[student@room9pc01 ~]$ hostname
+room9pc01.tedu.cn
+[student@room9pc01 ~]$ gos
+ssh: connect to host 172.25.0.11 port 22: No route to host
+[student@room9pc01 ~]$ gos
+ssh: connect to host 172.25.0.11 port 22: No route to host
+[student@room9pc01 ~]$ gos
+Last login: Mon Aug  5 14:07:30 2019 from 172.25.0.250
+[root@server0 ~]# useradd gelin01
+[root@server0 ~]# useradd gelin02
+[root@server0 ~]# groupadd tarena
+[root@server0 ~]# chown gelin01:tarena /nsd06
+chown: 无法访问"/nsd06": 没有那个文件或目录
+[root@server0 ~]# mkdir /nsd06
+[root@server0 ~]# chown gelin01:tarena /nsd06
+[root@server0 ~]# ls -ld /nsd06
+drwxr-xr-x. 2 gelin01 tarena 6 8月   5 14:55 /nsd06
+[root@server0 ~]# chmod o=--- /nsd06
+[root@server0 ~]# ls -ld /nsd06
+drwxr-x---. 2 gelin01 tarena 6 8月   5 14:55 /nsd06
+[root@server0 ~]# gpasswd -a gelin02 tarena
+正在将用户“gelin02”加入到“tarena”组中
+[root@server0 ~]# su - gelin02
+[gelin02@server0 ~]$ ls /nsd06
+[gelin02@server0 ~]$ exit
+logout
+[root@server0 ~]# useradd xiaohu
+[root@server0 ~]# su - xiaohu
+[xiaohu@server0 ~]$ ls /nsd06
+ls: cannot open directory /nsd06: Permission denied
+[xiaohu@server0 ~]$ exit
+logout
+
+[root@server0 ~]# gpasswd -a gelin01 tarena
+正在将用户“gelin01”加入到“tarena”组中
+
+[root@server0 ~]# chmod u=rw,g=rx,o=--- /nsd06
+[root@server0 ~]# ls -ld /nsd06
+drw-r-x---. 2 gelin01 tarena 6 8月   5 14:55 /nsd06
+
+[root@server0 ~]# mkdir /nsd08
+[root@server0 ~]# ls -ld /nsd08
+drwxr-xr-x. 2 root root 6 8月   5 15:25 /nsd08
+
+[root@server0 ~]# mkdir /nsd08/abc01
+[root@server0 ~]# ls -ld /nsd08/abc01/
+drwxr-xr-x. 2 root root 6 8月   5 15:26 /nsd08/abc01/
+
+[root@server0 ~]# chown :tedu /nsd08
+[root@server0 ~]# ls -ld /nsd08
+drwxr-xr-x. 3 root tedu 18 8月   5 15:26 /nsd08
+
+[root@server0 ~]# mkdir /nsd08/abc02
+[root@server0 ~]# ls -ld /nsd08/abc02
+drwxr-xr-x. 2 root root 6 8月   5 15:27 /nsd08/abc02
+
+[root@server0 ~]# chmod g+s /nsd08
+[root@server0 ~]# ls -ld /nsd08
+drwxr-sr-x. 4 root tedu 30 8月   5 15:27 /nsd08
+
+[root@server0 ~]# mkdir /nsd08/abc03
+[root@server0 ~]# ls -ld /nsd08/abc03
+drwxr-sr-x. 2 root tedu 6 8月   5 15:30 /nsd08/abc03
+[root@server0 ~]# 
+[root@server0 ~]# /usr/binmkdir /opt/xixi
+-bash: /usr/binmkdir: 没有那个文件或目录
+
+[root@server0 ~]# usr/bin/mkdir /opt/xixi
+-bash: usr/bin/mkdir: 没有那个文件或目录
+
+[root@server0 ~]# /usr/bin/mkdir /opt/xixi
+[root@server0 ~]# ls /opt/
+rh  xixi
+
+[root@server0 ~]# cp /usr/bin/mkdir /usr/bin/hahadir
+[root@server0 ~]# /usr/bin/hahadir /opt/xixi02
+[root@server0 ~]# ls /opt/
+rh  xixi  xixi02
+
+[root@server0 ~]# chmod u+s /usr/bin/hahadir
+[root@server0 ~]# ls -l /usr/bin/hahadir
+-rwsr-xr-x. 1 root root 79712 8月   5 16:06 /usr/bin/hahadir
+
+[root@server0 ~]# ls -l /usr/bin/mkdir
+-rwxr-xr-x. 1 root root 79712 1月  25 2014 /usr/bin/mkdir
+
+
+
+[root@server0 ~]# su - lisi
+上一次登录：一 8月  5 11:56:22 CST 2019pts/0 上
+[lisi@server0 ~]$ /usr/bin/hahadir abc01
+[lisi@server0 ~]$ ls -l
+total 0
+drwxrwxr-x. 2 root lisi 6 Aug  5 16:08 abc01
+[lisi@server0 ~]$ mkdir abc02
+[lisi@server0 ~]$ ls -l
+total 0
+drwxrwxr-x. 2 root lisi 6 Aug  5 16:08 abc01
+drwxrwxr-x. 2 lisi lisi 6 Aug  5 16:09 abc02
+[lisi@server0 ~]$ /usr/bin/mkdir abc02
+/usr/bin/mkdir: cannot create directory ‘abc02’: File exists
+
+[lisi@server0 ~]$ ls -l 
+total 0
+drwxrwxr-x. 2 root lisi 6 Aug  5 16:08 abc01
+drwxrwxr-x. 2 lisi lisi 6 Aug  5 16:09 abc02
+
+[lisi@server0 ~]$ /usr/bin/mkdir abc03
+[lisi@server0 ~]$ /usr/bin/hahadir abc05
+[lisi@server0 ~]$ ls -l
+total 0                                 
+                                        //chmod u+s 修改的是可执行文件
+                                                   //使用此可执行文件所产生的文件用户为root
+                                                   //显示于 ls -l 文件下的用户位置
+
+drwxrwxr-x. 2 root lisi 6 Aug  5 16:08 abc01
+drwxrwxr-x. 2 lisi lisi 6 Aug  5 16:09 abc02
+drwxrwxr-x. 2 lisi lisi 6 Aug  5 16:10 abc03
+drwxrwxr-x. 2 root lisi 6 Aug  5 16:11 abc05
+[lisi@server0 ~]$ mkdir ~
+mkdir: cannot create directory ‘/home/lisi’: File exists
+[lisi@server0 ~]$ mkdir ~ usus
+mkdir: cannot create directory ‘/home/lisi’: File exists
+[lisi@server0 ~]$ exit
+logout
+
+
+
+###################################################3
+
+
+
+[root@server0 ~]# useradd zhangsan
+[root@server0 ~]# useradd lisi
+[root@server0 ~]# useradd dc
+
+[root@server0 ~]# mkdir /home/public
+[root@server0 ~]# chmod ugo=rwx /home/public
+[root@server0 ~]# ls -ld /home/public/
+drwxrwxrwx. 2 root root 6 8月   5 16:37 /home/public/
+
+[root@server0 ~]# chmod o+t /home/public/
+[root@server0 ~]# id zhangsan
+uid=1005(zhangsan) gid=1007(zhangsan) 组=1007(zhangsan)
+[root@server0 ~]# id dc
+uid=1006(dc) gid=1008(dc) 组=1008(dc)
+[root@server0 ~]# su - zhangsan
+[zhangsan@server0 ~]$ exit
+logout
+
+
+
+#######################################################################3
+
+
+[student@room9pc01 ~]$ gos
+Last login: Mon Aug  5 14:53:40 2019 from 172.25.0.250
+[root@server0 ~]# su - lisi
+上一次登录：一 8月  5 16:08:30 CST 2019pts/0 上
+[lisi@server0 ~]$ touch /home/public/lisi.txt
+[lisi@server0 ~]$ ls -ld/home/public/
+ls: invalid option -- '/'
+Try 'ls --help' for more information.
+[lisi@server0 ~]$ ls -ld /home/public/
+drwxrwxrwt. 2 root root 21 Aug  5 16:40 /home/public/
+[lisi@server0 ~]$ ls -l /home/public/
+total 0
+-rw-rw-r--. 1 lisi lisi 0 Aug  5 16:40 lisi.txt
+
+
+
+
+#########################################################################33
+
+
+
+[student@room9pc01 ~]$ gos
+Last login: Mon Aug  5 16:36:15 2019 from 172.25.0.250
+[root@server0 ~]# su - dc
+[dc@server0 ~]$ touch /home/public/dc.txt
+[dc@server0 ~]$ ls /home/public/
+dc.txt  lisi.txt
+[dc@server0 ~]$ rm -rf /home/public/lisi.txt
+rm: cannot remove ‘/home/public/lisi.txt’: Operation not permitted
+
+
+
+
+
+
+
+####################################################################33
+
+
+
+
+[root@server0 ~]# su - zhangsan
+上一次登录：一 8月  5 16:43:45 CST 2019pts/0 上
+[zhangsan@server0 ~]$ 
+[zhangsan@server0 ~]$ touch /home/public/zhangsan.txt
+[zhangsan@server0 ~]$ rm -rf /home/public/*
+rm: cannot remove ‘/home/public/dc.txt’: Operation not permitted
+rm: cannot remove ‘/home/public/lisi.txt’: Operation not permitted
+[zhangsan@server0 ~]$ ls /home/public/
+dc.txt  lisi.txt
+
+############################################################################
+
+
+[root@server0 ~]# mkdir /home/admins
+[root@server0 ~]# groupadd adminuser
+[root@server0 ~]# chown :adminuser /home/admins/      //定义admins的组名
+
+[root@server0 ~]# ls -ld /home/admins/
+drwxr-xr-x. 2 root adminuser 6 8月   5 16:51 /home/admins/
+
+[root@server0 ~]# chmod g=rwx,o=--- /home/admins/     //设置admins文件的各种权限
+[root@server0 ~]# ls -ld /home/admins/
+drwxrwx---. 2 root adminuser 6 8月   5 16:51 /home/admins/
+
+[root@server0 ~]# chmod g+s /home/admins/
+[root@server0 ~]# ls -ld /home/admins/
+drwxrws---. 2 root adminuser 6 8月   5 16:51 /home/admins/
+  
+
+
+[root@server0 ~]# mkdir /nsd11
+[root@server0 ~]# chmod o=--- /nsd11        //设置文件权限 其他用户不可'rwx' 
+[root@server0 ~]# ls -ld /nsd11
+drwxr-x---. 2 root root 6 8月   5 17:14 /nsd11
+
+
+[root@server0 ~]# su - lisi
+上一次登录：一 8月  5 16:36:53 CST 2019pts/1 上
+[lisi@server0 ~]$ ls /nsd11
+ls: cannot open directory /nsd11: Permission denied
+[lisi@server0 ~]$ exit
+logout
+
+
+#####################################################################3
+acl 为个别用户和个别组设置独立的权限
+
+[root@server0 ~]# setfacl -m u:lisi:rx /nsd11   //为lisi加入特殊权限rx
+                                                             //格式固定
+                                    //setfacl -m u:用户名:权限 /文件位置/文件名
+                                    //setfacl -m g:组名:权限 /文件位置/文件名
+
+
+[root@server0 ~]# getfacl /nsd11      //查看文件/nsd11的所有权限拥有者 
+
+
+getfacl: Removing leading '/' from absolute path names
+# file: nsd11
+# owner: root
+# group: root
+user::rwx
+user:lisi:r-x
+group::r-x
+mask::r-x
+other::---
+
+#################################################################
+
+
+[root@server0 ~]# mkdir /nsd12
+[root@server0 ~]# ls -ld /nsd12
+drwxr-xr-x. 2 root root 6 8月   5 17:28 /nsd12
+[root@server0 ~]# setfacl -m u:dc:rwx /nsd12
+[root@server0 ~]# setfacl -m u:zhangsan:rwx /nsd12
+[root@server0 ~]# setfacl -m u:lisi:rw /nsd12
+[root@server0 ~]# ls /home
+admins  dc  gelin01  gelin02  lisi  public  student  xiaohu  zhangsan
+[root@server0 ~]# setfacl -m u:gelin01:wx /nsd12
+[root@server0 ~]# setfacl -m u:gelin02:rx /nsd12
+[root@server0 ~]# getfacl /nsd12
+getfacl: Removing leading '/' from absolute path names
+# file: nsd12
+# owner: root
+# group: root
+user::rwx
+user:lisi:rw-
+user:gelin01:-wx
+user:gelin02:r-x
+user:zhangsan:rwx
+user:dc:rwx
+group::r-x
+mask::rwx
+other::r-x
+
+###############################################################33
+
+[root@server0 ~]# setfacl -x u:lisi /nsd12
+[root@server0 ~]# getfacl ned12
+getfacl: ned12: 没有那个文件或目录
+[root@server0 ~]# getfacl /nsd12
+getfacl: Removing leading '/' from absolute path names
+# file: nsd12
+# owner: root
+# group: root
+user::rwx
+user:gelin01:-wx
+user:gelin02:r-x
+user:zhangsan:rwx
+user:dc:rwx
+group::r-x
+mask::rwx
+other::r-x
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+[root@server0 ~]# setfacl -x u:zhangsan /nsd12
+[root@server0 ~]# getfacl /nsd12
+getfacl: Removing leading '/' from absolute path names
+# file: nsd12
+# owner: root
+# group: root
+user::rwx
+user:gelin01:-wx
+user:gelin02:r-x
+user:dc:rwx
+group::r-x
+mask::rwx
+other::r-x
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+[root@server0 ~]# setfacl -x u:dc /nsd12
+[root@server0 ~]# getfacl /nsd12
+getfacl: Removing leading '/' from absolute path names
+# file: nsd12
+# owner: root
+# group: root
+user::rwx
+user:gelin01:-wx
+user:gelin02:r-x
+group::r-x
+mask::rwx
+other::r-x
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+[root@server0 ~]# setfacl -b /nsd12
+[root@server0 ~]# getfacl /nsd12
+getfacl: Removing leading '/' from absolute path names
+# file: nsd12
+# owner: root
+# group: root
+user::rwx
+group::r-x
+other::r-x
+
+
+#############################################################
+单独拒绝
+         
+
+           setfacl u:lisi:--- /nsd13
+
+
+
+
+#####################################################
+[root@server0 ~]# useradd nsd20
+[root@server0 ~]# grep nsd20 /etc/passwd
+nsd20:x:1007:1010::/home/nsd20:/bin/bash
+[root@server0 ~]# ls /home/
+admins  dc  gelin01  gelin02  lisi  nsd20  public  student  xiaohu  zhangsan
+[root@server0 ~]# usermod -d /mnt/stu20 nsd20
+[root@server0 ~]# grep nsd20 /etc/passwd
+nsd20:x:1007:1010::/mnt/stu20:/bin/bash
+[root@server0 ~]# ls /mnt
+
+[root@server0 ~]# cp -r /home/nsd20/ /mnt/stu20
+
+[root@server0 ~]# ls -lA /mnt/stu20/
+总用量 12
+-rw-r--r--. 1 root root  18 8月   5 17:47 .bash_logout
+-rw-r--r--. 1 root root 193 8月   5 17:47 .bash_profile
+-rw-r--r--. 1 root root 231 8月   5 17:47 .bashrc
+drwxr-xr-x. 2 root root  56 8月   5 17:47 .config
+drwxr-xr-x. 4 root root  37 8月   5 17:47 .mozilla
+
+[root@server0 ~]# chown -R nsd20:nsd20 /mnt/stu20/
+
+[root@server0 ~]# ls -lA /mnt/stu20/
+总用量 12
+-rw-r--r--. 1 nsd20 nsd20  18 8月   5 17:47 .bash_logout
+-rw-r--r--. 1 nsd20 nsd20 193 8月   5 17:47 .bash_profile
+-rw-r--r--. 1 nsd20 nsd20 231 8月   5 17:47 .bashrc
+drwxr-xr-x. 2 nsd20 nsd20  56 8月   5 17:47 .config
+drwxr-xr-x. 4 nsd20 nsd20  37 8月   5 17:47 .mozilla
+
+[root@server0 ~]# su - nsd20
+[nsd20@server0 ~]$ exit
+
+###############################################33
+         使用户获得读取权限,有几种方法
+利用其他人
+
+利用 组
+
+利用 用户
+
+利用stefacl 独立权限
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+[root@server0 ~]# useradd nsd20
+
+[root@server0 ~]# grep nsd20 /etc/passwd
+nsd20:x:1007:1010::/home/nsd20:/bin/bash
+
+[root@server0 ~]# ls /home/
+admins  dc  gelin01  gelin02  lisi  nsd20  public  student  xiaohu  zhangsan
+
+[root@server0 ~]# usermod -d /mnt/stu20 nsd20
+[root@server0 ~]# grep nsd20 /etc/passwd
+nsd20:x:1007:1010::/mnt/stu20:/bin/bash
+
+[root@server0 ~]# ls /mnt      //文件夹下无文件
+
+[root@server0 ~]# cp -r /home/nsd20/ /mnt/stu20   
+[root@server0 ~]# ls -lA /mnt/stu20/
+总用量 12
+-rw-r--r--. 1 root root  18 8月   5 17:47 .bash_logout
+-rw-r--r--. 1 root root 193 8月   5 17:47 .bash_profile
+-rw-r--r--. 1 root root 231 8月   5 17:47 .bashrc
+drwxr-xr-x. 2 root root  56 8月   5 17:47 .config
+drwxr-xr-x. 4 root root  37 8月   5 17:47 .mozilla
+
+
+[root@server0 ~]# chown -R nsd20:nsd20 /mnt/stu20/     
+          // -R 递归设置 递归设置权限，目录及目录下所有(设置之后的"用户":"组")
+
+
+[root@server0 ~]# ls -lA /mnt/stu20/
+总用量 12
+-rw-r--r--. 1 nsd20 nsd20  18 8月   5 17:47 .bash_logout
+-rw-r--r--. 1 nsd20 nsd20 193 8月   5 17:47 .bash_profile
+-rw-r--r--. 1 nsd20 nsd20 231 8月   5 17:47 .bashrc
+drwxr-xr-x. 2 nsd20 nsd20  56 8月   5 17:47 .config
+drwxr-xr-x. 4 nsd20 nsd20  37 8月   5 17:47 .mozilla
+
+[root@server0 ~]# su - nsd20     //进入到主机用户nsd20中
+[nsd20@server0 ~]$ exit   
+
+
+
+
+mount.ntfs-3g /dev/sdb1   /mnt
+  //挂载U盘                    //放的位置
+
+
+
+
+
+
+
+
+

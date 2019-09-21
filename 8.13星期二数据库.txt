@@ -1,0 +1,207 @@
+--------------------------------共享服务器端------------------------------------------------
+
+root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+[root@server0 ~]# firewall-cmd --get-default-zone
+trusted
+[root@server0 ~]#         //关闭防火墙限制
+
+
+[root@server0 ~]# rpm -q nfs-utils   //查看是否安装NFS网络文件系统
+nfs-utils-1.3.0-0.el7.x86_64
+[root@server0 ~]# mkdir /public             //创建要共享的文件
+[root@server0 ~]# touch /public/{1..10}.txt  //文件中的内容
+[root@server0 ~]# ls /public
+10.txt  1.txt  2.txt  3.txt  4.txt  5.txt  6.txt  7.txt  8.txt  9.txt
+[root@server0 ~]# 
+
+
+[root@server0 ~]# vim /etc/exports      //设置挂载接口ip地址
+       /public  *(ro)    //文件中默认为空 需输入参数
+            //   在   /public  的文件夹  下的所有文件  (  * )  权限只有读 ( ro )  
+
+[root@server0 ~]# systemctl restart nfs-server  //重启nfs系统服务
+[root@server0 ~]#                          //重启系统很关键
+
+ ----------------------------------------------------接收端--------------
+
+[root@desktop0 ~]# firewall-cmd --set-default-zone=trusted
+success                 //关闭防火墙
+[root@desktop0 ~]# firewall-cmd --get-default-zone
+trusted
+[root@desktop0 ~]# mkdir /mnt/nsd    创建要挂载的位置
+[root@desktop0 ~]# mount 172.25.0.11:/public /mnt/nsd/
+      //挂载NFS网络文件 属于ip 172.25.0.11 共享的文件夹     /mnt/nsd/文件下
+   //   mount   + ip地址  + ' : '  +  ' / 共享端共享文件夹 ' + '要挂载的位置'   
+
+[root@desktop0 ~]# df -h //此时
+文件系统             容量  已用  可用 已用% 挂载点
+/dev/vda1             10G  3.0G  7.1G   30% /
+devtmpfs             906M     0  906M    0% /dev
+tmpfs                921M   80K  921M    1% /dev/shm
+tmpfs                921M   17M  904M    2% /run
+tmpfs                921M     0  921M    0% /sys/fs/cgroup
+172.25.0.11:/public   10G  3.0G  7.1G   30% /mnt/nsd
+[root@desktop0 ~]# ls /mnt/nsd/
+10.txt  1.txt  2.txt  3.txt  4.txt  5.txt  6.txt  7.txt  8.txt  9.txt
+[root@desktop0 ~]# 
+
+
+
+   -------------------------------------------------接收端开机自动挂载----------------------------
+                _netdev :声明网络设备 (这是个网络设备)
+                                             首先确保网络服务的启动,然后再挂载本设备
+      
+
+
+     搭建web服务器
+
+
+[root@server0 ~]# yum -y install httpd //安装httpd软件
+
+[root@server0 ~]# vim /var/www/html/index.html 
+            //创建文件 位置在 /var/www/html 下 名字为 index.html()
+
+
+                                   验证DNS解析命令
+-----------------------------------------------------------------------------------------------
+[root@server0 ~]# nslookup server0.example.com
+Server:		172.25.254.254
+Address:	172.25.254.254#53
+
+Name:	server0.example.com
+Address: 172.25.0.11
+
+[root@server0 ~]# nslookup www0.example.com
+Server:		172.25.254.254
+Address:	172.25.254.254#53
+
+www0.example.com	canonical name = server0.example.com.
+Name:	server0.example.com
+Address: 172.25.0.11
+
+[root@server0 ~]# nslookup webapp0.example.com
+Server:		172.25.254.254
+Address:	172.25.254.254#53
+
+webapp0.example.com	canonical name = server0.example.com.
+Name:	server0.example.com
+Address: 172.25.0.11
+----------------------------------------------------------------------------------------------
+
+   新建网页文件
+
+[root@server0 ~]# mkdir /var/www/myweb
+[root@server0 ~]# echo '<h1>wo shi myweb' > /var/www/myweb/index.html
+[root@server0 ~]# cat /var/
+account/  db/       gopher/   lock/     opt/      tmp/
+adm/      empty/    kerberos/ log/      preserve/ var/
+cache/    games/    lib/      mail/     run/      www/
+crash/    gdm/      local/    nis/      spool/    yp/
+[root@server0 ~]# cat /var/www/
+cgi-bin/ html/    myweb/   
+[root@server0 ~]# cat /var/www/myweb/index.html 
+<h1>wo shi myweb
+
+
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+              //修改网页主配置文件   (默认打开页面地址)
+        /Document (查找)   修改默认文件位置
+
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# firefox 172.25.0.11
+
+(process:1120): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+
+
+
+
+-----------------------------------------------虚拟化网页设置---------
+       //可支持同一服务器开设多个web界面
+ //同时本机默认的web服务器网页不能使用 只能把之前默认web服务创建为虚拟web服务
+//一旦使用虚拟web主机功能,所有网站必须利用虚拟web主机实现
+//默认利用ip地址访问,服务端会返回第一个虚拟web主机的内容
+
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf
+<VirtualHost  *:80>
+  ServerName server0.example.com    
+  Documentroot /var/www/qq
+</VirtualHost>
+<VirtualHost  *:80>
+  ServerName www0.example.com
+  Documentroot /var/www/baidu
+</VirtualHost>
+
+~                             
+
+[root@server0 ~]# mkdir /var/www/qq /var/www/baidu
+[root@server0 ~]# echo '<h1>企鹅' > /var/www/qq/index.html    
+                                    //输入网页信息
+[root@server0 ~]# echo '<h1>百度' > /var/www/baidu/index.html
+[root@server0 ~]# systemctl restart httpd
+
+
+=====================================================
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/
+autoindex.conf  README          welcome.conf
+nsd01.conf      userdir.conf    
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# mkdir /webroot
+[root@server0 ~]# echo '<h1>wo shi webroot' > /webroot/index.html
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# vim /etc/httpd/conf/ 
+httpd.conf  magic       
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# cat /webroot/index.html 
+<h1>wo shi webroot
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# setenforce 0       /SElinux 宽松模式
+[root@server0 ~]# setenforce 1  
+==================================================
+//修改Documentroot的位置
+//设置访问控制 /   针对/webroot进行访问设置 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,430 @@
+
+
+www.github.com/账户名  redhatedu/仓库名称
+
+
+
+使用Varnish加速Web
+          
+远距离 web 看视屏 非常慢非常卡
+
+地区间 建一个最近的缓存服务器 可以加快缓存服务器
+
+
+
+              地区缓存服务器 ( 天津 )
+ 
+总部   ---- 地区缓存服务器 (成都)   ========  pc
+  
+             地区缓存服务器 (上海)
+
+        CDN 内容分发网络  +  DNS分离解析 实现
+   全国 各地访问本地服务器
+
+
+
+测试页面是否正常
+    [root@proxy ~]# firefox http://192.168.2.100
+
+
+装包
+[root@proxy ~]# yum -y install gcc readline-devel  
+                               //安装软件依赖包
+[root@proxy ~]# yum -y install ncurses-devel     
+                                    //安装软件依赖包
+[root@proxy ~]# yum -y install pcre-devel            
+                                     //安装软件依赖包
+[root@proxy ~]# yum -y install python-docutils        
+                                   //安装软件依赖包
+[root@proxy ~]# useradd -s /sbin/nologin varnish
+                                      //创建账户
+
+[root@proxy ~]# tar -xf varnish-5.2.1.tar.gz
+[root@proxy ~]# cd varnish-5.2.1
+[root@proxy varnish-5.2.1]# ./configure
+[root@proxy varnish-5.2.1]# make && make install
+
+复制启动脚本及配置文件（注意相对路径与绝对路径）
+[root@proxy  
+]# cp  etc/example.vcl   /usr/local/etc/default.vcl
+
+修改配置文件
+    [root@proxy ~]# vim  /usr/local/etc/default.vcl
+    backend default {
+         .host = "192.168.2.100";  #哪个是你后台
+         .port = "80";    #端口
+     }
+
+
+启动服务
+     [root@proxy ~]# varnishd  -f /usr/local/etc/default.vcl
+//varnishd命令的其他选项说明如下：  没加参数 默认缓存内存
+//varnishd -s malloc,128M        
+   定义varnish使用内存作为缓存，空间为128M
+//varnishd -s file,/var/lib/varnish_storage.bin,1G 
+       定义varnish使用文件作为缓存
+
+
+
+
+
+
+查看varnish日志
+root@proxy ~]# varnishlog       //varnish日志
+root@proxy ~]# varnishncsa         //访问日志
+运行程序   只有在用户访问网站时 才会产生 日志数据
+
+
+更新缓存数据，在后台web服务器更新页面内容后，用户访问代理服务器看到的还是之前的数据，说明缓存中的数据过期了需要更新（默认也会自动更新，但非实时更新）。
+
+    [root@proxy ~]# varnishadm  
+    varnish> ban req.url ~ .* (.* 清空所有缓存)
+    //清空缓存数据，支持正则表达式
+
+就是说 定时 清空缓存 但是有等待时间
+如果不想等 可以直接手动 清除缓存网站
+
+
+
+
+
+
+版本控制   共享文件目录
+连接 上传下载 文件 (修改文件)
+服务器自动      保存更新     自动备份
+
+代码底线  必须放在 版本控制里
+
+集中式管理  不科学  服务器坏掉 全死
+
+
+分布式  单个客户端
+1 客户端对服务器的完整克隆       #备份到单个客户端上
+2 修改代码
+3 上传到本地备份   #可以断网操作
+4 上传远程服务器
+
+
+
+YUM安装Git软件。
+
+[root@web1 ~]# yum -y install git
+[root@web1 ~]# git --version
+[root@web1 ~]# mkdir /var/git
+  #仓库可自选仓库地址   不固定位置地址
+[root@web1 ~]# git init /var/git/project --bare 
+         #此处才是创建 仓库    #project 仓库名 可自定
+[root@web1 ~]# ls /var/git/project
+config  description  HEAD  hooks  info  objects  refs   
+
+
+
+[root@web2 ~]# yum -y install git
+[root@web2 ~]# git clone root@192.168.2.100:/var/git/project  #此处拷贝仓库 自动创建仓库文件 project
+[root@web2 ~]# cd project   #本地仓库
+[root@web2 ~]# ls 
+
+[root@web2 project]# mkdir demo
+[root@web2 project]# echo init date > init.txt
+[root@web2 project]# cp /etc/hosts demo/
+[root@web2 project]# ls
+demo  init.txt
+
+[root@web2 project]# git status
+# 位于分支 master
+#
+# 初始提交
+#
+# 未跟踪的文件:
+#   （使用 "git add <file>..." 以包含要提交的内容）
+#
+#	demo/
+#	init.txt
+提交为空，但是存在尚未跟踪的文件（使用 "git add" 建立跟踪）
+
+[root@web2 project]# git add . #当前文件夹下所有文件
+
+[root@web2 project]# git status
+# 位于分支 master
+#
+# 初始提交
+#
+# 要提交的变更：
+#   （使用 "git rm --cached <file>..." 撤出暂存区）
+#
+#	新文件：    demo/hosts
+#	新文件：    init.txt
+#
+
+[root@web2 project]# git commit  -m  "可以为任意字符"
+直接打此命令 会显示 你是谁 写下面代码 可继续
+
+[root@web2 project]# git config --global user.email "you@example.com"
+[root@web2 project]# git config --global user.name "Your Name"
+
+[root@web2 project]# git commit  -m  "可以为任意字符"
+
+再来一次 就可以了 提示干净的工作区
+
+
+之后 秩序
+修改
+git add .
+git commit  -m  "注释，可以为任意字符"
+                                #可以写为什么改代码
+
+git push    #客户端文件 上传 到远程服务的仓库
+git config --global push.default simple
+git push
+
+git pull  #将服务器上的数据更新到本地
+git clone #将服务器上所有数据下载到本地
+
+
+查看版本日志
+    [root@web2 project]# git log
+    [root@web2 project]# git log --pretty=oneline
+    [root@web2 project]# git log --oneline
+    [root@web2 project]# git reflog
+
+[root@web2 project]# git log
+commit 226d6c6e89e79114a54468dcf08ff7b8b4abb55e
+Author: root <root@web2.2.200>
+Date:   Wed Sep 18 14:17:54 2019 +0800
+      world var
+[root@web2 project]# git log --pretty=oneline 
+226d6c6e89e79114a54468dcf08ff7b8b4abb55e world var
+[root@web2 project]# git log --oneline 
+226d6c6 world var
+
+
+
+[root@web2 project]# git reflog  
+             #head指针 还原 必备命令
+226d6c6 HEAD@{0}: commit (initial): world var
+
+
+[root@web2 project]# git reflog 
+cccb37c HEAD@{0}: commit: num.txt:789
+ecc885e HEAD@{1}: commit: num.txt:456
+281478b HEAD@{2}: commit: num.txt:123
+4fd8f80 HEAD@{3}: commit: new.txt:third
+92afcb3 HEAD@{4}: commit: new.txt:second
+70fd799 HEAD@{5}: commit: new.txt:first line
+2a8e285 HEAD@{6}: commit: add new.txt
+226d6c6 HEAD@{7}: commit (initial): world var
+
+ #head {0} 为当前版本
+
+[root@web2 project]# git reset --hard cccb37
+                                                        #移动到哪一次改变的时候
+[root@web2 project]# git reflog 
+cccb37c HEAD@{0}: reset: moving to cccb37
+70fd799 HEAD@{1}: reset: moving to 70fd
+281478b HEAD@{2}: reset: moving to 281478
+cccb37c HEAD@{3}: commit: num.txt:789
+ecc885e HEAD@{4}: commit: num.txt:456
+281478b HEAD@{5}: commit: num.txt:123
+4fd8f80 HEAD@{6}: commit: new.txt:third
+92afcb3 HEAD@{7}: commit: new.txt:second
+70fd799 HEAD@{8}: commit: new.txt:first line
+2a8e285 HEAD@{9}: commit: add new.txt
+226d6c6 HEAD@{10}: commit (initial): world var
+#查看变动历史   非常完整 还能 随时修改回来
+
+#当移动到的版本 在很久之前时 最近修改的文件 也将不会存在
+#删除 上传后 也可以还原
+
+
+
+MASTER分支（MASTER是主分支，是代码的核心）。
+
+DEVELOP分支（DEVELOP最新开发成果的分支）。
+
+RELEASE分支（为发布新产品设置的分支）。
+
+HOTFIX分支（为了修复软件BUG缺陷的分支）。
+
+FEATURE分支（为开发新功能设置的分支）。
+
+
+默认分支 MASTER
+
+
+git status     #当前分支
+git branch -v   #所有分支
+
+git branch hotfix  #创建分支 名字随意
+
+
+[root@web2 project]# git branch -v
+* master cccb37c num.txt:789
+[root@web2 project]# git branch hotfix
+[root@web2 project]# git branch feature
+[root@web2 project]# git branch -v
+  feature cccb37c num.txt:789
+  hotfix  cccb37c num.txt:789
+* master  cccb37c num.txt:789
+#*代表当前 分支
+
+
+[root@web2 project]# git checkout hotfix 
+切换到分支 'hotfix'
+[root@web2 project]# git branch -v
+  feature cccb37c num.txt:789
+* hotfix  cccb37c num.txt:789
+  master  cccb37c num.txt:789
+
+
+#分支 只是从 主分支 分割 出来的一个部分 最终 还是会 回到主分支
+#与主分支合并?
+#看不出有什么变化
+
+
+[root@web2 project]# echo "fix a bug" >> new.txt 
+[root@web2 project]# git add .
+[root@web2 project]# git commit -m "fix a bug"
+[hotfix 25f9e89] fix a bug
+ 1 file changed, 1 insertion(+)
+[root@web2 project]# cat new.txt 
+new file
+first
+second
+third
+fix a bug
+[root@web2 project]# git checkout master 
+切换到分支 'master'
+[root@web2 project]# cat new.txt 
+new file
+first
+second
+third
+
+
+              合并回 master
+要先进入到 master 执行命令 才算合并到 master
+合并其他文件  操作相似 
+[root@web2 project]# git checkout master
+[root@web2 project]# git merge hotfix
+
+
+[root@web2 project]# git checkout master
+切换到分支 'master'
+[root@web2 project]# git merge hotfix
+更新 cccb37c..25f9e89
+Fast-forward
+ new.txt | 1 +
+ 1 file changed, 1 insertion(+)
+[root@web2 project]# cat new.txt 
+new file
+first
+second
+third
+fix a bug
+
+分支 可能产生冲突 
+在不同分支 修改了相同行
+
+
+<<<<<<< HEAD
+BBB
+=======
+AAA
+>>>>>>> hotfix
+
+删除 一行 留下认为 需要的一行
+
+
+
+
+
+
+    创建SSH协议服务器  读写
+    创建Git协议服务器  只读
+    创建HTTP协议服务器 只读
+
+
+
+SSH协议服务器
+[root@web1 ~]git init --bare /var/git/base_ssh
+        #服务端
+[root@web2 ~]# ssh-keygen -f /root/.ssh/id_rsa -N ''
+        #客户端
+[root@web2 ~]# ssh-copy-id  192.168.2.100
+[root@web2 ~]# git clone root@192.168.2.100:/var/git/base_ssh
+[root@web2 ~]# git push
+
+  取消密码验证   ssh
+
+
+Git协议服务器
+web1主机操作
+[root@web1 ~]# yum -y install git-daemon
+[root@web1 ~]# git init --bare /var/git/base_git
+    Initialized empty Git repository in /var/git/base_git/
+vim /usr/lib/systemd/system/git@.service
+
+[root@web1 ~]# systemctl  start  git.socket
+
+ExecStart=-/usr/libexec/git-core/git-daemon --base-path=/var/lib/git 
+--export-all --user-path=public_git --syslog --inetd –verbose
+修改后内容如下：
+ExecStart=-/usr/libexec/git-core/git-daemon --base-path=/var/git 
+--export-all --user-path=public_git --syslog --inetd –verbose
+
+
+
+
+[root@web1 ~]# yum -y install httpd gitweb
+
+
+[root@web1 ~]# vim +11 /etc/gitweb.conf 
+    $projectroot = "/var/git";                       
+      #添加一行
+
+[root@web1 ~]# git init --bare /var/git/base_http
+
+
+[root@web1 ~]# systemctl start httpd
+
+systemctl restart httpd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

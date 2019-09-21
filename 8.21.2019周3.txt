@@ -1,0 +1,179 @@
+    分离解析
+    view "名字" {
+      match-clients {来源地址1;....; }
+           zone "12306.cn" IN {
+                   ......地址库1;
+              }; };
+
+    view "名字" {
+      match-clients {来源地址2;....; }   //匹配 客户端来源地址
+           zone "12306.cn" IN {
+                   ......地址库2;
+              }; };
+
+   view "名字" {
+      match-clients {  any; }
+           zone "12306.cn" IN {
+                   ......地址1;
+              }; };
+
+                    由上到下一次匹配 匹配即停止
+
+-
+ 错误1 /etc/named 文件有错 没删完   内容与 之后定义文件不同
+        内容没写完 或者写错  没改变参数    空格 大括号是否把数据装完
+       
+      /var/named/  下文件出错 域名没写完  ( qq.com. ) 
+
+
+
+多区域解析   
+    每一个view中,zone 的分类以及负责的域名都要保持一致
+
+
+
+ view "名字" {
+       acl dc { 192.168.4.207: 192.168.7.0/24;  };
+           //定义变量下方可以用     dc 来代替 ip
+       match-clients { 192.168.4.207; 192.168.7.0/24; };
+           zone "12306.cn" IN {
+                   ......地址库1;
+              };  
+           zone "12306.cn" IN {
+                   ......地址库2;
+              };
+};
+
+view "other" { 
+ match-clients { any; };
+zone "tedu.cn" IN {
+        type master;
+        file "tedu.cn.other";
+};
+zone "sina.com" IN {
+        type master;
+        file "sina.com.on";
+};
+};
+
+
+
+    dig  www.sina.com
+
+
+
+两个web  qq 163
+ dns     a
+           /       \
+      c(qq) d (163)
+      a     b      
+
+
+
+pstree -ap
+
+ps aux   查看所有正在运行的进程
+ps -elf   显示正在运行的进程
+
+PPID 父进程的PID值
+
+
+top -d (刷新秒数) / u
+按 大写的P 
+     大写的M
+ 
+pgrep    模糊匹配     -l 进程名  -U 指定用户  -lU ID  -x 精确查找 
+pgrep a 包含a的进程
+
+
+
+    软件名  &  放到后台
+   ctrl+z 运行程序放入后台  会暂停程序
+    bg  程序序号  >>>>启动后台程序
+     fg  程序序号>>>>后台程序恢复到前台
+      jobs -l     
+
+   kill  [-9] PID   -9 强杀
+   killall   进程名 同名全杀	
+pkill   模糊查杀
+
+   killall  -9 -u lisi
+
+
+
+
+   awk  sed  分析工具
+
+
+
+用户登录信息
+     user   who  w
+
+who
+root  pst/0 2019-08-21 14:26 (192.168.4.254)
+
+
+   last  lastb
+登录成功  登录失败
+ last -2  //最近登录成功的2条信息
+
+
+日志信息
+
+journalctl  -u 服务名
+
+
+
+multi-user  字符
+graphical   图形
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

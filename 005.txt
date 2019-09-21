@@ -1,0 +1,361 @@
+
+
+
+                              >&2   报错信息
+                             exit 1   (不为0) 报错状态值
+
+
+------------------------------------------------------------------=============================
+#!/bin/bash
+# $# -eq 0 判断用户是否输入参数
+# >&2 将输出变为错误输出
+# exit可以指定程序退出状态
+-----------
+if   [ $# -eq 0 ];then
+ echo '/root/foo.sh redhat|fedora' >&2
+ exit 48
+----------
+elif [ $1 == redhat ];then
+ echo 'fedora' 
+----------
+elif [ $1 == fedora ];then
+ echo 'redhat' 
+---------
+else
+ echo '/root/foo.sh redhat|fedora' >&2
+ exit 49
+fi
+
+
+--------------------------------------------------==================================
+
+给出的要求为 从文件中提取信息 用以创建用户 所以 $1 为文件绝对位置
+=============
+ #!/bin/bash
+if [ $# -eq 0 ];then               #判断用户是否输入信息
+ echo 'Usage: /root/batchusers' >&2
+ exit 1
+-------------
+elif [  -f $1 ];then               #判断文件存在为真
+-------------
+ for a in $(cat $1)                #将命令输出做为循环的列表值
+ do
+ useradd -s /bin/false $a &> /dev/null
+ echo $a用户创建按成功
+ done
+-------------
+else
+ echo 'Input file not found' >&2
+ exit 2
+fi
+===========
+
+[root@server0 ~]# getenforce    查看SELinux 状态
+Enforcing
+
+/etc/selinux/config    //永久配置文件修改位置
+ 
+setenforce 0|1      临时修改SElinux状态
+----------------------------------------------------------------------
+enforcing   强制
+
+permissive   宽松
+
+disabled   关闭
+
+
+.bashrc  环境配置
+------------------------------------------------
+[root@ ~]# vim /root/.bashrc  //root用户的变量
+[root@ ~]# vim /etc/bashrc    //全局变量
+[root@ ~]# vim /home/student/.bashrc  
+                              //student的变量
+============---------------------------------=================--
+
+web服务   httpd   Nginx  Tomcat 
+-------------------------------------------------------
+[root@server0 ~]# yum -y install httpd
+
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# firefox 172.25.0.11
+                               //防火墙默认开启 /本机访问
+
+------------------------------------------------------------------------------
+默认 网页文件路径 : /var/www/html
+----------------------------------------
+ 页面 文件名: index.html
+
+<marquee><font color=red><h1>:我傻了都
+
+
+//滚动    //字体颜色     //字体为标题且变大
+-----------------------------------------------------------------------
+
+vsftp
+
+FTP文本传输协议
+/var/ftp
+
+
+--------------------------------------------------
+防火墙
+自己ping自己无效
+
+firewall-cmd
+-------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --get-default-zone 
+public        //可以通信  可以ping ssh 
+----------------------------------------------------------------------------
+[root@desktop0 ~]# ping 172.25.0.11
+PING 172.25.0.11 (172.25.0.11) 56(84) bytes of data.
+64 bytes from 172.25.0.11: icmp_seq=1 ttl=64 time=0.392 ms
+64 bytes from 172.25.0.11: icmp_seq=2 ttl=64 time=0.559 ms
+64 bytes from 172.25.0.11: icmp_seq=3 ttl=64 time=0.489 ms
+64 bytes from 172.25.0.11: icmp_seq=4 ttl=64 time=0.537 ms
+64 bytes from 172.25.0.11: icmp_seq=5 ttl=64 time=0.622 ms
+64 bytes from 172.25.0.11: icmp_seq=6 ttl=64 time=0.316 ms
+
+
+
+--------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --set-default-zone=block
+--------------------------------------------------------------
+success
+--------------------------------------------------------
+[root@server0 ~]# firewall-cmd --get-default-zone
+block         //拒绝 有回应
+--------------------------------------------------------
+[root@desktop0 ~]# ping 172.25.0.11
+PING 172.25.0.11 (172.25.0.11) 56(84) bytes of data.
+From 172.25.0.11 icmp_seq=1 Destination Host Prohibited
+From 172.25.0.11 icmp_seq=2 Destination Host Prohibited
+From 172.25.0.11 icmp_seq=3 Destination Host Prohibited
+From 172.25.0.11 icmp_seq=4 Destination Host Prohibited
+^C
+
+---------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --set-default-zone=drop
+success                          //拒绝并丢弃,不回应
+------------------------------------------------------------------------
+
+[root@server0 ~]# firewall-cmd --get-default-zone
+drop
+
+[root@desktop0 ~]# ping 172.25.0.11
+PING 172.25.0.11 (172.25.0.11) 56(84) bytes of data.
+
+
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+[root@server0 ~]# firewall-cmd --get-default-zone
+trusted     //接受所有
+
+
+[root@desktop0 ~]# ping 172.25.0.11
+PING 172.25.0.11 (172.25.0.11) 56(84) bytes of data.
+64 bytes from 172.25.0.11: icmp_seq=76 ttl=64 time=0.488 ms
+64 bytes from 172.25.0.11: icmp_seq=77 ttl=64 time=0.577 ms
+64 bytes from 172.25.0.11: icmp_seq=78 ttl=64 time=0.713 ms
+64 bytes from 172.25.0.11: icmp_seq=79 ttl=64 time=0.688 ms
+64 bytes from 172.25.0.11: icmp_seq=80 ttl=64 time=0.636 ms
+
+
+------------------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --list-all
+                                   //查看public区域规则
+---------------------------------------------------------------------------
+public (default, active)
+  interfaces: eth0
+  sources: 
+  services: dhcpv6-client ssh
+  ports: 
+  masquerade: no
+  forward-ports: 
+  icmp-blocks: 
+  rich rules: 
+--------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --add-service=http         //为防火墙public区域增加http协议
+
+success       
+-------------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --add-service=ftp        //为防火墙public区域添加ftp协议
+
+success    
+
+
+
+---------------------------------------------------------------------------------
+[root@desktop0 ~]# firefox 172.25.0.11   
+           // 打开浏览器并连接网络到172.25.0.11
+------------------------------------------------------------------------
+(process:4845): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+
+[root@desktop0 ~]# firefox ftp://172.25.0.11
+                   //打开浏览器并连接到服务器网络
+
+(process:4896): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+---------------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --list-all
+                                         //再次查看区域规则 
+----------------------------------------------------------------------------
+public (default, active)
+  interfaces: eth0
+  sources: 
+  services: dhcpv6-client ftp http ssh
+  ports: 
+  masquerade: no
+  forward-ports: 
+  icmp-blocks: 
+  rich rules: 
+------------------------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --list-all
+          //之前写的为临时参数 刷新就没
+--------------------------------------------------------------
+
+public (default, active)
+  interfaces: eth0
+  sources: 
+  services: dhcpv6-client ssh
+  ports: 
+  masquerade: no
+  forward-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+---------------------------------================--------------------
+                  永久添加服务协议
+
+[root@server0 ~]# firewall-cmd --permanent --zone=public --add-service=http    //添加永久定义 下次开机或重新刷新可检测
+success
+--------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --permanent --zone=public --add-service=ftp
+success
+-------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --reload  //刷新看是否永久成功
+success
+----------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --list-all 
+----------------------------------------------
+public (default, active)
+  interfaces: eth0
+  sources: 
+  services: dhcpv6-client ftp http ssh
+  ports: 
+  masquerade: no
+  forward-ports: 
+  icmp-blocks: 
+  rich rules: 
+
+----------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=block --add-source=172.25.0.10  //禁止单个客户端访问
+success
+-----------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=block --list-all
+block
+  interfaces: 
+  sources: 172.25.0.10
+  services: 
+  ports: 
+  masquerade: no
+  forward-ports: 
+  icmp-blocks: 
+  rich rules: 
+	---------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=block --remove-source=172.25.0.10       //删除对源ip的限制
+success
+-------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --add-forward-port=port=5423:proto=tcp:toport=80  
+    //添加端口转发规则=目标端口为5423:协议为tcp:转发到80端口
+success
+--------------------------------------------------------------------
+[root@server0 ~]# firewall-cmd --zone=public --list-all
+public (default, active)
+  interfaces: eth0
+  sources: 
+  services: dhcpv6-client ftp http ssh
+  ports: 
+  masquerade: no
+  forward-ports: port=5423:proto=tcp:toport=80:toaddr=
+  icmp-blocks: 
+  rich rules: 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3333##################################################3
+
+fdisk /dev/vdb
+[root@server0 ~]# mkswap /dev/vdb1
+正在设置交换空间版本 1，大小 = 2097148 KiB
+无标签，UUID=d4a6ab1c-3616-4d4f-982d-00a976b1901c
+[root@server0 ~]# mkswap /dev/vdb2
+正在设置交换空间版本 1，大小 = 2097148 KiB
+无标签，UUID=6564cfca-2897-4cdf-82d9-25bfcf19e200
+[root@server0 ~]# blkid
+/dev/vda1: UUID="9bf6b9f7-92ad-441b-848e-0257cbb883d1" TYPE="xfs" 
+/dev/vdb1: UUID="d4a6ab1c-3616-4d4f-982d-00a976b1901c" TYPE="swap" 
+/dev/vdb2: UUID="6564cfca-2897-4cdf-82d9-25bfcf19e200" TYPE="swap" 
+[root@server0 ~]# blkid /dev/
+[root@server0 ~]# blkid /dev/vdb2
+/dev/vdb2: UUID="6564cfca-2897-4cdf-82d9-25bfcf19e200" TYPE="swap" 
+[root@server0 ~]# blkid /dev/vdb1
+/dev/vdb1: UUID="d4a6ab1c-3616-4d4f-982d-00a976b1901c" TYPE="swap" 
+[root@server0 ~]# swapon -s
+[root@server0 ~]# swapon /dev/vdb1
+[root@server0 ~]# swapon -s
+文件名				类型		大小	已用	权限
+/dev/vdb1                              	partition	2097148	0	-1
+[root@server0 ~]# swapon /dev/vdb2
+[root@server0 ~]# swapon -s
+文件名				类型		大小	已用	权限
+/dev/vdb1                              	partition	2097148	0	-1
+/dev/vdb2                              	partition	2097148	0	-2
+
+[root@server0 ~]# swapoff /dev/vdb1    停用
+
+vim /etc/fstab     //写入开机启动
+/dev/vdb1 swap swap defaults 0 0
+/dev/vdb2 swap swap defaults 0 0
+
+
+[root@server0 ~]# swapoff /dev/vdb1
+[root@server0 ~]# swapoff /dev/vdb2
+[root@server0 ~]# swapoff /dev/vdb2
+swapoff: /dev/vdb2：swapoff 失败: 无效的参数
+[root@server0 ~]# swapoff /dev/vdb1
+swapoff: /dev/vdb1：swapoff 失败: 无效的参数
+
+[root@server0 ~]# swapon -a   //专用于检测交换分区
+[root@server0 ~]# swapon -s  
+文件名				类型		大小	已用	权限
+/dev/vdb1                              	partition	2097148	0	-1
+/dev/vdb2                              	partition	2097148	0	-2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,393 @@
+git add .
+git commit
+git push
+git reset --head uuid
+git log   / reflog
+git merge 分支名 
+
+-----------------------------------------------------------
+
+源码包 -- PRM包(压缩包)
+
+源码包 (nginx)
+解压
+./configure
+make && make install
+/usr/local/nginx/
+把下载下来的目录 压缩成 文件.rpm
+
+RPM包 原理  就是打包和解压 固定位置的 软件系统
+
+createrepo 做成yum源
+
+
+---------------------
+制作nginx的RPM包
+
+安装rpm-build软件包
+
+>yum -y install  rpm-build
+
+生成rpmbuild目录结构
+
+>rpmbuild -ba nginx.spec       //会报错，没有文件或目录
+输入此命令 会自动创建 下面文件 并且会有6个子目录
+>ls /root/rpmbuild         //自动生成的目录结构
+BUILD  BUILDROOT  RPMS  SOURCES     SPECS         SRPMS
+                                /成品     /源码包    /最重要配置文件
+
+源码包放入 SOURCES 会自动完成以上步骤 打包成RPM包
+
+
+>yum -y groupinstall   组安装 
+
+
+>vim /root/rpmbuild/SPECS/xx.spec
+
+Name:nginx
+Version:1.12.2
+#版本号
+Release:100                
+ #rpm 次数
+Summary:is web server.
+#描述信息       
+#Group: 
+#组信息 
+License:GPL
+#可随意安装下载 但受法律保护 开源  固定GPL 自己用随意
+URL:www.xxx.com
+#随意           
+Source0:nginx-1.12.2.tar.gz
+#安装 源文件 要与版本号匹配     
+#BuildRequires: 
+#Requires:      
+%description
+#描述信息
+
+
+%post
+useradd dc
+touch /tmp/dc.txt
+
+#安装后脚本
+%prep
+%setup -q
+%build
+./configure
+#./configure
+make %{?_smp_mflags}
+%install
+make install DESTDIR=%{buildroot}
+%files
+%doc
+/usr/local/nginx/*
+#要压缩的文件
+%changelog
+
+
+
+
+
+
+
+
+
+
+[root@web1 ~]# vim /root/rpmbuild/SPECS/nginx.spec 
+    Name:nginx                         #源码包软件名称
+    Version:1.12.2                       #源码包软件的版本号
+    Release:    10                                 #制作的RPM包版本号
+    Summary: Nginx is a web server software.            #RPM软件的概述    
+    License:GPL               #软件的协议
+    URL:    www.test.com                   #网址
+    Source0:nginx-1.12.2.tar.gz      #源码包文件的全称
+    #BuildRequires:                #制作RPM时的依赖关系
+    #Requires:                      #安装RPM时的依赖关系
+    %description
+    nginx  is  HTTP  server.       #软件的详细描述
+
+    %post
+    useradd nginx         #非必需操作：安装后脚本(创建账户)
+       #内容随意 有潜在威胁 不要装未知名的rpm包
+    %prep
+    %setup -q            #自动解压源码包，并cd进入目录
+    %build
+    ./configure          #需要修改 原始错误
+    make %{?_smp_mflags}
+    %install
+    make install DESTDIR=%{buildroot}
+    %files
+    %doc
+    /usr/local/nginx/*        #对哪些文件与目录打包
+    %changelog
+
+
+#配置文件 写好了就可以安转了
+>rpmbuild -ba SPECS/do.spec
+
+
+
+    vpn  在公共网络的基础上  创建私密加密网络
+                        公网                        私网
+
+
+
+          GRE PPTP L2TP+IPSec SSL
+
+安全 
+    GRE < PPTP  < L2TP+IPSec
+
+
+ucloud
+
+
+
+linux 默认有GRE 
+
+>lsmod      #LINUX的内核模块
+>modprobe  ip_gre
+>lsmod  | grep ip_gre
+ip_gre                 22707  0 
+ip_tunnel              25163  1 ip_gre
+gre                    13144  1 ip_gre
+
+
+>/lib/modules/3.10.0-862.el7.x86_64/kernel/
+#linux的内核模块  可以激活
+激活   >modprobe + 模块  (只用文件名  不用全名.不加后缀)
+
+ip help
+
+ tunnel 隧道  route 网关
+
+ip tunnel help
+ip tunnel { add | change | del | show | prl | 6rd } [ NAME ]
+
+ mode { ipip | gre | sit | isatap | vti }[ remote ADDR ] [ local ADDR ]                            对方ip
+           自己ip              
+              可做的   模块
+
+
+
+
+ip a s  显示网卡
+
+ip link set tun0 up  启动网卡
+
+>ip tunnel add tun0  mode gre remote 201.1.2.5 local 201.1.2.10
+    //ip tunnel add创建隧道（隧道名称为tun0），ip tunnel help可以查看帮助
+    //mode设置隧道使用gre模式
+    //local后面跟本机的IP地址，remote后面是与其他主机建立隧道的对方IP地址
+
+>ip link show
+>ip link set tun0 up         //设置UP
+>ip link show
+
+
+>ip addr add 10.10.10.10/24 peer 10.10.10.5/24 dev tun0
+
+tun0@NONE: <POINTOPOINT,NOARP> mtu 1476 qdisc noop state DOWN group default qlen 1000
+    link/gre 201.1.2.10 peer 201.1.2.5
+    inet 10.10.10.10 peer 10.10.10.5/24 scope global tun0
+       valid_lft forever preferred_lft forever
+
+关闭防火墙
+>firewall-cmd --set-default-zone=trusted
+
+两台机器同样操作 
+
+>modprobe  ip_gre
+>modinfo ip_gre
+
+>ip tunnel add tun0 mode gre remote 201.1.2.10 local 201.1.2.5
+
+>ip link set tun0 up
+
+>ip addr add 10.10.10.5/24 peer 10.10.10.10/24 dev tun0
+
+>ip a s
+
+
+
+windos 不支持  gre
+
+
+
+rpm -qc pptpd   查询配置文件
+
+
+>vim /etc/pptpd.conf
+.. ..
+localip 201.1.2.5                                    //服务器本地IP
+remoteip 192.168.3.1-50                            //分配给客户端的IP池
+
+>vim /etc/ppp/options.pptpd
+require-mppe-128                  //使用MPPE加密数据
+ms-dns 8.8.8.8 /  114.114.114         //DNS服务器
+
+
+>vim /etc/ppp/chap-secrets           
+ //修改账户配置文件
+jacob           *               123456      *
+//用户名    服务器标记    密码    客户端
+用户可以有多个
+
+# Secrets for authentication using CHAP
+# client        server  secret                  IP addresses
+#用户名         服务器    密码                     客户端ip
+
+所有linux 都可以当路由器 1 开  0 关 (软路由)
+> echo "1" > /proc/sys/net/ipv4/ip_forward   
+            //开启路由转发
+翻墙设置   私网ip 传化为 vpn的公网ip
+>iptables -t nat -A POSTROUTING -s 192.168.3.0/24 \
+    >  -j SNAT --to-source 201.1.2.5
+
+
+网络共享  新建网络 vpn 创建 配置 创建 
+
+
+
+
+墙外 主机  搭vpn 服务器
+
+百度 ip  本机ip
+
+网络设置
+
+vpn
+
+添加vpn
+
+预共享秘钥  (服务器
+
+
+数据加密  ------------------------------------
+>yum -y install libreswan
+
+>vim /etc/ipsec.d/myipsec.conf    
+       #模板
+conn IDC-PSK-NAT
+    rightsubnet=vhost:%priv
+    also=IDC-PSK-noNAT
+
+conn IDC-PSK-noNAT
+    authby=secret
+        ike=3des-sha1;modp1024
+        phase2alg=aes256-sha1;modp2048
+    pfs=no
+    auto=add
+    keyingtries=3
+    rekey=no
+    ikelifetime=8h
+    keylife=3h
+    type=transport
+    left=201.1.2.10   #服务器 ip地址
+    leftprotoport=17/1701
+    right=%any
+    rightprotoport=17/%any
+
+
+--------------------------------------
+
+>cat /etc/ipsec.secrets 
+include /etc/ipsec.d/*.secrets
+       # 秘钥
+>vim /etc/ipsec.d/xxx.secrets
+
+vpn自己 ip  |  谁可以连 你的vpn |  PSK(预共享秘钥)
+
+201.1.2.10       %any:          PSK    "randpass" 
+
+----------------------------------------
+>systemctl start ipsec
+
+ss -tunlp | grep pluto
+
+
+4500  |  500  端口
+
+
+
+vpn--------------------------
+
+>yum -y install xl2tpd-1.3.8-2.el7.x86_64.rpm 
+装包
+
+
+>vim  /etc/xl2tpd/xl2tpd.conf    
+ 32 
+   192.168.3.128-192.168.3.254
+33  
+    201.1.2.10
+
+>vim /etc/ppp/options.xl2tpd   
+16 + #   10 + #
+21  去掉 "# + 空格" 
+
+>vim /etc/ppp/chap-secrets 
+
+用户名 *(服务器名) 密码 *(客户端ip)
+
+tom * 123456 *
+
+
+
+  win10 不用  直接 vpn 
+
+    单击"开始"，单击"运行"，键入"regedit"，然后单击"确定"
+    找到下面的注册表子项，然后单击它：
+    HKEY_LOCAL_MACHINE\ System\CurrentControlSet\Services\Rasman\Parameters
+    在"编辑"菜单上，单击"新建"->"DWORD值"
+    在"名称"框中，键入"ProhibitIpSec"
+    在"数值数据"框中，键入"1"，然后单击"确定"
+    退出注册表编辑器，然后重新启动计算机
+
+
+
+
+网络设备   路由器
+
+
+
+
+
+
+
+NTP 时间服务器
+
+[root@proxy ~]# yum -y install chrony
+
+cat /etc/chrony.conf
+    .. ..
+server 0.centos.pool.ntp.org iburst         //server用户客户端指向上层NTP服务器
+allow 192.168.4.0/24                        //允许那个IP或网络访问NTP
+#deny  192.168.4.1                        //拒绝那个IP或网络访问NTP
+local stratum 10                            //设置NTP服务器的层数量
+    .. ..
+
+systemctl  restart  chronyd
+systemctl  enable   chronyd
+
+
+[root@client ~]# yum -y install chrony
+
+[root@client ~]# vim /etc/chrony.conf
+server 192.168.4.5 iburst                //设置
+date  -s  "hour:minute"     
+systemctl  restart  chronyd
+
+date   
+
+
+
+
+
+
+ProhibitIpSec
+
+
+
+
+
+

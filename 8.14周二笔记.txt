@@ -1,0 +1,176 @@
+
+
+
+
+
+
+
+
+0a、破解 root 密码 
+1）重启虚拟机 server，出现 GRUB 启动菜单时按 e 键进入编辑状态 
+2）找到 linux16 所在行，末尾添加 rd.break console=tty0，按 Ctrl+x 键进恢复模式 
+3）以可写方式挂载硬盘中的根目录，并重设 root 密码： 
+switch_root:/# mount  -o  remount,rw  /sysroot    #以可读写方式重新挂载根系统 
+switch_root:/# chroot  /sysroot/                  #切换到根系统 
+sh-4.2# echo  redhat  |  passwd  --stdin  root    #设置考试指定的密码 
+sh-4.2# touch  /.autorelabel                      #标记下一次启动重做 SELinux 标签 
+sh-4.2# exit switch_root:/# reboot 
+ 
+
+
+
+
+
+[root@server0 ~]# ls -Zd /var/www/
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /var/www/
+[root@server0 ~]#                         //httpd专有权限se可识别
+                                         //se允许运行
+
+[root@server0 ~]# ls -Zd /webroot
+drwxr-xr-x. root root unconfined_u:object_r:default_t:s0 /webroot
+                                                                             //此处权限不同
+
+[root@server0 ~]# chcon -R --reference=/var/www /webroot/
+                                        //递归   --refence=模板目录 新目录(要修改的目录文件)
+                                                           //样板全部复制
+    利用root权限给予其他运行程序权限以通过SElinux的强制管制(标记)状态
+
+[root@server0 ~]# ls -Zd /var/www/
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /var/www/
+[root@server0 ~]# ls -Zd /webroot
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /webroot
+[root@server0 ~]# 
+
+
+
+动态网站  原型为F12中的 php语言
+
+
+
+
+[root@server0 ~]# yum -y insstall mod_ssl
+已加载插件：langpacks
+没有该命令：insstall。请使用 /usr/bin/yum --help
+[root@server0 ~]# yum -y install mod_ssl
+已加载插件：langpacks
+正在解决依赖关系
+--> 正在检查事务
+---> 软件包 mod_ssl.x86_64.1.2.4.6-17.el7 将被 安装
+--> 解决依赖关系完成
+
+依赖关系解决
+
+=====================================================================
+ Package      架构        版本                   源             大小
+=====================================================================
+正在安装:
+ mod_ssl      x86_64      1:2.4.6-17.el7         rhel_dvd       97 k
+
+事务概要
+=====================================================================
+安装  1 软件包
+
+总下载量：97 k
+安装大小：219 k
+Downloading packages:
+mod_ssl-2.4.6-17.el7.x86_64.rpm                 |  97 kB   00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  正在安装    : 1:mod_ssl-2.4.6-17.el7.x86_64                    1/1 
+  验证中      : 1:mod_ssl-2.4.6-17.el7.x86_64                    1/1 
+
+已安装:
+  mod_ssl.x86_64 1:2.4.6-17.el7                                      
+
+完毕！
+[root@server0 ~]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf  README    userdir.conf
+nsd01.conf      nsd03       ssl.conf  welcome.conf
+[root@server0 ~]# rm -rf /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      README          userdir.conf
+nsd01.conf      nsd03/          ssl.conf        welcome.conf
+[root@server0 ~]# rm -rf /etc/httpd/conf.d/nsd03/
+[root@server0 ~]# ls /etc/httpd/conf.d/nsd03/
+ls: 无法访问/etc/httpd/conf.d/nsd03/: 没有那个文件或目录
+[root@server0 ~]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf  ssl.conf      welcome.conf
+nsd01.conf      README      userdir.conf
+[root@server0 ~]# 
+[root@server0 ~]# cd /etc/pk
+pkcs11/ pki/    
+[root@server0 ~]# cd /etc/pki/tls/certs/
+[root@server0 certs]# ls
+ca-bundle.crt        localhost.crt    Makefile
+ca-bundle.trust.crt  make-dummy-cert  renew-dummy-cert
+[root@server0 certs]# wget http://classroom.example.com/pub/tls/certs/server0.crt
+--2019-08-14 15:59:09--  http://classroom.example.com/pub/tls/certs/server0.crt
+正在解析主机 classroom.example.com (classroom.example.com)... 172.25.254.254
+正在连接 classroom.example.com (classroom.example.com)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：3505 (3.4K)
+正在保存至: “server0.crt”
+
+100%[===========================>] 3,505       --.-K/s 用时 0s      
+
+2019-08-14 15:59:09 (484 MB/s) - 已保存 “server0.crt” [3505/3505])
+
+[root@server0 certs]# ls
+ca-bundle.crt        localhost.crt    Makefile          server0.crt
+ca-bundle.trust.crt  make-dummy-cert  renew-dummy-cert
+[root@server0 certs]# wget http://classroom.example.com/pub/example-ca.crt
+--2019-08-14 16:02:53--  http://classroom.example.com/pub/example-ca.crt
+正在解析主机 classroom.example.com (classroom.example.com)... 172.25.254.254
+正在连接 classroom.example.com (classroom.example.com)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：1220 (1.2K)
+正在保存至: “example-ca.crt”
+
+100%[===========================>] 1,220       --.-K/s 用时 0s      
+
+2019-08-14 16:02:53 (258 MB/s) - 已保存 “example-ca.crt” [1220/1220])
+
+[root@server0 certs]# ls
+ca-bundle.crt        localhost.crt    renew-dummy-cert
+ca-bundle.trust.crt  make-dummy-cert  server0.crt
+example-ca.crt       Makefile
+[root@server0 certs]# cd /etc/pki/tls/certs/
+[root@server0 certs]# ls
+ca-bundle.crt        localhost.crt    renew-dummy-cert
+ca-bundle.trust.crt  make-dummy-cert  server0.crt
+example-ca.crt       Makefile
+[root@server0 certs]# cd /etc/pki/tls/private/
+[root@server0 private]# ls
+localhost.key
+[root@server0 private]# wget http://classroom.example.com/pub/tls/private/server0.key
+--2019-08-14 16:07:04--  http://classroom.example.com/pub/tls/private/server0.key
+正在解析主机 classroom.example.com (classroom.example.com)... 172.25.254.254
+正在连接 classroom.example.com (classroom.example.com)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：916
+正在保存至: “server0.key”
+
+100%[===========================>] 916         --.-K/s 用时 0s      
+
+2019-08-14 16:07:04 (234 MB/s) - 已保存 “server0.key” [916/916])
+
+[root@server0 private]# ls
+localhost.key  server0.key
+[root@server0 private]# vim /etc/httpd/conf.d/ssl.conf 
+[root@server0 private]# systemctl restart hpptd
+Failed to issue method call: Unit hpptd.service failed to load: No such file or directory.
+[root@server0 private]# systemctl restart httpd
+
+
+
+
+
+
+
+
+
+
+
+
+

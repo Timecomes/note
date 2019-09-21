@@ -1,0 +1,52 @@
+bind
+  named
+ /var/named/chroot
+ 
+ 主配置文件 /ect/named.conf   #设置本DNS负责解析的域名
+
+ 
+ 地址库文件 /var/named  #完整的主机名与ip地址的对应关系
+
+
+ 装包 
+
+
+        搭建DNS服务器  
+修改配置文件
+vim /etc/named.conf    //先备份一个 named.bak
+
+
+options {
+        directory       "/var/named";
+};
+zone "tedu.cn" IN {        (有修改)   //设置负责解析的域名
+        type master;       //本服务为权威DNS
+        file "tedu.cn.zone";    //设置地址库文件名 
+                                                 //此处为自建文件 名字要统一
+};
+
+创建新的地址库文件
+
+
+保证用户named对文件有 读 权限
+
+
+
+/etc/host    可以DNS域名解析作用
+
+
+
+DNS
+ NS 解析记录
+ A 解析记录
+ CNAME 解析记录
+
+
+
+
+
+
+
+
+
+

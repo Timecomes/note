@@ -1,0 +1,119 @@
+缺省路由 
+优先级最低  就算是0.0.0.0 0 也不会优先选择该路由器
+ 访问外网
+路由动态+静态  完全体
+tcp
+
+
+路由器  ip
+dis ip in b 
+
+
+acl
+高级 3000-3999   限制进出
+       源ip 
+acl 3000
+  rule deny tcp source 192.168.2.1 0 destination
+192.168.1.1 0 destination-port eq 21
+
+undo rule 5
+
+
+
+
+识别  内网 <  > 外网
+
+NAT 网络地址转换  可以将内部私有地址与外部公有地址相互转换
+实现内外互通的目的
+节约公网ip,增加安全
+ 
+A 1-127 
+B 128-191
+C 192-223
+
+私有地址范围
+
+A 10.0.0.0 - 10.255.255.255
+B 172.16.0.0 - 172.31.255.255
+C 192.168.0.0 - 192.168.255.255
+
+------------==========-------------=========-------------
+NAT 
+静态转换  1对1  适合服务器对外发布服务的环境 
+  双方均可发起链接     web服务器
+easy ip 1对多 适合仅仅访问外网的需求,如办公室环境 员工上网
+只能由内向外发起数据请求
+
+
+in 内网出口端口           单主机 ----单外网ip
+in g0/0/1
+nat static global 100.0.0.2 inside 192.168.2.1 
+                     外网                             内网
+
+
+esay ip        多主机  --只关联一个外网ip
+acl 2000
+ rule permit source any    #允许所有
+ in g0/0/1
+  nat outbound 2000
+
+
+vrrp 虚拟路由冗余协议  网关备份
+
+vrrp三个角色
+主路由器  备份路由器  虚拟路由器
+
+in v 1
+vrrp vrid 1 virtual-ip 192.168.1.254
+只要virid 组相同 vlan 不同也可以 
+
+vrrp vrid 1 priority 105
+                        #修改优先级 默认100 这样就能调整主从
+
+dis vrrp brief   查看状态
+ 
+
+dis ip routing-table | in /24
+
+
+
+acl 2000
+ rule permit source any
+in g0/0/2
+ nat outbound 2000
+
+配静态路由
+ip route-static 0.0.0.0 0 100.0.0.10
+
+ospf 
+default-route-advertise
+
+访问外网  使用默认路由
+达成 下一跳
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

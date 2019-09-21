@@ -1,0 +1,215 @@
+${变量名 :} 替换
+${变量名 /} 替换
+${变量名 #} 掐头
+${变量名 %} 去尾
+grep "[ad]" /user  带a和b的 
+grep "^root" /user 以root开头的
+grep "in$" /user   以in结尾的
+grep "[^in]" /user 以in结尾相反的    取反
+grep "ro.t"  /user 任意单个字符   搜索ro t(中间为任意单个字符)
+grep "r*"  /user   匹配r任意次数 0次也会有输出
+grep "ro*t" /user   >>可能结果  >> * 只匹配前一个字符
+rt  /   rot   /root  /rooot  /roo...oot  
+grep ".*" /user    整个文档 任意字符任意次数  包含空格/回车行 
+grep "  "    加引号搜索 系统可能报错
+grep "." /user  整个文档 包含有空格 不显示只有回车的行 
+grep "ro\{1,2\}t" /user  匹配o 1-2次
+grep "ro\{2\}t"  /user   匹配o 2次
+grep "ro\{1,\}t" /user   匹配o 一次以及一次以上
+grep "\(0:\)\{2\}" /user 匹配( 0: )     2次
+            \(\)  保留 整体
+\{\}    \(0:0\)\{1,2\}
+grep "0:\{2\}" /user     搜索 0::
+grep "\(0:\)\{2\}" /user 搜索 0:0:
+egrep "0:+" /user  搜索( 0: )     ( : ) 匹配 一次及以上 
+grep -E 可支持扩展正则   ====   egrep
+egrep "ro+t" /user 
+
+grep "bi\{0,1\}n" /user
+egrep "bi?n" /user   搜所( i )    (?) 最多匹配一次
+
+grep "ro\{2\}t" /user
+egrep "ro{2}t" /user
+
+grep "\(0:\)\{2\}" /user
+egrep "(0:){2}" /user
+
+egrep "ro|in" /user  搜索两个单词 ro  in
+grep [rn]  /user   搜索字母
+egrep "r|n" /user  搜索单词    |  或者
+
+grep the /user  >>带the 的一行全输出
+egrep "\bthe\b" /user 只输出 the 这个单词   \b 界限
+特殊符号不算还是会输出     可单独出现
+
+精准匹配 默认用反撇 大括号 小括号 执行
+值为空时  使用默认值
+
+
+ echo ${p:-123456} | passwd --stdin lisi
+
+
+grep -以行为单位搜索
+
+
+    sed  修改文本内容  非交互式  流式编辑器
+                支持正则表达式 工作方式是逐行处理   
+
+   1.  sed 选项 (定位/址)指令  被处理方式
+          2.  前置命令 | sed  选项  (定址符)指令    
+               前置命令 >>用处>> 文件何处而来
+
+选项  (可用可不用 需要时再使用)
+  -n   屏蔽默认输出  (不屏蔽会重复输出一次)
+  -r   支持扩展正则
+  -i   写入文件   >>>>最重要 修改文件   in-place
+指令   (必须有)
+   p  输出
+   d  删除
+   s  替换
+
+sed -n '2p' /user  查看文件user的第2行
+
+sed -n '2,3p' /user 文件的2~3行
+
+sed -n '1p;4p' /user 文件的第1行和文件的第4行 ( ; ) 分隔前后
+
+sed -n '3,+10p' /user  文件的第3行及之后10行
+
+sed -n '1~2p' /user  输出奇数行 
+        1行输出2行不输出3行输出4行不输出
+ 
+
+正则 + sed
+sed -n '/root/p' /user 有root单词的行
+sed -n '1p' /user 第一行
+sed -n '/bash$/p' /user 以bash结尾的行
+
+sed -n '=' /user  文档只显示行号 
+sed -n '$=' /user   最后一行为多少行
+
+删除时没有输出 要开启默认输出选项
+sed 'd' /user 全删
+sed '1d' /user 第一行没了
+sed '2,4d' /user 2-4行没了 只剩1,5行
+sed '3,+2d' /user 第三行开始和之后两行
+sed '2d;5d' /user 第二和第五行
+
+sed '/xml/!d' /user    ! 取反
+sed -i '1,3d' user  默认没有输出 但实际执行
+
+sed   s替换  (s/旧/新/选项)  默认情况只换一个
+  但会逐行进行
+
+
+2017 2011 2018 
+2017 2017 2024 
+2017 2017 2017
+
+sed 's/2017/xxxx/' txt
+每行第一个
+
+sed 's/2017/xxxx/2' txt
+每行第二个
+sed '3s/2017/xxxx/3' txt
+三行 第三个
+
+
+[root@server0 5周五了]# sed '3s/2017/xxxx/1;3s/2017/xxxx/2' test1.txt 
+2017 2011 2018
+2017 2017 2024
+xxxx 2017 xxxx
+
+您在 /var/spool/mail/root 中有新邮件
+[root@server0 5周五了]# sed '3s/2017/xxxx/1;3s/2017/xxxx/' test1.txt 
+2017 2011 2018
+2017 2017 2024
+xxxx xxxx 2017
+
+当第一运行完成时  第三行 此时变为 xxxx 2017 2017
+第二个修改命令 为修改第二个2017
+故修改的是第三的2017而不是第二的2017
+
+---------------------------------------------------------------------
+
+[root@server0 5周五了]# sed '3s/2017//2' test1.txt 
+2017 2011 2018
+2017 2017 2024
+2017  2017
+
+
+[root@server0 5周五了]# sed '3s/2017/    /2' test1.txt 
+2017 2011 2018
+2017 2017 2024
+2017      2017
+
+[root@server0 5周五了]# sed 's/2017/xxxx/g' test1.txt 
+xxxx 2011 2018                (g全换)
+xxxx xxxx 2024
+xxxx xxxx xxxx
+
+[root@server0 5周五了]# sed 's/2017 //g' test1.txt 
+2011 2018                                   精准匹配 '2017 '后有空格
+2024                                    所以最后一个2017 没有替换掉
+2017
+
+
+
+可以删除单个 与d指令区分
+
+
+[root]# sed -n 's/bash/xxxx/p' /etc/passwd
+            (-n同时加上)             (p辅助工具显示换了哪些)
+root:x:0:0:root:/root:/bin/xxxx
+student:x:1000:1000:Student User:/home/student:/bin/xxxx
+lisi:x:1001:1001::/home/lisi:/bin/xxxx
+dc:x:1002:1002::/home/dc:/bin/xxxx
+cd:x:1003:1003::/home/cd:/bin/xxxx
+1:x:1004:1004::/home/1:/bin/xxxx
+lisan:x:1005:1005::/home/lisan:/bin/xxxx
+zhangsan:x:1006:1006::/home/zhangsan:/bin/xxxx
+wangwu:x:1007:1007::/home/wangwu:/bin/xxxx
+ 
+-----------------------------------------------------------------------
+
+       sed 's/bin\/bash/sbin\/sh/' user
+
+
+[root]# sed 's/\/bin\/bash/\/sbin\/sh/' user 
+root:x:0:0:root:/root:/sbin/sh
+
+    将/bin/bash 改为 /sbin/sh
+ 直接填入系统报错  反斜杠 可以取消定义   不是最好的办法
+
+  1~0 上的 特殊符号可以当替换符
+
+[root]# sed 's!/bin/bash!/sbin/sh!' user 
+root:x:0:0:root:/root:/sbin/sh
+
+[root]# sed 's(/bin/bash(/sbin/sh(' user 
+root:x:0:0:root:/root:/sbin/sh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

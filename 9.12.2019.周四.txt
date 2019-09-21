@@ -1,0 +1,205 @@
+听说 你叫集群?
+
+upstream webserver{
+     server 192.168.2.100:80;  #ip:端口;
+     server 192.168.2.200:80;  #定义集群
+
+}
+#使用upstream定义后端服务器集群，集群名称任意(如webserver)
+#使用server定义集群中的具体服务器和端口
+
+
+
+server {
+        listen        80;
+        server_name  localhost;
+            location / {
+            proxy_pass http://webserver;
+        }           #调用集群
+          #通过proxy_pass将用户的请求转发给webserver集群
+
+如此将实现 访问 当前ip时 跳转访问的是 集群中网址的其中一个 
+  网站
+
+集群优先级 比config文件内的 本地 root 高 可以直接加在 原有
+location 命令行中
+
+  location / {
+            root   html;
+           index  index.html index.htm;
+          proxy_pass http://webserver;
+            #   直接加入 就行
+        }
+
+
+upstream webserver {
+    # server 192.168.2.100:80;
+    # server 192.168.2.200:80;
+server 192.168.2.100 weight=1 max_fails=1 fail_timeout=30;
+server 192.168.2.200 weight=2 max_fails=2 fail_timeout=30;
+server 192.168.2.101 down;
+}
+
+
+#weight设置服务器权重值，默认值为1  数字越大输出次数越多
+        为2时 三次访问 2次 分给 ip的次数多
+
+#max_fails设置最大失败次数
+#fail_timeout设置失败超时时间，单位为秒
+设定秒数 下一次 每20秒再次访问web 看是否修复
+        再次访问时间  有默认值
+#down标记服务器已关机，不参与集群调度
+.. ..
+
+健康检查  当某一个web 失效时 自动关闭对该web的访问
+
+
+有 bug  当 使用web1 时 刷新网页后 重新连接web 可能联向web2
+有密码验证时 
+
+默认访问 为轮询
+相同客户端访问相同web服务器
+记住客户端  
+
+upstream webserver {
+#通过ip_hash设置调度规则为：相同客户端访问相同服务器
+                 ip_hash;
+                server 192.168.2.100 weight=1 max_fails=2 fail_timeout=10;
+                server 192.168.2.200 weight=2 max_fails=2 fail_timeout=10;
+        }
+
+
+
+只能通过 http服务   samba ftp mysql 不能代理
+
+如何实现  代理
+1.9版本之后支持 代理
+默认不支持 需要安装模块 --with-stream
+
+
+[root@proxy ~]# yum -y install gcc pcre-devel openssl-devel        //安装依赖包
+[root@proxy ~]# tar  -xf   nginx-1.12.2.tar.gz
+[root@proxy ~]# cd  nginx-1.12.2
+[root@proxy nginx-1.12.2]# ./configure   \
+>--with-http_ssl_module    //开启SSL加密功能
+> --with-stream      开启4层反向代理功能       
+
+
+
+
+
+stream {
+upstream backend {
+server 192.168.2.100:22;    #:3306;  数据库
+server 192.168.2.200:22;
+}
+server {
+listen 12345;   #一定有监听
+proxy_connect_timeout 1s;  #超时时间 例子 可有可无
+proxy_timeout 3s;  #可有可无
+proxy_pass backend;
+}
+}
+在 http 外 书写此 ssh远程连接命令
+
+#http {
+ #   include       mime.types;
+     #此处只是表明以下为http的地盘
+
+[root@client ~]# ssh 192.168.4.5 -p12345
+           ssh 连接时 -p 端口 一定要 否则 会连接4.5的机器
+
+
+
+
+
+
+
+
+脚本 语法不重要 
+重要的是内容  能运行的命令
+
+
+如何区分 手机网页 与 pc端的网页
+当输入 相同网页 ip地址 时 分开 进入网页
+
+
+if ( 如何辨别 firefox ){
+ rewrit /(.*)
+}
+
+                                    ~ 正则比较 *不区分大小写
+if ($http_user_agent ~* firefox) {     
+                        //识别客户端firefox浏览器
+rewrite ^(.*)$  /firefox/$1;
+}
+
+$http_user_agent  ( nginx内置变量 客户端的浏览器信息)
+
+$http_user_agent=msie7.0  #ie浏览器
+$http_user_agent=firefox36  #火狐浏览器
+取决与客户端 访问时使用的浏览器 等各种信息
+
+[student@room9pc01 ~]$ curl 192.168.4.5/test.html
+i am normal page
+
+curl 可以显示网页内容 以源码形式显示 并且直接在终端显示结果
+不跳转浏览器
+
+
+）地址重写格式【总结】
+
+rewrite 旧地址 新地址 [选项];
+
+last 不再读其他rewrite
+rewrite /a.html /b.html;
+rewrite /b.html /c.html;    #访问a会跳转到c
+
+rewrite /a.html /b.html last; #last匹配将停止 其他该读还读
+rewrite /b.html /c.html;  #访问a跳到b;访问b跳到c
+
+
+
+
+break 不再读其他语句，结束请求
+
+location /a.html {
+rewrite /a.html /b.html;
+}
+location /b.html {
+rewrite /b.html /c.html;
+}     #访问a将跳转到c 在第一句/b.html后加last 将不起作用
+         a还将跳转到c
+
+location /a.html {
+rewrite /a.html /b.html break; #break 到此请求结束
+}
+location /b.html {
+rewrite /b.html /c.html;
+}
+
+
+
+redirect 临时重定向
+
+permament 永久重定向
+
+
+状态码
+200正常
+300 重定向
+400 用户错  用户密码 
+500 服务器错  502 集群失败  500 服务器内部错
+
+
+
+
+
+
+
+
+
+
+
+
+

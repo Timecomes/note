@@ -1,0 +1,365 @@
+
+
+
+
+
+[root@server0 ~]# vim /root/hello.sh      //hello world
+[root@server0 ~]# /root/hello.sh
+-bash: /root/hello.sh: 权限不够
+[root@server0 ~]# chmod +x /root/hello.sh 
+[root@server0 ~]# /root/hello.sh 
+/root/hello.sh:行1: hello: 未找到命令
+[root@server0 ~]# vim /root/hello.sh     //echo hello world
+[root@server0 ~]# /root/hello.sh 
+hello world
+
+
+       >正确输出
+      2>错误输出
+      &>正确和错误输出
+    ' '  单引号 >>>>> 取消字符的特殊意义 原样输出
+     /dev/null >>>>>>黑洞设备,专用于不需要的输出信息
+        变量 类似容器          |__________ |
+                                      |                 |
+                                      |                 |
+                     |     $a  | 
+                                      |                 |
+                                      |__________ |
+
+                 echo ${a}
+
+     $( ) 或 ` ` 反撇号 将命令的输出作为参数 
+
+
+
+
+
+[root@server0 ~]# echo 123 > /opt/1.txt
+[root@server0 ~]# cat /opt/1.txt
+123
+[root@server0 ~]# cat /opt/1.txt  /a
+123
+cat: /a: 没有那个文件或目录
+[root@server0 ~]# cat /opt/1.txt  /a > /opt/nsd.txt
+cat: /a: 没有那个文件或目录
+[root@server0 ~]# cat /opt/nsd.txt 
+123
+[root@server0 ~]# cat /opt/1.txt  /a 2> /opt/nsd.txt 
+123
+[root@server0 ~]# cat /opt/nsd.txt 
+cat: /a: 没有那个文件或目录
+[root@server0 ~]# cat /opt/1.txt  /a $> /opt/nsd.txt 
+cat: /a: 没有那个文件或目录
+cat: $: 没有那个文件或目录
+[root@server0 ~]# cat /opt/1.txt  /a &> /opt/nsd.txt 
+[root@server0 ~]# cat /opt/nsd.txt 
+123
+cat: /a: 没有那个文件或目录
+
+
+
+#!/bin/bash
+a=nsd02
+useradd $a &> /dev/null
+echo 用户$a创建成功
+echo 123 | passwd --stdin $a &> /dev/null
+echo 用户$a密码设置成功
+
+
+[root@server0 ~]# a=100       变量赋值 + ''  $  '' 符号才能输出变量所赋的值
+[root@server0 ~]# echo a
+a
+[root@server0 ~]# echo $a
+100
+
+
+--------------------------------------------------------------变量------------------------------------------
+
+[root@server0 ~]# vim /root/user.sh 
+[root@server0 ~]# /root/user.sh 
+请输入您要创建的用户名1
+请设置密码1
+用户1创建成功
+用户1密码设置成功
+
+#!/bin/bash
+read -p '请输入您要创建的用户名' a
+read -p '请设置密码' b
+useradd $a &> /dev/null
+echo 用户$a创建成功
+echo $b | passwd --stdin $a &> /dev/null
+echo 用户$a密码设置成功
+
+
+------------------------------------------------------------------------------------------------------------
+[root@server0 ~]# a=rhel
+[root@server0 ~]# echo $a
+rhel
+[root@server0 ~]# echo $a7
+
+[root@server0 ~]# echo ${a}7
+rhel7
+[root@server0 ~]# b=8
+[root@server0 ~]# echo ${a}${b}
+rhel8
+[root@server0 ~]# echo $a$b
+rhel8
+----------------------------------------------------------
+
+[root@server0 ~]# date 
+2019年 08月 08日 星期四 11:33:37 CST
+[root@server0 ~]# date +%F  //显示年月日
+2019-08-08
+
+
+
+
+mkdir nsd-$(date +%F)
+[root@server0 ~]# mkdir /nsd-$(date +%F)
+[root@server0 ~]# ls
+anaconda-ks.cfg  Documents  hello.sh  nsd-2019-08-08  Public     user.sh
+Desktop          Downloads  Music     Pictures        Templates  Videos
+
+[root@server0 ~]# mkdir abc-`hostname`
+[root@server0 ~]# ls
+abc-server0.example.com  Documents  Music           Public     Videos
+anaconda-ks.cfg          Downloads  nsd-2019-08-08  Templates
+Desktop                  hello.sh   Pictures        user.sh
+
+[root@server0 ~]# mkdir $(hostname)-$(date +%F)
+[root@server0 ~]# ls
+abc-server0.example.com  hello.sh        server0.example.com-2019-08-08
+anaconda-ks.cfg          Music           Templates
+Desktop                  nsd-2019-08-08  user.sh
+Documents                Pictures        Videos
+Downloads                Public
+
+
+
+
+---------------------------------------------------------------------------------------------------------
+
+
+[root@server0 ~]# echo $USER   //当前系统登录用户名
+root
+[root@server0 ~]# su - 1
+[1@server0 ~]$ echo $USER
+1
+
+[root@server0 ~]# /root/user.sh 
+请输入您要创建的用户名dc
+请设置密码1
+用户dc创建成功
+用户dc密码设置成功 密码为1
+[root@server0 ~]# su - dc
+[dc@server0 ~]$ echo $USER
+dc
+
+
+[root@server0 ~]# vim /root/2.sh
+
+#!/bin/bash
+cat -n $1 | head -$2
+
+[root@server0 ~]# /root/2.sh /etc/passwd 3
+     1	root:x:0:0:root:/root:/bin/bash
+     2	bin:x:1:1:bin:/bin:/sbin/nologin
+     3	daemon:x:2:2:daemon:/sbin:/sbin/nologin
+
+
+[root@server0 ~]# chmod +x /root/2.sh 
+[root@server0 ~]# /root/2.sh /etc/passwd
+     1	root:x:0:0:root:/root:/bin/bash
+     2	bin:x:1:1:bin:/bin:/sbin/nologin
+     3	daemon:x:2:2:daemon:/sbin:/sbin/nologin
+     4	adm:x:3:4:adm:/var/adm:/sbin/nologin
+     5	lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+     6	sync:x:5:0:sync:/sbin:/bin/sync
+     7	shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+     8	halt:x:7:0:halt:/sbin:/sbin/halt
+     9	mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+    10	operator:x:11:0:operator:/root:/sbin/nologin
+[root@server0 ~]# vim /root/3.sh
+
+#!/bin/bash
+echo $1
+echo $2 
+echo $3
+
+
+[root@server0 ~]# chmod +x /root/3.sh 
+[root@server0 ~]# /root/3.sh harry tom zhangsan
+harry
+tom
+zhangsan
+
+----------------------------------------------------------------------------
+
+        $#    显示运行所输入的参数个数
+          //用于 判断用户是否输入参数
+
+#!/bin/bash
+echo $1
+echo $2 
+echo $3
+echo $#
+
+[root@server0 ~]# /root/3.sh aa bb cc dd ee
+aa
+bb
+cc
+5
+
+[root@server0 ~]# /root/3.sh 
+
+
+
+0
+
+---------------------------------------------------------------------------
+
+[root@server0 ~]# $?
+bash: 0: 未找到命令...
+[root@server0 ~]# echo $?          // $? = 0 时 上一程序成功运行
+127                                          //$?  ≠ 0 时上一程序运行失败
+[root@server0 ~]# echo $?
+0
+
+---------------------------------------------------------------------------
+
+
+[root@server0 ~]# [ -e /etc ]         //判断 /etc 是否存在
+[root@server0 ~]# echo $?
+0                                               //运行成功 /etc 存在且为真
+[root@server0 ~]# [ -e /ete ]         //判断 /ete 是否存在
+[root@server0 ~]# echo $?
+1                                             // != 0 /ete 不存在 为假
+[root@server0 ~]# [ -d /etc/passwd ]        //判断 是否有 /etc/passwd 文件夹
+[root@server0 ~]# echo $?
+1                                                         // != 0 不存在 /etc/passwd 文件夹
+[root@server0 ~]# [ -f /etc/passwd ]       //判断 是否存在 /etc/passwd 文件
+[root@server0 ~]# echo $?
+0                                                       // == 0   存在
+
+
+
+---------------------------------------------------------------------------------------------------------
+
+[root@server0 ~]# [ 1 -eq 12 ]            -eq  等于
+[root@server0 ~]# echo $?                 -gt  大于   
+ 1                                        -ge  大于等于
+[root@server0 ~]# [12 -gt 21 ]            -le  小于等于
+bash: [12: 未找到命令...                          -lt  小于
+[root@server0 ~]# [ 12 -gt 21 ]           -ne  不等于
+[root@server0 ~]# echo $?                  ==  一致为真
+1                                                       !=  不一致为真
+ [root@server0 ~]# [ 11 -ge 11 ]         $? = 0 时 上一程序成功运行
+[root@server0 ~]# echo $?                $?  ≠ 0 时上一程序运行失败
+0                                                    $#   显示运行所输入的参数个数
+[root@server0 ~]# [12  -le 12 ]
+bash: [12: 未找到命令...
+[root@server0 ~]# [ 12  -le 12 ]
+[root@server0 ~]# echo $?
+0
+[root@server0 ~]# [ 11 -le 13 ]
+[root@server0 ~]# echo $?
+0
+[root@server0 ~]# [ 12 -lt 11 ]
+[root@server0 ~]# echo $?
+1
+[root@server0 ~]# [  11 -ne 12 ]
+[root@server0 ~]# echo $?
+0
+[root@server0 ~]# [ 11 -gt 12   ]
+[root@server0 ~]# [ 11 -lt 12   ]  
+[root@server0 ~]# echo $?
+
+
+[root@server0 ~]# [ gob != goa ]
+[root@server0 ~]# echo $?
+0
+[root@server0 ~]# [ 119 != 119 ]
+[root@server0 ~]# echo $?
+1
+
+[root@server0 ~]# [ $USER == student ]
+[root@server0 ~]# echo $?
+1
+
+------------------------------------------------------------------------
+
+[root@server0 ~]# vim /root/if01.sh
+
+#!/bin/bash                               if条件
+if [ $1 -eq 1 ];then
+   echo 110
+else
+  echo 120
+fi
+
+
+[root@server0 ~]# chmod +x /root/if01.sh 
+[root@server0 ~]# /root/if01.sh 12
+120
+[root@server0 ~]# /root/if01.sh 1
+110
+
+
+#!/bin/bash
+if [ $# -eq 0 ];then
+ echo 您没有输入任何数
+else
+ echo 您输入了参数
+fi
+~                        
+
+
+
+
+
+#!/bin/bash
+if [ $# -eq 0 ];then
+ echo '/root/foo.sh redhat|fedora'
+elif [  $1 == redhat ];then
+   echo 'fedora'
+elif [ $1 == fedora  ];then
+  echo 'redhat'
+else
+
+ echo '/root/foo.sh redhat|fedora'
+fi
+~                                                                               
+~                                                                               
+~          
+
+-----------------============-------------=====-----------========-----------
+
+ #!/bin/bash
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+
+network="192.168.4"
+for sitenu in $(seq 1 254)
+do
+        ping -c 1 -w 1 > /dev/null 2>&1 && result=0 || result=1
+        if [ "$result" == 0 ]; then
+              echo "server ${network}.${sitenu} is up." 
+        else
+              echo "server ${network}.${sitenu} is down."
+        fi
+done
+
+
+                             
+
+
+
+
+
+
+
+
+
+

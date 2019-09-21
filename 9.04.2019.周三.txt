@@ -1,0 +1,374 @@
+    
+
+
+
+      [ 123 == 0123 ]      >>字符串 所以两个不同
+   [ 123 -eq 0123 ]  >>数字 所以两个相同
+
+
+  case 分支 相当于简化版的if 代码精简 功能<if
+
+
+    case 变量 in 
+   模式1)       [0-9] )  >>>>可以匹配0到9 十个数字
+        命令序列1;;     >>>>双分号
+    模式2)
+         命令序列2;;  
+..........
+          *)                        >>前面都没成功  到此处运行
+    默认序列
+   esac          >>>>反向书写
+最后一条 可以不用 双分号
+
+#!/bin/bash
+
+case $1 in
+t|T|tt|TT)     >>>> t|T) 可以识别大小写的tT 甚至更多
+ touch $2 ;;
+m|M)
+ mkdir $2 ;;
+r|R)
+ rm -rf $2 ;;
+*)
+  echo "t|m|r"
+esac   >>>结尾 一定要加  报错 会提示不存在的 末尾行 15行
+
+
+ case 编写小工具
+
+
+脚本安装程序
+  安装编译工具  gcc  openssl-devel  pcre-devel
+  安装 程序 ng
+  释放tar包  解压
+  亲自到目录下执行   不支持 systemctl
+
+你写的脚本  同时 所需文件 解压包都在当前文件夹下 
+
+#!/bin/bash
+#安装源码程序
+yum -y install gcc openssl-devel pcre-devel &> /dev/null
+# 安装的时候不建议 丢弃 看一看 是否有错 
+tar -xf nginx-1.12.2.tar.gz
+cd nginx-1.12.2
+./configure
+make
+make install    #安装
+
+
+cd 到 系统文件位置 /usr/local/nginx/sbin/下
+   运行文件下唯一文件  ./nginx
+关闭防火墙  systemctl stop firewalld
+查看是否安装 别的web 服务 报错 .80  暂停web服务
+/usr/local/nginx/sbin/nginx -s stop  #关闭nginx服务
+
+    netstat  查看各种数据 很全面 
+        -n 数字形式显示 端口号
+        -t 显示tcp连接的端口
+        -u     udp端口
+        -l  监听 端口
+        -p 显示
+
+    netstat -ntulp  |  grep :80  
+
+  直接运行数据太多   管道 给详细想查看的信息
+ -ntulp 整体一起用 好记
+grep -q 不显示输出 结果真
+
+
+
+---------------------------------------------------
+#!/bin/bash
+#case 工具 简单化 开启/关闭 nginx服务
+case $1 in
+st)
+      /usr/local/nginx/sbin/nginx
+            echo "启动"         ;;
+stop)
+      /usr/local/nginx/sbin/nginx -s stop
+            echo "我停了" ;;
+re)
+      /usr/local/nginx/sbin/nginx -s stop
+      /usr/local/nginx/sbin/nginx            
+      echo "我重启了"   ;; 
+
+ # 同一分支中只存在一个;; 并在最后加;;
+
+ls)
+   netstat  -ntulp | grep -q nginx
+   [ $? -eq 0 ] && echo "我开着的" || echo "我没开我是真的没有开" ;;
+*)
+      echo " st | stop | re "
+esac
+
+
+字符 改颜色
+
+
+echo -e "\033[32mABCD\033[0m"    没有空格
+                |ABCD \ 此处为返回默认颜色
+                             为输出的字
+        \033[32m 颜色
+            [33m 更换颜色
+
+===================================
+#!/bin/bash
+#case 工具 简单化 开启/关闭 nginx服务
+#添加函数 cocho 改变echo输出的颜色
+# cocho 31红  32绿 33黄 34蓝 35紫 36青 37白
+cocho (){
+echo -e "\033[$1m$2\033[0m"
+}
+
+
+case $1 in
+st)
+      /usr/local/nginx/sbin/nginx
+            cocho 32 "启动"         ;;
+stop)
+      /usr/local/nginx/sbin/nginx -s stop
+            cocho 31 "我停了" ;;
+re)
+      /usr/local/nginx/sbin/nginx -s stop
+      /usr/local/nginx/sbin/nginx           #同一分支中只存在一个;; 并在最后加 ;;    
+      cocho 32 "我重启了"   ;;
+
+ls)
+   netstat  -ntulp | grep -q nginx         #查看服务状态 开启与否  
+   [ $? -eq 0 ] && cocho 32 "我开着的" || cocho 31 "我没开我是真的没有开" ;;
+
+*)
+      echo " st 开 | stop 关 | re 重 | ls 查 "
+esac
+
+
+
+
+
+
+
+alias 别名 剪短   别名覆盖只能存一条
+
+加强版 别名
+     函数 可存多条
+
+格式1
+  function  函数名 {
+    命令序列
+      .........                #你想执行的各种函数
+    }
+
+
+格式2
+   
+      函数名(){           >>所以() 前的 是自己定义的啊 逼格
+       命令序列
+        ..........
+
+
+      }
+
+
+直接在命令行 就可以输入
+abc (){
+>ls -l
+>echo 123
+>}
+
+                > ----   回车后自动生成
+
+aaa (){ echo acca; echo bbc; echo zxc; echo ctrl; }
+-------------------------------------------------------------------
+#!/bin/bash      -----不要瞎点程序
+#fork 炸弹  必定死机
+.(){
+.|.&      #&扔后台了 高速必备 结果未出 开始下一次循环
+}
+.
+
+高速 进程 不建议在有任务的机器上使用
+--------------------------------------
+机器不行时 不加入后台 一次一次运行 不会跳过结束 直接下一次循环
+
+
+#!/bin/bash
+#扔后台
+#调用函数 ping 主机
+
+pping(){
+
+ping -c1 -W1 $1 &> /dev/null
+if [ $? -eq 0 ];then
+ echo "$1 is up"
+else
+  echo "$1 is down"
+fi
+}
+
+for i in {1..254}
+do
+ pping 192.168.4.$i &
+
+done
+wait    #wait 等待所有后台进程结束才结束
+
+
+如何实现 终止本次循环 不终止此脚本 
+exit >>终止脚本 退出脚本
+break >>终止循环,执行循环之后的任务  
+你循环没了 循环下面的代码还能运行
+continue >>终止当前循环,继续下一次循环  比上一条更细 
+------------------------------------------
+#!/bin/bash
+for i in {1..10}
+do
+  [ $i -eq 5 ] && break  #此循环结束  退出循环 执行之后的命令
+  echo $i
+done
+echo 1-4
+
+#!/bin/bash
+for i in {1..10}
+do
+ [ $i -eq 5 ] && continue     #此次循环结束 运行下一次循环
+  echo $i
+done
+echo "1-10 没有5  啊 !( ⊙ o ⊙ )！"
+  
+  控制字符串  处理  ( 截取切割
+                       进阶
+素材  
+[root@server0 3day]# a=`head -1 /etc/passwd`
+[root@server0 3day]# echo $a
+root:x:0:0:root:/root:/bin/bash  >>截取其中一段!
+来了他来了
+
+      ${变量名:起始位置:长度}
+                                   长度 : 几个字符
+         起始位置 从0 开始
+[root@server0 3day]# echo ${a:0:1}
+r     >>输出的结果                第一个字母 取一个字符
+
+[root@server0 3day]# echo ${a:0:1}   #取数时取第一位可以不写
+r
+[root@server0 3day]# echo ${a:0:2}  ${a::2}
+ro
+[root@server0 3day]# echo ${a:0:3}
+roo
+[root@server0 3day]# echo ${a:0:4}
+root
+[root@server0 3day]# echo ${a::4}
+root
+
+[root@server0 3day]# b=1802874632
+[root@server0 3day]# echo ${b:3:3}
+287
+
+
+$RANDOM
+
+#!/bin/bash
+x=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+n=$[RANDOM%62]
+p=${x:n:1}
+pass=$pass$p  >>>>此方法可将单个输出集合成一个组
+           旧+新 且不是计算 单个字符串的累积在一起
+
+
+
+n=$[RANDOM%62]#!/bin/bash
+x=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+for i in {1..8}
+do
+n=$[RANDOM%62]        #在你的x中 有0~61位数 并随机一个0~61之间的数字
+p=${x:n:1}            #随机获取的数为 对应的 x 中的一个字符串 只取一个数
+pass=$pass$p          #简单的字符串堆积在一起  >>想法很重要 简单 易忽略
+done
+echo $pass            #当前输出的是 累积在一起的一整组字符串
+
+
+字符串的替换
+    格式:  ${变量名/old/new}  输出的改变了 原始没变
+b=18045679  
+echo ${b/0/}  >>将b的0改为空
+1845679
+echo ${b/18/}
+045679
+
+字符串的删除     >>>>>         变量$的掐头去尾
+
+${变量名#*关键词}  从左往右删            掐头
+               关键词 >> 删到哪里 停
+单个# 不能容忍重复   两个##  无视重复只去只取最后
+
+[root]# echo $a
+root:x:0:0:root:/root:/bin/bash
+[root]# echo ${a#root}
+:x:0:0:root:/root:/bin/bash
+[root]# echo $a
+root:x:0:0:root:/root:/bin/bash
+[root]# echo ${a#root}
+:x:0:0:root:/root:/bin/bash
+
+[root]# echo ${a#*root}  >>错误
+:x:0:0:root:/root:/bin/bash
+[root]# echo ${a##*root} >>正确
+:/bin/bash              >>删除所有root前的所有
+
+[root]# echo ${a#*:root}   >>关键字删除
+:/root:/bin/bash            >>无重复 就可以
+
+从右往左删                        去尾
+${变量名称%关键词*}
+[root@server0 3day]# echo ${a%bash}
+root:x:0:0:root:/root:/bin/
+[root@server0 3day]# echo ${a%/*} >>从右往左第一个 /
+root:x:0:0:root:/root:/bin
+[root@server0 3day]# echo ${a%%/*}>> 最后一个 /
+root:x:0:0:root:
+
+
+实现 为文件修改后缀名
+脚本实现 批量修改 
+只是修改后缀
+
+
+#!/bin/bash
+#批量修改文件名
+#如果我想 改变别的文件后缀名
+
+for i in `ls *.txt`
+do
+  n=${i%.*}       #你要实现去尾  %.*去从右到左去到.      ???  就不用加别的数据?
+  mv $i $n.doc     #你要实现移动并修改后缀名
+
+
+done
+
+#for i in `ls *.$1`   #这个循环是为了修改不确定后缀名 并改为想要的后缀名
+#do
+#  n=${i%.*}       #你要实现去尾  %.*去从右到左去到.      ???  就不用加别的数据?
+#  mv $i $n.$2     #你要实现移动并修改后缀名
+#done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

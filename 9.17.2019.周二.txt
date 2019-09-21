@@ -1,0 +1,347 @@
+http nginx (PHP,python)
+LAMP,LNMP
+
+JAVA   -- 只支持一下软件做网页 与http,nginx
+tomcat,(oracle)weblogic,(IBM)websphere,(redhat)jboss  
+
+        cp -a   复制粘贴所有 递归 并不改变复制文件的属性
+
+                     web1
+client   poxy+数据库
+                     web2
+
+memcached 数据库(简单)
+key=value
+
+set  写 0 不压缩 180 储存时间 3 三个字节(必须为指定数量否则报错)
+get  查
+[root@proxy ~]# telnet 192.168.2.5 11211  #启动数据库
+
+set dc 0 180 4  #定义变量名 dc 不压缩  存180秒  4个字节
+ildc           #输入ildc 
+STORED         #存入成功
+get dc         #查看dc
+VALUE dc 0 4   #输出结果提示符
+ildc           #最终结果
+END
+
+
+add myname 0 180 10    //新建，myname不存在则添加，存在则报错
+set myname 0 180 10        //添加或替换变量
+replace myname 0 180 10    //替换，如果myname不存在则报错
+get myname                 //读取变量
+append myname 0 180 10     //向变量中追加数据
+delete myname              //删除变量
+flush_all                  //清空所有
+quit                       //退出登录   
+
+
+<?php
+$memcache=new Memcache;
+$memcache->connect('192.168.2.5',11211) or die ('could not connect!! ');
+$memcache->set('ke[root@web1 ~]# systemctl  restart  php-fpmy', 'test');
+$get_values=$memcache->get('key');
+echo $get_values;
+?>
+
+php脚本 不可用  由于 php没有安装 识别memcached的模块
+所以要安装  php-pecl-memcache 模块
+
+[root@web1 ~]# yum -y install  php-pecl-memcache
+
+[root@web1 ~]# vim  /etc/php-fpm.d/www.conf            //修改该配置文件的两个参数
+//文件的最后2行
+修改前效果如下:
+php_value[session.save_handler] = files
+php_value[session.save_path] = /var/lib/php/session
+
+
+
+修改后效果如下:
+php_value[session.save_handler] = memcache
+php_value[session.save_path] = "tcp://192.168.2.5:11211"
+//定义Session信息存储在公共的memcached服务器上，主机参数中为memcache（没有d）
+//通过path参数定义公共的memcached服务器在哪（服务器的IP和端口）
+
+
+[root@web1 ~]# systemctl  restart  php-fpm
+
+
+
+
+
+脚本文件 自动安装并配置 php文件
+
+#!/bin/bash
+
+yum -y install gcc pcre-devel openssl-devel
+#安装 源码包 安装解释器 
+
+cd /opt/2/
+tar -xf lnmp_soft.tar.gz
+cd lnmp_soft/
+tar -xf nginx-1.12.2.tar.gz
+cd nginx-1.12.2
+./configure --with_ssl_module
+make
+make install
+#解压源码包  下载nginx 程序
+
+
+yum -y install mariadb mariadb-server mariadb-devel
+yum -y install php php-fpm php-mysql php-pecl-memcache
+#下载 数据库mariadb 和php动态网页编辑器 同时下载 php对memcache 的支持模块 以便使用数据库
+
+
+systemctl stop httpd
+systemctl start mariadb
+systemctl start php-fpm
+#关闭可能存在冲突的 80端口 httpd服务 开启数据库和php服务
+
+
+sed -i '65,71s/#//' /usr/local/nginx/conf/nginx.conf
+sed -i '/SCRIPT_FILENAME/d' /usr/local/nginx/conf/nginx.conf
+sed -i 's/fastcgi_params/fastcgi.conf/' /usr/local/nginx/conf/nginx.conf
+sed -i '224s/files/memcache/' /etc/php-fpm.d/www.conf
+sed -i '225s/\/var\/lib\/php\/session/"tcp:\/\/192.168.2.5:11211"/' /etc/php-fpm.d/www.conf
+#修改配置文件 1 打开动态网页分流 当用户访问网站的 动态页面时 使用php翻译
+# 2 同上配置文件  不需要此行 删除
+# 3 修改本行原始数据 改为.conf
+# 4 此处为修改连接数据库的文件 由于是由 php软件转发 所以在/etc/php-fpm.d/www.conf下
+#修改 储存地点 由本地 改为 memcache
+
+
+systemctl restart mariadb
+systemctl restart php-rpm
+/usr/local/nginx/sbin/nginx
+
+
+
+
+
+
+
+
+[root]# yum -y install java-1.8.0-openjdk   //安装JDK
+[root@web1 ~]# yum -y install java-1.8.0-openjdk-headless        //安装JDK
+[root@web1 ~]# java -version         //查看JAVA版本
+
+
+[root@web1 ~]# ls /usr/local/tomcat
+bin/              //主程序目录
+lib/              //库文件目录
+logs/             //日志目录  
+temp/               //临时目录
+work/               //自动编译目录jsp代码转换servlet
+conf/               //配置文件目录
+webapps/            //页面目录
+
+
+
+启动服务
+[root@web1 ~]# /usr/local/tomcat/bin/startup.sh
+
+
+root@web1 ~]# netstat -nutlp |grep java       
+              //查看java监听的端口
+tcp        0      0 :::8080              :::*                LISTEN      
+tcp        0      0 :::8009              :::*                LISTEN      
+tcp        0      0 ::ffff:127.0.0.1:8005     :::*         LISTEN       2778/java 
+
+
+如果检查端口时，8005端口启动非常慢，默认tomcat启动需要从/dev/random读取大量的随机数据，默认该设备生成随机数据的速度很慢，可用使用下面的命令用urandom替换random
+
+
+[root@web1 ~]# mv /dev/random  /dev/random.bak
+[root@web1 ~]# ln -s /dev/urandom  /dev/random
+
+
+方案二
+    [root@web1 ~]# yum install rng-tools
+    [root@web1 ~]# systemctl start rngd
+    [root@web1 ~]# systemctl enable rngd
+
+
+
+
+配置文件
+# cat /usr/local/tomcat/conf/server.xml
+
+<Server>      #服务器
+   <Service>  #对外提供服务
+     <Connector port=8080 />    #服务器端口号
+     <Connector port=8009 />    #可随意改变
+ <Engine name="Catalina" 
+defaultHost="localhost">  #default 决定默认网站
+
+<Host name="www.a.com"   #虚拟主机
+appBase="a"              #网站文件存储位置
+unpackWARS="true" 
+autoDeploy="true">
+</Host>
+
+
+      <Host name="localhost"  appBase="webapps"
+            unpackWARs="true" autoDeploy="true">
+  #unpackwars 自动解压压缩文件   auto 文件有变化 自动部署
+当放 war压缩文件到 webapps文件下时 自动解压
+
+   
+        <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+               resourceName="UserDatabase"/>
+      </Realm>
+
+      <Host name="www.a.com"  appBase="a"
+            unpackWARs="true" autoDeploy="true">
+      </Host>
+      <Host name="www.b.com"  appBase="b"
+            unpackWARs="true" autoDeploy="true">
+      </Host>
+
+
+mkdir -p /usr/local/tomcat/{a,b}/ROOT
+-p 子目录  {a,b} 同时创建a,b 两个文件
+
+
+[root@web1 conf]# echo "AAA" > /usr/local/tomcat/a/ROOT/index.html
+[root@web1 conf]# echo "BBB" > /usr/local/tomcat/b/ROOT/index.html
+
+[root@web1 conf]# /usr/local/tomcat/bin/shutdown.sh 
+Using CATALINA_BASE:   /usr/local/tomcat
+      #关闭服务
+[root@web1 conf]# /usr/local/tomcat/bin/startup.sh 
+Using CATALINA_BASE:   /usr/local/tomcat
+Using CATALINA_HOME:   /usr/local/tomcat
+    #启动服务    重启服务
+
+
+
+/usr/local/tomcat/logs/catlina.2019.9 系统软件日志
+                                  出错 可看
+localhost 访问日志  -首页才会记录
+      日志文件
+
+ #系统文件中 <Host 下 有一段日志命令 其他网站需要日志文件时
+       # 需要复制 这一段
+  <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" #目录
+               prefix="localhost_access_log"#文件名 suffix=".txt" 文件后缀
+               pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+
+
+
+
+<Host name="www.b.com" appBase="b" unpackWARS="true" autoDeploy="true">
+<Context path="" docBase="base"/>
+                #docBase 可以改变 读取位置
+
+<Context path="/test" docBase="/var/www/html/" />
+#Context path= 可以定义指定文件 当文件夹中有多个网页文件时
+可指定 一个网页文件
+
+当Context指定 /地址时  docBase 可以跳转到其他文件夹下的网页文件 
+  
+
+
+   <Host name="www.a.com"  appBase="a"
+            unpackWARs="true" autoDeploy="true">
+      <Context path="/test" docBase="/var/www/html/"/>
+   </Host>
+
+
+  firefox http://www.a.com:8080/test
+当访问 www.a.com 的test文件时 
+实际跳转到的是 /var/www/html/index.html文件
+
+
+     网站与端口没有绑定
+
+加密网站做一次 所有网站都加密
+
+
+创建加密用的私钥和证书文件
+
+[root@web1 ~]# keytool -genkeypair -alias tomcat -keyalg RSA -keystore /usr/local/tomcat/keystore
+
+ //提示输入密码为:123456
+//-genkeypair     生成密钥对
+//-alias tomcat     密钥别名
+//-keyalg RSA     定义密钥算法为RSA算法
+//-keystore   定义密钥文件存储在:/usr/local/tomcat/keystore
+
+输入密钥库口令:  
+再次输入新口令: 
+您的名字与姓氏是什么?
+  [Unknown]:  x
+您的组织单位名称是什么?
+  [Unknown]:  x
+您的组织名称是什么?
+  [Unknown]:  x
+您所在的城市或区域名称是什么?
+  [Unknown]:  x
+您所在的省/市/自治区名称是什么?
+  [Unknown]:  x
+该单位的双字母国家/地区代码是什么?
+  [Unknown]:  x
+CN=x, OU=x, O=x, L=x, ST=x, C=x是否正确?
+  [否]:  y
+
+输入 <tomcat> 的密钥口令
+	(如果和密钥库口令相同, 按回车):  
+再次输入新口令: 
+
+
+
+配置文件 server 下 修改第85行 去注释 <!--    -->
+
+
+
+<Connector port="8443" 
+
+protocol="org.apache.coyote.http11.Http11NioProtocol"
+
+ maxThreads="150" SSLEnabled="true" 
+
+scheme="https" secure="true"
+
+clientAuth="false" sslProtocol="TLS" />
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

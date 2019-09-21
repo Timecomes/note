@@ -1,0 +1,397 @@
+    
+     
+   sed 拓展 使用
+
+    替换每一行的 第二个字符 转换为空
+           sed 's/.//2'  文件
+            
+    替换每一行最后一个字符
+             sed 's/.$//' 文件
+           
+
+    sed 's/.//2;s/.$//'   文件
+
+
+         sed -r 使用正则表达式 时一定要 加-r 不然报错
+
+    ( ) 保留 复制
+sed -r 's/(a)(b)(c)/\1\3\2/'  文件
+sed -r 's/(.)(.)(.)/\3\2\1/'  文件 任意三个字符替换 
+                要替换的字符
+                                     更改位置
+
+sed -r 's/^(.)(.*)(.)$/\3\2\1/'
+                     1     2    3 
+  匹配任意行的第一行和最后一行
+
+[root]# sed -r 's/^(.)(.*)(.)$/\3\2\1/' nss.txt 
+        将文件每一行的第一个字符和最后一个字符做替换
+
+dello th6e WorlH
+gn ha7o ma beijini
+
+[root]# sed -r 's/^(.....)(.*)(.....)$/\3\2\1/' nss.txt 
+   只能替换的是字符 不能替换单词 
+World th6e Hello
+ijing7o ma bein ha
+
+
+[root@server0 6周六]# sed 's/[0-9]//g' nss.txt 
+                              替换 文本中 0-9 数字   所有
+Hello the World
+in hao ma beijing
+
+
+                                           
+                       -r拓展    反斜杠 \1 为前替换字符的序号 
+[root@server0 6周六]# sed -r 's/([A-Z])/(\1)/g' nss.txt 
+                           替换文本中的所有大写字母 并加上括号
+(H)ello th6e (W)orld
+in ha7o ma beijing
+[root@server0 6周六]# sed -r 's/([a-z])/_\1/g' nss.txt 
+H_e_l_l_o _t_h6_e W_o_r_l_d
+_i_n _h_a7_o _m_a _b_e_i_j_i_n_g
+
+
+        d 删除               p 更改                 s  替换
+        a             i              c
+       在行下追加         在行上追加             替换整行
+              需添加定址符
+
+sed '1i xxx' 文件  在第一行上追加 一行 xxx
+sed '1a xxxx' 文件  在第一行下方追加一行xxxxx
+    '1a = 2i'  第一行下 = 第二行上
+sed 'c xxxx' 文件 替换所有行 为 xxxx
+sed '/abc/c xxxx' 文件 替换文件有abc的行 改为xxxx
+
+[root]# sed '/abc/c xxxx' nss.txt 
+Hello th6e World
+in ha7o ma beijing
+xxxx
+xxxx
+accadf
+
+----------------------------------------------------------------------------
+
+正则 sed      awk 处理文档的工具 可用正则
+grep 模糊搜索
+sed  可以修改文档
+awk  精确搜索   逐行处理并输出
+
+使用 
+        awk  选项  (条件)指令  被处理的文件
+ 
+          前置命令  |  awk  选项  (条件)指令 
+
+
+        选项  -F 定义分隔符 定义的是 文件中的分隔符 (默认空格)
+
+        指令 print 输出
+          内部变量 
+                显示列 : $1 , $2 , $3    第一列叫$1 第二列$2  . $0 所有列
+                            横竖精确[匹配      , 逗号 分隔空格  (如果一行很长 将不可用)
+-F[:/]
+  [ ]可以定义多个分隔符 遇到其中之一时分隔
+                  两个分隔符中间没东西时 默认占一列
+
+        条件
+
+
+root@server0 6周六]# awk '{print $1,$3}' nss.txt  
+Hello World                     逗号 分隔 (空格)
+in ma
+abc 
+abcd 
+accadf 
+[root@server0 6周六]# awk '{print $1 $3}' nss.txt  
+HelloWorld                 直接空格 不起作用
+inma
+abc
+abcd
+accadf
+
+[root@server0 6周六]# awk '/beijing/{print}' nss.txt  
+in ha7o ma beijing           查找beijing
+[root@server0 6周六]# awk '/beijing/{print $2}' nss.txt  
+ha7o                            节省掐头去尾
+
+
+[root@server0 6周六]# awk '{print}' nss.txt  
+Hello th6e World
+in ha7o ma beijing
+abc
+abcd
+accadf
+
+[root@server0 6周六]# awk '{print $2}' nss.txt  
+th6e
+ha7o
+
+
+[root@server0 6周六]# cat u 
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+
+[root@server0 6周六]# awk -F: '{print $6}' u
+/root                  (-F:)重新定义分隔符 >> ( : )    
+/bin
+
+[root@server0 6周六]# awk -F/ '{print $3}' u
+
+bin                       -F定义的东西不空格 之后空格
+sbin
+[root@server0 6周六]# awk -F[:/] '{print $7}' u
+
+root                [ ]可以定义多个分隔符 遇到其中之一时分隔
+bin                  两个分隔符中间没东西时 默认占一列
+
+[root@server0 6周六]# awk -F[:/] '{print $6}' u
+
+                                 输出为空  第6列源文件为   :/ 判定为一个空列
+
+[root@server0 6周六]# awk -F: '{print $1"的解释器是"$7}' u
+
+                                          可以输入常量 但要加入"" 放入 系统当做常量输出
+root的解释器是/bin/bash      
+bin的解释器是/sbin/nologin
+
+[root@server0 6周六]# awk -F: '{print $1 abc $7}' u
+
+root/bin/bash                 不加""系统会默认为变量如果变量没有定义
+bin/sbin/nologin                   输出值为空
+
+
+[root@server0 6周六]# awk -F: '{print NR,NF}' u
+
+1 7                                     内置变量     NR 显示行  NF 显示列
+2 7
+
+[root@server0 6周六]# awk -F: '{print NR" "NF}' u
+
+1 7                                    可放入空格 " " 双引号中为常量 可识别空格
+2 7
+
+-------------------------------------------------------------------------
+[root@server0 6周六]# ifconfig eth0
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.25.0.11  netmask 255.255.255.0  broadcast 172.25.0.255
+        inet6 fe80::5054:ff:fe00:b  prefixlen 64  scopeid 0x20<link>
+        ether 52:54:00:00:00:0b  txqueuelen 1000  (Ethernet)
+        RX packets 29225  bytes 2325024 (2.2 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 13354  bytes 1779777 (1.6 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+[root]# ifconfig eth0 | awk '/RX p/{print "当前主机的eth0网卡接受的流量是"$5"字节"}'
+当前主机的eth0网卡接受的流量是2347438字节
+[root]# ifconfig eth0 | awk '/TX p/{print "当前主机的eth0网卡发出的流量是"$5"字节"}'
+当前主机的eth0网卡发出的流量是1804905字节
+
+[root@server0 6周六]# df -h | awk '/vda1/{print "当前主机根分区剩余空间是"$4}'
+当前主机根分区剩余空间是6.4G
+
+
+----------------------------------------------------------------------------------------------
+
+                                                            安全日志文件 全系统的
+[root@server0 6周六]# tail -3 /var/log/secure   #日志文件 
+
+Sep  7 15:12:36 server0 sshd[6573]: Failed password for root from 172.25.0.10 port 53326 ssh2            #密码错误
+  ip地址
+
+Sep  7 15:12:36 server0 sshd[6573]: Connection closed by 172.25.0.10 [preauth]
+Sep  7 15:12:36 server0 sshd[6573]: PAM 2 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=desktop0.example.com  user=root
+
+
+
+[root@server0 6周六]# awk '/Failed/{print $11}' /var/log/secure 
+172.25.0.250             查看是否有主机远程ssh本机 并且是输错密码的
+172.25.0.250
+172.25.0.250
+
+                  awk的工作流程控制
+ 
+   BEGIN任务 执行一次 和逐行任务无关   
+       逐行任务  执行N次  文本有关
+    END任务  执行一次  和逐行任务无关
+
+
+[root@server0 6周六]# awk 'BEGIN{print "hah"}' 
+hah                         BEGIN任务 输出hah
+
+[root@server0 6周六]# awk 'BEGIN{x=10;print x}' 
+10                                         定义变量 x=10
+
+[root@server0 6周六]# awk 'BEGIN{print "x"}{print "A"}' u 
+x                          BEGIN任务输出一次
+A                         print任务与文件中行数相关
+A
+
+[root@server0 6周六]# awk 'BEGIN{print "x"}{print "A"}END{print "C"}' u                 小写识别不了                      END不可单独使用
+x              当END单独出现时会提取 前面的命令 如果没有 执行报错
+A
+A
+C
+
+
+[root@server0 6周六]# awk 'END{print "x"}' 
+^C                       此时为强制退出
+ 
+[root@server0 6周六]# awk 'BEGIN{print "User\tUID\t home"}' 
+User	UID	 home                       \t 制表符 相当于tab
+
+[root@server0 6周六]# awk -F: '{print $1"\t"$3"\t"$6}' u 
+root	0	/root                     "\t" 制表符
+bin	1	/bin
+[root@server0 6周六]# awk -F: 'END{print "总计"NR"行"}' u
+总计2行
+
+
+[root@server0 6周六]# awk -F: 'BEGIN{print "User\tUID\t home"}{print $1"\t"$3"\t"$6}END{print "总计"NR"行 "}' u 
+User	UID	 home     最终输出结果
+root	0	/root
+bin		1	/bin
+总计2行
+
+
+
+     awk 正则匹配
+111111111111111111111111
+                        ~包含
+   
+awk -F: '$1~/root/' /etc/passwd
+awk -F: '$1~/root/{print}' /etc/passwd
+         第一列中 包含 /root/ 的 输出
+
+awk -F: '$1!~/root/' /etc/passwd
+             第一列中 不包含root 的输出
+
+22222222222222222222222
+使用数值/字符串比较这只条件
+   
+    ==    >= <= != > < 
+
+[root@server0 6周六]# awk 'NR==2{print}' y
+                                                等于第二行
+bin:x:1:1:bin:/bin:/sbin/nologin
+
+[root@server0 6周六]# awk -F: '$1=="root"' y
+root:x:0:0:root:/root:/bin/bash     必须相等
+
+[root@server0 6周六]# awk -F: '$3=="0"' y
+root:x:0:0:root:/root:/bin/bash  第三列 UID
+
+[root@server0 6周六]# awk -F: '$3<10' /etc/passwd
+root:x:0:0:root:/root:/bin/bash      第三行小于10
+bin:x:1:1:bin:/bin:/sbin/nologin
+
+
+[root@server0 6周六]# awk -F: 'NR<10' /etc/passwd  前9行
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+
+[root@server0 6周六]# awk -F: '$3>1000' /etc/passwd
+                                                第三行 大于1000
+nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
+lisi:x:1001:1001::/home/lisi:/bin/bash
+dc:x:1002:1002::/home/dc:/bin/bash
+cd:x:1003:1003::/home/cd:/bin/bash
+
+
+3333333333333333333333
+
+逻辑符号  &&  并且      ||   或者
+
+
+[root@server0 6周六]# awk -F: '$3<10&&$3>5' /etc/passwd
+shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+halt:x:7:0:halt:/sbin:/sbin/halt
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+
+[root@server0 6周六]# awk -F: '$3>10 && $3<15' /etc/passwd
+                                                 第三列  大于10 小于15
+operator:x:11:0:operator:/root:/sbin/nologin
+games:x:12:100:games:/usr/games:/sbin/nologin
+ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+
+
+[root@server0 6周六]# awk -F: 'NR>=3 && NR<=10' /etc/passwd
+                                                        3~10行
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+sync:x:5:0:sync:/sbin:/bin/sync
+shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+halt:x:7:0:halt:/sbin:/sbin/halt
+mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+operator:x:11:0:operator:/root:/sbin/nologin
+
+
+[root@server0 6周六]# awk -F: 'NR>=45 || NR<=6' /etc/passwd
+                                                     大于等于45 或小于等于6
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/bin:/sbin/nologin
+daemon:x:2:2:daemon:/sbin:/sbin/nologin
+adm:x:3:4:adm:/var/adm:/sbin/nologin
+lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+sync:x:5:0:sync:/sbin:/bin/sync
+1:x:1004:1004::/home/1:/bin/bash
+lisan:x:1005:1005::/home/lisan:/bin/bash
+zhangsan:x:1006:1006::/home/zhangsan:/bin/bash
+wangwu:x:1007:1007::/home/wangwu:/bin/bash
+
+
+44444444444444444444444444444
+
+
+     计算
+
+
+[root@server0 6周六]# seq 200 | awk '$1%3==0'
+3
+6
+9
+12
+
+[root@server0 6周六]# awk 'BEGIN{x++;print x}'
+1
+[root@server0 6周六]# awk 'BEGIN{print 2/3}'
+0.666667
+
+[root@server0 6周六]# awk 'BEGIN{print 2*3}'
+6
+
+[root@server0 6周六]# awk 'BEGIN{print 3+2}'
+5
+[root@server0 6周六]# awk 'BEGIN{print 10-3}'
+7
+
+[root@server0 6周六]# awk 'BEGIN{a=10;b=20;print a*b}'
+200
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

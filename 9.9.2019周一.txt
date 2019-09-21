@@ -1,0 +1,268 @@
+
+awk  选项  (条件)指令  被处理的文件
+
+awk 支持if     if 在awk中 为指令
+awk 选项     '条件 {if(判断条件){命令}else{命令}}'   文件
+
+ if (判断条件) ;then
+       命令
+       命令
+ fi
+
+if(判断条件){
+
+      命令
+}
+
+双分枝
+ if (条件){
+         命令
+    }
+  else {
+         命令
+    }
+多分支
+   if (条件){
+           命令
+    }
+  else if (条件){
+        命令
+    }
+
+
+
+[shell2]# awk -F: '{
+> if($3>=1000) {
+>  x++
+> }}
+> END{print x}' /etc/passwd
+9
+[root@server0 shell2]# awk -F: '{
+if($3<=1000 && $7~/bash/) {
+ x++
+}}
+END{print x}' /etc/passwd
+2
+
+
+[root@server0 shell2]# awk -F: '{
+if($3>=1000 && $7~/bash/) {
+ x++ ;print $1
+}}
+END{print x}' /etc/passwd
+student
+lisi
+dc
+cd
+1
+lisan
+zhangsan
+wangwu
+8
+[root@server0 shell2]# awk -F: '{
+if($3>=1000 || $7~/bash/) {
+ x++ ;print $1           #我要的是UID大于等于3或者最后一位
+}}                                #的解释器为bash的行 并输出 第一行的 用户名
+END{print x}' /etc/passwd
+root
+nfsnobody
+student
+lisi
+dc
+cd
+1
+lisan
+zhangsan
+wangwu
+10
+
+[root@server0 shell2]# awk -F: 'BEGIN{print "ilovedc"}{if($7~/bash/){x++}} END{print x}' /etc/passwd
+ilovedc
+9
+打完大括号可以回车 也可以不回车 直接把命令写完
+
+[shell2]# awk -F: '{
+if($7~/bash/) {
+ print "我是上帝"
+}
+}'  /etc/passwd
+我是上帝
+我是上帝
+
+[root@server0 shell2]# awk -F: '{if($7~/bash/){x++}else{y++}} END{print "狗哥身高"x,"大锤"y}' /etc/passwd
+狗哥身高9 大锤40
+
+{if($7~/bash/){x++}else{y++}}  同在第一条if中
+END{print "狗哥身高"x,"大锤"y} END为另一指令 与if不相关
+
+
+  awk 支持数组(一个可以存多个值的变量)   还是变量
+                                        变量没定义初始值时默认为0
+
+  x[0]=11
+  x[1]=22    #大意时一个变量 可以存多个数据
+  x[2]=33
+
+echo -e "\033[15;30Hx"   #15行 30列 输出一个x
+box0=(0 0 0 1 1 0 1 1)   #存入的数组
+
+[root@server0 shell2]# awk 'BEGIN{x[0]=11;x[1]=22;print x[1],x[0]}'       命令中分号;分隔 两个独立
+22 11
+
+[root@server0 shell2]# awk 'BEGIN{x[0]=11;x[1]=22;print x[1];print x[0]}'
+22
+11
+
+[root@server0 shell2]# awk 'BEGIN{a[0]=00;a[1]=11;a[2]=22;for(i in a){print a[i]}}'
+     
+       #for循环有相同有不同       
+ 
+0
+11
+22
+
+[root@server0 shell2]# awk 'BEGIN{a[0]=00;a[1]=11;a[2]=22;a[8]=88;a[6]=666;for(i in a){print a[i]}}'
+
+666         #数字排序 是如何排序的
+88           #随机?不随机 哪里随机
+0             #以后变量使用应该很少用到 全输出
+11           #定义以后 输出需要的
+22
+
+   | 
+多ip 访问本地 要做统计分析
+
+   awk '{IP[$1]++}' access_log
+   IP[192.168.4.5]   IP为变量名   $1为每行第一个的IP
+           文本中 所有第一行的ip 变为了变量IP 的数组内容
+             IP[192.168.4.5]++=1
+             IP[192.168.4.8]++=1
+             IP[192.168.4.5]++=2
+
+cat /var/log/httpd/access_log
+
+172.25.0.10 - - [09/Sep/2019:15:32:22 +0800] "GET / HTTP/1.1" 200 145 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:24.0) Gecko/20100101 Firefox/24.0"
+
+ab -c 100 -n 100 http://172.25.0.11/
+ab 软件 100 人 访问 共100次    n>=c
+
+同一时间 访问ip
+[root]# ab -c 100 -n 200 http://172.25.0.11/
+This is ApacheBench, Version 2.3 <$Revision: 1430300 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+
+[root@server0 shell2]# wc -l /var/log/httpd/access_log203 /var/log/httpd/access_log
+#查看日志文件有多少行
+
+                                             每一ip 自加1         循环 运行自加1
+[root@server0 shell2]# awk '{a[$1]++} END{for (i in a){print i,a[i]}}' /var/log/httpd/access_log
+  输出  i--ip名     a[i]--每个ip自加的结果
+
+ #统计 不同ip 访问的次数
+172.25.0.10 3
+172.25.0.11 200
+
+数据 |  sort -n  排序  用字母来排序  升序
+      sort -nr  倒序
+
+[root@server0 shell2]# awk '{a[$1]++} END{for (i in a){print a[i],i}}' /var/log/httpd/access_log | sort -nr
+
+200 172.25.0.11              #倒序排列 sort -nr
+3 172.25.0.10
+
+                 a[$1]
+                                   /\
+                    a
+                               /        \
+             a[172.25.0.11]
+                       /                      \ 
+
+
+   uptime  #cpu负载 | awk 'print $NF' #$NF 最后一列
+#top    #启动天数 (交互)
+      ifconfig eth0 | awk '/RX p/{print $5}'
+      ifconfig eth0 | awk '/TX p/{print $5}'
+网卡流量
+
+磁盘剩余 df | awk '/\/$/{print $4}'  根分区
+
+有多少用户 user cat /etc/passwd | wc -l
+ sed -n '$=' /etc/passwd
+
+登录人数  who | wc -l
+
+计算机所有程序
+ ps aux | wc -l
+
+装了多少包
+rpm -qa | wc -l
+
+本机ip
+ifconfig eth0  | awk '/inte/{print $2}' 
+
+
+
+                       脚本 运行实现本机参数查看
+#!/bin/bash
+cpu=$(uptime | awk '{print $NF}')
+ip=$(ifconfig eth0 | awk '/inet/{print $2}')
+net_in=$(ifconfig eth0 | awk '/RX p/{print $5}')
+net_out=$(ifconfig eth0 | awk '/TX p/{print $5}')
+dev=$(df | awk '/\/$/{print $4}')
+user=$(cat /etc/passwd | wc -l)
+pepo=$(who | wc -l)
+running=$(ps aux | wc -l)
+pag=$(rpm -qa | wc -l)
+
+
+
+echo "本机主要配置信息"
+echo "每15分钟cpu占用量 $cpu"
+echo "本机ip地址 $ip"
+echo "接收数据包 $net_in"
+echo "上传的数据包 $net_out"
+echo "根目录剩余空间 $dev"
+echo "系统用户数量 $user"
+echo "当前系统使用人数 $pepo"
+echo "当前系统正在使用的进程数 $running"
+echo "本机已安装的软件数 $pag"
+
+
+
+
+
+
+过滤帐户名失败的命令(登陆日志文件为/var/log/secure)
+~]# awk '/Invalid user/{print $10}' /var/log/secure
+
+过滤密码失败的命令
+[root@svr5 ~]# awk '/Failed password/{print $11}' /var/log/secure
+
+
+#!/bin/bash
+
+# 过滤账户名失败命令
+awk '/Failed password/{print $11}' /var/log/secure  | awk '{ip[$1]++}END{for(i in ip){print ip[i],i}}'
+这是一条 
+awk '/invalid user/{print $9}'   /var/log/secure
+#过滤密码失败命令
+
+
+
+
+
+
+
+
+
+
+
+               
+
+
+
+
+
+

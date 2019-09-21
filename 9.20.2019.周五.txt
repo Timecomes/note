@@ -1,0 +1,231 @@
+
+
+高性能 集群 ( HPC )
+ 科学上使用
+
+负载均衡集群 ( LB )
+互联网企业
+
+高可用集群 ( HA )
+互联网企业
+  双nginx 实现高可用+负载均衡
+
+
+
+nfs 
+/common *(rw) 修改
+
+web1:
+mount ip:/common /var/www/html
+
+web2:
+mount ip:/common /var/www/html
+
+
+          web1(RIP) real server 真实
+proxy -(director server) 调度 (VIP+DIP)  V用户 D后台
+          web2 (RIP)          虚拟ip  
+
+
+
+
+NAT 模式
+规模越大 限制越大  出口只有一个
+
+DR 模式 
+路由器 进 调度器 出 直接出不经过调度器
+
+TUN 模式 (少)
+调度器和服务器不在一个网里 调度器在公网中
+调度器 和服务器做隧道
+
+
+LVS  >  nginx(轮询 ,ip_hash)
+数据包转发 + NAT(地址转换) 工作原理像路由器
+4.10          4.5        web1 2.100
+client --- lvs(router) 
+                      转换地址          web2
+
+from 4.10   4.10-- 4.10   4.10
+to 4.5       4.5-- 2.100  2.100
+
+             4.10  <<2.100  <from 2.100   跨网段要网关
+                  4.5       <back 4.5
+
+
+LVS ( 轮询,加权轮询<权重多次访问>,        调度算法
+        最少连接算法,加权最少连接算法, 
+              源地址哈希,目标地址哈希  )
+  ( 轮询roundrobin RR
+  (加权轮询  wrr
+ (lc   least 最少连接
+ (wlc   加权最少
+ (sh  source hash源地址哈希
+ (dh         目标哈希
+          谁连接少 给谁
+
+
+
+
+[root@proxy ~]# ipvsadm -A -t 192.168.4.5:80 -s rr
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 rr
+
+[root@proxy ~]# ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.100:80
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 rr
+  -> 192.168.2.100:80             Route   1      0          0      
+
+[root@proxy ~]# ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.201:80 -w 2
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 rr
+  -> 192.168.2.100:80             Route   1      0          0         
+  -> 192.168.2.201:80             Route   2      0          0     
+
+[root@proxy ~]# ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.203:80 -w 2 -i
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 rr
+  -> 192.168.2.100:80             Route   1      0          0         
+  -> 192.168.2.201:80             Route   2      0          0         
+  -> 192.168.2.202:80             Masq    2      0          0         
+  -> 192.168.2.203:80             Tunnel  2      0          0         
+
+[root@proxy ~]# ipvsadm -E -t 192.168.4.5:80 -s wrr
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 wrr
+  -> 192.168.2.100:80             Route   1      0          0         
+  -> 192.168.2.201:80             Route   2      0          0         
+  -> 192.168.2.202:80             Masq    2      0          0         
+  -> 192.168.2.203:80             Tunnel  2      0          0      
+
+[root@proxy ~]# ipvsadm -e -t 192.168.4.5:80 -r 192.168.2.100:80 -w 2 -m
+[root@proxy ~]# ipvsadm -Ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -> RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.4.5:80 wrr
+  -> 192.168.2.100:80             Masq    2      0          0         
+  -> 192.168.2.201:80             Route   2      0          0         
+  -> 192.168.2.202:80             Masq    2      0          0         
+  -> 192.168.2.203:80             Tunnel  2      0          0         
+
+
+
+ipvsadm -A -t 192.168.4.5:80 -s rr
+定义虚拟服务器
+ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.100:80 -g
+虚拟服务器最终将跳转 到  真实服务器  默认直连路由 (-g)  无权重
+ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.201:80 -w 2 -m
+真实服务器 权重 2 (-w)     算法 (-m) NAT
+
+ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.203:80 -w 2 -i
+隧道模式  tun (-i)
+
+ipvsadm -E -t 192.168.4.5:80 -s wrr
+修改虚拟服务器 算法 从 rr >> wrr (轮询>加权轮询
+
+ipvsadm -e -t 192.168.4.5:80 -r 192.168.2.100:80 -w 2 -m
+修改真实服务器 + 权重 (-w 2)+ 算法 (NAT)
+                           rr wrr lc wlc  sh
+
+永久保存    
+  ipvsadm-save -n > /etc/sysconfig/ipvsadm
+     或者直接手写 vim /etc/sysconfig/ipvsadm
+
+清除  -d -D -C
+          真实地址 集群  全清
+
+NAT 哪进哪出
+
+                                           真集群
+配置环境  web1  web2 proxy
+临时修改
+echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+永久配置 调度器转发功能  (默认没开)
+echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+
+>yum -y install ipvsadm
+>ipvsadm -A -t 192.168.4.5:80 -s wrr
+>ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.100 -w 1 -m
+>ipvsadm -a -t 192.168.4.5:80 -r 192.168.2.200 -w 1 -m
+保存规则
+ipvsadm-save -n > /etc/sysconfig/ipvsadm
+
+
+
+dr  直连路由
+1.web需要和客户端在同一网段
+2.web需要伪装成调度ip
+访问和回复数据的ip必须一直
+3.修改内核防止网络冲突
+4.一个网卡可以配多个ip 一个主 多个辅助ip
+默认使用主ip VIP必须配辅助接口  DIP必须在主接口上
+
+
+配置虚拟接口 ip
+cd /etc/sysconfig/network-scripts/
+cp ifcfg-eth0{,:0}
+vim ifcfg-eth0:0
+TYPE=Ethernet
+BOOTPROTO=none
+DEFROUTE=yes
+NAME=eth0:0
+DEVICE=eth0:0
+ONBOOT=yes
+IPADDR=192.168.4.15
+PREFIX=24
+
+systemctl restart network
+启服务 系统间冲突 stop NetworkManager
+
+客户端>>>访问网站ip  vip
+              虚拟服务器接收客户端请求 vip
+    dip 虚拟服务器将请求传给内网 真实ip地址上 
+               服务器真实ip地址  rip
+      web接收到请求dip----rip      
+          真实服务器掩饰成虚拟服务器ip   rip--vip----vip
+               返还数据给客户端  vip          内         外
+                                                        进口   服务器 出口 --- 客户端    
+
+
+lo 本地回环ip
+/proc/sys/net/ipv4/conf/all
+                       /lo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

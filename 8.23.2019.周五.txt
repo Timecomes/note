@@ -1,0 +1,172 @@
+
+     rsync 同步操作
+baseurl=file:///tools/other  #指定本地为Yum服务端
+
+
+
+    rsync -av --delete /源文件   /目标文件
+    同步     并删除多余目标文件下文件  同步文件为源文件及内容
+    rsync -av --delete /源文件/   /目标文件
+    同步 并删除多余目标文件下文件 同步文件为源文件下内容/不包含源文件名
+
+[root@svr7 ~]# ls /nsd06/
+fstab  nsd06  passwd
+[root@svr7 ~]# ls /dir/
+fstab  nsd06  passwd
+[root@svr7 ~]# touch /dir/a.txt
+[root@svr7 ~]# touch /dir/b.xtx
+[root@svr7 ~]# ls /dir/
+a.txt  b.xtx  fstab  nsd06  passwd
+[root@svr7 ~]# ls /nsd06/
+fstab  nsd06  passwd
+[root@svr7 ~]# rsync -av --delete /nsd06/ /dir/
+sending incremental file list
+deleting b.xtx
+deleting a.txt
+./
+
+sent 146 bytes  received 34 bytes  360.00 bytes/sec
+total size is 2,848  speedup is 15.82
+[root@svr7 ~]# ls /nsd06/
+fstab  nsd06  passwd
+[root@svr7 ~]# ls /dir/
+
+
+远程同步  rsync+ssh
+ 
+ 上行 下载  rsync -av --delete /nsd06/ root@192.168.4.207:/opt/
+ 
+下行  上传
+
+    公钥  私钥 实现无密码远程连接
+[root@svr7 ~]# ssh-keygen 
+Generating public/private rsa key pair.
+Enter file in which to save -the key (/root/.ssh/id_rsa): 
+
+
+[root@svr7 ~]# ssh-copy-id root@192.168.4.207
+发送公钥
+
+      for 循环  固定有次数的循环
+
+      while循环 无限次数的循环 死循环
+
+                      useradd
+                while 条件 /命令 <<--------
+                 do                |
+                                重复执行的代码         |
+                 done       ------->>          
+
+
+
+while inotifywait -rqq /nsd06/  #一个q为减少屏幕输出
+                                                       #两个qq为无屏幕输出
+do
+
+rsync -av --delete /nsd06/ root@192.168.4.207:/opt/
+做脚本时 可以去掉 -v 取消屏幕输出信息
+	
+done
+
+chmod +x /root/rsync.sh
+/root/rsync.sh &  后台运行
+
+运行此脚本时 源文件夹下增删改 
+会实时同步到 ip:192.168.4.207 的/opt/下
+
+
+ 环境变量 $PATH  >>>>>/usr/bin/
+   可以把脚本转化为 系统命令 减少命令行数
+
+
+
+[root@cobbler ~]# ls /root/
+anaconda-ks.cfg  cobbler.zip  initial-setup-ks.cfg  公共  模板  视频  图片  文档  下载  音乐  桌面
+
+[root@cobbler ~]# unzip /root/cobbler.zip -d /
+
+Archive:  /root/cobbler.zip
+   creating: /cobbler/
+ extracting: /cobbler/cobbler_rpm.zip  
+
+
+[root@cobbler ~]# ls /cobbler/
+
+cobbler_boot.tar.gz  cobbler_rpm.zip  cobbler_web.png
+
+[root@cobbler ~]# unzip /cobbler/cobbler_rpm.zip -d /opt/
+
+Archive:  /cobbler/cobbler_rpm.zip
+   creating: /opt/cobbler/
+  inflating: /opt/cobbler/cobbler-2.8.2-1.el7.x86_64.rpm  
+
+
+[root@cobbler ~]# ls /opt/cobbler/
+
+cobbler-2.8.2-1.el7.x86_64.rpm
+cobbler-web-2.8.2-1.el7.noarch.rpm
+dhclient-4.2.5-58.el7.centos.1.x86_64.rpm
+libyaml-0.1.4-11.el7_0.x86_64.rpm
+mod_wsgi-3.4-12.el7_0.x86_64.rpm
+
+[root@cobbler ~]# yum -y install /opt/cobbler/*.rpm
+
+已加载插件：fastestmirror, langpacks
+正在检查 /opt/cobbler/cobbler-2.8.2-1.el7.x86_64.rpm: cobbler-2.8.2-1.el7.x86_64
+
+[root@cobbler ~]# vim /etc/cobbler/settings 
+
+next_server: 192.168.4.123  //设置下一服务器为本机
+server: 192.168.4.123    //设置本机为cobbler服务器
+manage_dhcp: 1       //设置cobbler管理dhcp服务
+pxe_just_once: 1     //防止客户端重复安装操作系统
+
+
+开机启动项 匹配停止
+  1.硬盘启动    2.光驱设备   3.u盘   4.网络引导
+
+
+
+
+vim /etc/cobbler/dhcp.template
+    
+     末行模式 :%s /旧/新/g    #全文替换
+          : %s /192.168.1/192.168.4/g 
+
+
+tar -zcPf   保存根/ 目录 解压后有覆盖之前文件风险
+tar -xPf   绝对路径释放
+
+[root@cobbler ~]# tar -xPf /cobbler/cobbler_boot.tar.gz 
+[root@cobbler ~]# ls /var/lib/cobbler/loaders/
+COPYING.elilo     COPYING.yaboot  grub-x86_64.efi  menu.c32    README
+COPYING.syslinux  elilo-ia64.efi  grub-x86.efi     pxelinux.0  yaboot
+
+[root@cobbler ~]# tar -tf /cobbler/cobbler_boot.tar.gz 
+tar: 从成员名中删除开头的“/”
+/var/lib/cobbler/loaders/
+/var/lib/cobbler/loaders/README
+
+
+[root@cobbler ~]# systemctl restart cobblerd
+[rot@cobbler ~]# systemctl enable cobblerd
+[root@cobbler ~]# systemctl restart httpd
+[root@cobbler ~]# systemctl enable httpd
+[root@cobbler ~]# systemctl restart tftp
+[root@cobbler ~]# systemctl enable tftp
+[root@cobbler ~]# systemctl restart rsyncd
+[root@cobbler ~]# systemctl enable rsyncd
+
+
+
+ctrl + w 删除
+
+
+[root@cobbler ~]# cobbler sync
+
+
+
+
+
+
+

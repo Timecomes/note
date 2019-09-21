@@ -1,0 +1,6 @@
+       主机名配置文件 /etc/hostname 文件默认不存在
+
+        nmcli 非交互式 ip dns(网关) 
+
+  [root@youki ~]# nmcli connection modify 'System eth0' ipv4.method manual ipv4.addresses '172.25.0.110/24 172.25.0.254' connection.autoconnect yes 
+

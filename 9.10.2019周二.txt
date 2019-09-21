@@ -1,0 +1,107 @@
+nginx 模块化设计软件
+100个功能 (100个独立的模块)
+
+安装时 可以根据需要有选择的安装
+
+文件越大 漏洞越大
+
+代码越多  出错概率越大 越容易被攻击
+
+
+出错
+nmtui 设置 
+ip 后直接跟掩码 /24
+getway 网关  不是电子掩码
+
+
+
+   源码安装 大趋势
+    工作里面 不太用 yum yum装依赖包
+      源码 程序最新 自定义安装
+ yum -y install gcc pcre-devel openssl-devel
+   useradd -s /sbin/nologin nginx
+      tar -xf nginx-1.10.tar.gz  
+         cd nginx-1.10
+  
+   ./confugure  \
+> --prefix=/usr/local/nginx   \  //指定安装路径
+> --user=nginx   \               //指定用户
+> --group=nginx  \               //指定组
+> --with-http_ssl_module         //开启SSL加密功能
+
+   ./configure --help 帮助  
+                 --with 默认不会装 附加模块要自己指定
+                 --without 默认会装
+                         加到configure中 可以不装
+
+
+报错
+         用户没创建 并且有可能./configure 时 用户名字写错
+    导致 nginx 无法识别 只能再添 一个用户 用户名 有提示 (" ")
+ 
+[root@proxy ~]# /usr/local/nginx/sbin/nginx
+nginx: [emerg] getpwnam("nginx") failed
+
+
+       httpd 服务   开启时 端口冲突 
+          要先关闭一个服务 才行   或者    服务已经开启
+        报错为   0.0.0.80 
+
+[root@proxy ~]# nginx
+nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)
+nginx: [emerg] bind() to 0.0.0.0:80 failed (98: Address already in use)
+
+
+netstat -tuanp   没有顺序
+查看现在端口 使用的程序 对应有 : 端口号 服务名 
+
+升级 软件 只升级程序 其他不动 只需要 安装到 make 把源码包
+配置成 新的程序 再从objs 文件中找到 新的程序文件 将程序替换旧的
+程序
+
+升级程序 重启以下服务  make upgrade
+          或者      killall nginx  在启服务
+
+
+配置文件 加密
+提示行直接加入 配置文件
+
+    [root@proxy ~]# vim /usr/local/nginx/conf/nginx.conf
+    .. ..
+    server {
+            listen       80;
+            server_name  localhost;
+
+ auth_basic "Input Password:";        //认证提示符信息
+
+auth_basic_user_file "/usr/local/nginx/pass";  
+                       //认证的密码文件此文件名字很重要 一定要找的到
+  并且文件不是直接手动创建的 而是由软件 httpd-tools 创建的 
+            location / {
+                root   html;
+                index  index.html index.htm;
+            }
+      }
+
+[root@proxy ~]# yum -y install  httpd-tools
+[]#        htpasswd -c /usr/local/nginx/pass tom       
+                                              //创建密码文件
+New password: 
+Re-type new password: 
+Adding password for user tom
+[root@proxy ~]# htpasswd  /usr/local/nginx/pass   jerry      //追加用户，不使用-c选项,-c选项会覆盖之前文件内容
+New password: 
+
+
+
+服务器接手 权限 密码  权限加固
+
+数据库 备份  搜索引擎 数据格式
+
+
+
+
+
+
+
+

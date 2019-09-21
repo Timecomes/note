@@ -1,0 +1,244 @@
+
+
+
+
+     yum provides /文件名
+
+
+
+
+
+
+
+
+
+利用host 解析本地web
+ /etc/host   文件
+   文件内 加入本机ip  www.qq.com www.163.com
+临时 检测完删除 他是第一顺位影响DNS解析
+
+
+DHZP 自动分ip/子网掩码/dns/网关  搭建在交换机 或路由器上
+
+yum -y install dhcp    装包 >>配置 >>启服务
+
+
+dhcp 地址分配四次会话 整个过程 以广播形式进行 先到先得 同时 会从新广播
+ 客户端发送全局请求 服务端接受后发送
+一个网络中 只能有一个dhcp服务器  有冲突 拔网线
+  接受广播 
+---------------------------------------------------------------------------------
+yum -y install dhcp
+vim /etc/dhcp/dhcpd.conf
+    :r /user/share/doc    文件上有
+
+subnet 192.168.4.0 netmask 255.255.255.0 {   //分配的网段
+  range 192.168.4.100 192.168.4.200;      //分配的ip范围
+  option domain-name-servers 192.168.4.7;   //分配dns
+  option routers 192.168.4.254;    //分配网关
+  option broadcast-address 10.5.5.31;  //广播地址
+  default-lease-time 600;    //租用时间
+  max-lease-time 7200;    //最大租用时间
+  next-server 192.168.4.7;   //指定下一个服务的ip
+  filename "pxelinux.0";    //指定网卡引导文件名称
+} 
+           //以上全是给客户机分配的服务 与本机服务器无关
+
+    DHCP   TFTP    HTTP		
+
+
+subnet 192.168.4.0 netmask 255.255.255.0 {
+  range 192.168.4.100 192.168.4.200;
+  option domain-name-servers 192.168.4.7;
+  option routers 192.168.4.254;
+  default-lease-time 600;
+  max-lease-time 7200;
+  next-server 192.168.4.7;   //指定下一个服务的ip
+  filename "pxelinux.0";    //指定网卡引导文件名称
+                      //安装说明书 二进制文件
+
+搭建 tftp服务 提供引导文件
+
+        tftp 简单的文件传输协议  有ip 就能传  默认端口号:69
+        http  超文本传输协议  默认端口号: 80
+        https  安全的超文本传输协议 默认端口号: 443
+        DNS      域名解析协议  默认端口号: 53
+        telnet  远程管理协议    默认端口号:  23   明文传输
+        ssh     远程管理协议    默认端口号:  22   加密传输
+        FTP      文件传输协议  默认端口号: 21
+        snmp  简单的网络管理协议  默认端口号: 161
+        smtp  邮件协议  (发邮件)       默认端口号: 25
+        pop3  邮件协议 收邮件  默认端口号: 110 
+
+--------------------------------------------------------------------------------
+   yum -y install tftp-server
+        //默认共享数据路径        /\       /var/lib/tftpboot/
+
+   systemctl restart tftp
+
+   
+[root@svr7 ~]# yum provides */pxelinux.0
+已加载插件：fastestmirror
+Loading mirror speeds from cached hostfile
+syslinux-4.05-13.el7.x86_64 : Simple kernel loader which boots from a FAT
+                            : filesystem
+源    ：local_repo
+匹配来源：
+文件名    ：/usr/share/syslinux/pxelinux.0
+
+
+
+syslinux-tftpboot-4.05-13.el7.x86_64 : SYSLINUX modules in /var/lib/tftpboot,
+                                     : available for network booting
+源    ：local_repo
+匹配来源：
+文件名    ：/var/lib/tftpboot/pxelinux.0
+
+[root@svr7 ~]# rpm -ql syslinux | grep pxelinux.0
+/usr/share/syslinux/gpxelinux.0
+/usr/share/syslinux/pxelinux.0
+[root@svr7 ~]# cp /usr/share/syslinux/pxelinux.0  /var/lib/tftpboot/
+
+
+[root@svr7 ~]# ls /dev/cdrom 
+/dev/cdrom
+[root@svr7 ~]# mount /dev/cdrom /mnt/
+mount: /dev/sr0 写保护，将以只读方式挂载
+[root@svr7 ~]# ls /mnt/
+CentOS_BuildTag  GPL       LiveOS    RPM-GPG-KEY-CentOS-7
+EFI              images    Packages  RPM-GPG-KEY-CentOS-Testing-7
+EULA             isolinux  repodata  TRANS.TBL
+
+
+[root@svr7 ~]# mkdir /var/lib/tftpboot/pxelinux.cfg
+[root@svr7 ~]# cp /mnt/isolinux/isolinux.cfg  /var/lib/tftpboot/pxelinux.cfg/default
+
+[root@svr7 ~]# cp /mnt/isolinux/vesamenu.c32  /mnt/isolinux/splash.png  /var/lib/tftpboot/
+[root@svr7 ~]# ls /var/lib/tftpboot/
+pxelinux.0  pxelinux.cfg  splash.png  vesamenu.c32
+       # 图形界面   &    背景图
+
+[root@svr7 ~]# cp /mnt/isolinux/vmlinuz  /mnt/isolinux/initrd.img  /var/lib/tftpboot/     
+                       #启动内核   &    驱动程序 
+
+
+修改菜单文件内容
+ 1 default vesamenu.c32    默认加载图形模块          
+  2 timeout 600           默认读秒时间 60秒
+
+ 10 menu background splash.png   背景
+ 11 menu title CentOS 7    标题
+
+
+
+ 
+ 61 label linux                     //菜单选项显示内容
+ 62   menu label ^Install CentOS 7   // ^菜单快捷键
+      menu default   //读秒完后默认选项择
+ 63   kernel vmlinuz    //加载内核
+ 64   append initrd=initrd.img //加载驱动
+                                                         
+
+[root@svr7 ~]# mkdir /var/www/html/centos
+[root@svr7 ~]# mount /dev/cdrom  /var/www/html/centos/
+mount: /dev/sr0 写保护，将以只读方式挂载
+[root@svr7 ~]# ls /var/www/html/centos/
+CentOS_BuildTag  GPL       LiveOS    RPM-GPG-KEY-CentOS-7
+EFI              images    Packages  RPM-GPG-KEY-CentOS-Testing-7
+EULA             isolinux  repodata  TRANS.TBL
+
+
+[root@svr7 ~]# firefox 192.168.4.7/centos
+^C
+[root@svr7 ~]# yum -y install system-config-kickstart
+已加载插件：fastestmirror
+Loading mirror speeds from cached hostfile
+
+修改yum 仓库仓库名
+[development]
+
+          运行   没有中文翻译  只支持英文
+    LANG=en system-config-kickstart
+
+
+            web 共享应答文件 上一步生成文件自己保存
+
+[root@svr7 ~]# vim /root/ks.cfg 
+[root@svr7 ~]# cp /root/ks.cfg /var/www/html/
+[root@svr7 ~]# ls /var/www/html/ks.cfg 
+/var/www/html/ks.cfg
+[root@svr7 ~]# firefox 192.168.4.7/ks.cfg
+
+
+
+`
+label linux
+  menu label Inst^all CentOS 7
+  menu default
+  kernel vmlinuz
+  append initrd=initrd.img  ks=http://192.168.4.7/ks.cfg
+
+
+
+systemctl restart httpd
+systemctl restart tftp
+systemctl restart dhcpd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

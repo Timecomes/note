@@ -1,0 +1,238 @@
+
+
+   curl 
+ 
+     网站默认使用 http协议-明文协议
+
+
+
+对称算法有：AES、DES，主要应用在单机数据加密。  123    123
+                 暂时很安全 不适合网站加密
+
+非对称算法有：RSA、DSA，主要应用在网络数据加密。
+
+信息摘要：MD5、sha256，主要应用在数据完整性校验。
+
+[root@proxy ~]# openssl genrsa
+                > cert.key 
+                           //生成私钥
+root@proxy ~]# openssl req -new -x509 -key cert.key 
+           > cert.pem      //生成证书
+
+
+
+----
+Country Name (2 letter code) [XX]:CN   国家
+State or Province Name (full name) []:sichuan 省
+Locality Name (eg, city) [Default City]:chengdu 城市名
+Organization Name (eg, company) [Default Company Ltd]:tedu 公司名
+Organizational Unit Name (eg, section) []:student 职位名
+Common Name (eg, your name or your server's hostname) []:proxy 服务器名
+Email Address []:x@x.com 邮件
+
+公司名
+部门名
+
+
+   vim /usr/local/nginx/conf/nginx.comf
+ 
+    server {
+        listen       443 ssl;  加密网站 监听端口 443 默认
+        server_name  www.c.com;
+
+        ssl_certificate      证书.pem;
+        ssl_certificate_key  私钥.key;
+
+        ssl_session_cache    shared:SSL:1m;
+        ssl_session_timeout  5m; 5秒后显示超时
+
+        ssl_ciphers  HIGH:!aNULL:!MD5; 禁止空格/MD5加密
+        ssl_prefer_server_ciphers  on;
+
+        location / {
+            root   html;   默认首页
+            index  index.html index.htm;
+        }
+    }
+
+ssl证书 网上 找别人来做 绿色信任
+
+nginx (仅处理静态网页)
+
+静态网页 静态数据 a.mp3 a.MP4 a.html a.jpg
+不需要解释器
+
+动态数据  a.php , a.jsp ,a.sh
+源代码   解释器跑一遍
+
+
+
+
+
+    nginx
+    mariadb、mariadb-server、mariadb-devel
+    php、php-fpm、php-mysql
+
+
+mariadb（数据库客户端软件）
+mariadb-server（数据库服务器软件）、
+mariadb-devel（其他客户端软件的依赖包）、
+php（解释器）、
+php-fpm（进程管理器服务）自动运行解释php文件 
+php-mysql（PHP的数据库扩展包） 
+    (模块化)     把数据写入数据库  脚本 全自动 写入数据库
+
+
+
+装包 启服务
+
+                systemctl restart php-fpm
+[root@proxy ~]# systemctl enable php-fpm
+
+
+
+如何实现 把 所下载的程序 关联起来  否则 nginx还是会直接发送文件不会 翻译源代码
+
+
+创建脚本文件  test.php
+[root@proxy ~]# vim /usr//local/nginx/html/test.php
+
+<?php
+$i=33;          php脚本格式
+echo $i;
+?>
+
+[root@proxy ~]# php /usr//local/nginx/html/test.php
+33
+
+默认不换行  回车 命令下面的空行会影响输出的空行数
+
+
+nginx (80) mariadb (3306) php-fpm (9000) 端口
+
+fpm 多进程软件 进程越多 可同时工作 越多
+同时使用 越多 进程越多 但同时 内存占用也会变多
+
+如果用户访问的是 动态网站 通过nginx交给9000 
+如果是静态访问 自己解决
+
+
+
+
+netstat -tunpl | php-fpm
+
+location   匹配地址栏   如果
+location /abc { deny 1.1;allow all }
+location /test { allow 1.1; deny all }
+location /xyz { allow all }   以上均不可用 神似
+         ~^abc$  支持正则
+
+
+location ~ \.php$ { html找脚本  转发给9000 }
+             .php$ 以.php结尾
+                     \.  取消.的正则定义 只取.php 
+location / {
+       html找文件
+}
+
+
+ #location ~ \.php$ {
+        #    root           html;  
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+
+
+配置文件写错 reload 过不去
+tailf error  查看日志 并且可以看最新加入的 日志
+connection refused  连接 被拒绝
+
+
+
+脚本自动连 mysql
+php连脚本
+
+mysql -e "show databases"
+
+mysql -e "show databases";use
+mysql -e "select * from mysql.user\G"
+非交互式
+
+
+
+ 网址重写
+    rewrite regex replacement flag
+    rewrite 旧地址       新地址          [选项](可加可不加)
+   域名之后开始写 /
+                旧地址支持正则表达
+
+
+ server {
+        listen       80;
+        server_name  www.a.com;
+  rewrite /a.html /b.html;
+ 在server_name 下添加地址重写 ;号结尾
+同时在 /usr/local/nginx/html/下创建b.html网页文件
+重新载入配置文件  -s reload
+这时访问 www.a.com/a.html 时 实际访问的是 /b.html
+
+
+       listen       80;
+        server_name  www.a.com;
+  rewrite /a.html /b.html redirect;
+
+            redirect 选项将跳转后真实地址显示出来
+    不加redirect  地址栏为访问的网址 但不显示跳转地址 (真实地址)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

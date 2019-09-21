@@ -1,0 +1,400 @@
+[student@room9pc01 ~]$ rht-vmctl reset server
+server [OK]
+域 server 已开始
+1111111111111111111111111111111111111111111111111111111
+[student@room9pc01 ~]$ gos
+Last login: Fri Jan 12 18:54:14 2018 from 172.25.0.250
+/usr/bin/xauth:  file /root/.Xauthority does not exist
+[root@server0 ~]# mkdir /weboot
+
+[root@server0 ~]# yum -y install httpd
+已加载插件：langpacks
+rhel_dvd                                                 | 4.1 kB     00:00     
+(1/2): rhel_dvd/group_gz                                   | 134 kB   00:00     
+(2/2): rhel_dvd/primary_db                                 | 3.4 MB   00:00     
+正在解决依赖关系
+--> 正在检查事务
+---> 软件包 httpd.x86_64.0.2.4.6-17.el7 将被 安装
+--> 正在处理依赖关系 httpd-tools = 2.4.6-17.el7，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在处理依赖关系 /etc/mime.types，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在处理依赖关系 libapr-1.so.0()(64bit)，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在处理依赖关系 libaprutil-1.so.0()(64bit)，它被软件包 httpd-2.4.6-17.el7.x86_64 需要
+--> 正在检查事务
+---> 软件包 apr.x86_64.0.1.4.8-3.el7 将被 安装
+---> 软件包 apr-util.x86_64.0.1.5.2-6.el7 将被 安装
+---> 软件包 httpd-tools.x86_64.0.2.4.6-17.el7 将被 安装
+---> 软件包 mailcap.noarch.0.2.1.41-2.el7 将被 安装
+--> 解决依赖关系完成
+
+依赖关系解决
+
+================================================================================
+ Package             架构           版本                 源                大小
+================================================================================
+正在安装:
+ httpd               x86_64         2.4.6-17.el7         rhel_dvd         1.2 M
+为依赖而安装:
+ apr                 x86_64         1.4.8-3.el7          rhel_dvd         103 k
+ apr-util            x86_64         1.5.2-6.el7          rhel_dvd          92 k
+ httpd-tools         x86_64         2.4.6-17.el7         rhel_dvd          77 k
+ mailcap             noarch         2.1.41-2.el7         rhel_dvd          31 k
+
+事务概要
+================================================================================
+安装  1 软件包 (+4 依赖软件包)
+
+总下载量：1.5 M
+安装大小：4.3 M
+Downloading packages:
+(1/5): apr-1.4.8-3.el7.x86_64.rpm                          | 103 kB   00:00     
+(2/5): httpd-2.4.6-17.el7.x86_64.rpm                       | 1.2 MB   00:00     
+(3/5): apr-util-1.5.2-6.el7.x86_64.rpm                     |  92 kB   00:00     
+(4/5): httpd-tools-2.4.6-17.el7.x86_64.rpm                 |  77 kB   00:00     
+(5/5): mailcap-2.1.41-2.el7.noarch.rpm                     |  31 kB   00:00     
+--------------------------------------------------------------------------------
+总计                                               5.6 MB/s | 1.5 MB  00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  正在安装    : apr-1.4.8-3.el7.x86_64                                      1/5 
+  正在安装    : apr-util-1.5.2-6.el7.x86_64                                 2/5 
+  正在安装    : httpd-tools-2.4.6-17.el7.x86_64                             3/5 
+  正在安装    : mailcap-2.1.41-2.el7.noarch                                 4/5 
+  正在安装    : httpd-2.4.6-17.el7.x86_64                                   5/5 
+  验证中      : mailcap-2.1.41-2.el7.noarch                                 1/5 
+  验证中      : httpd-tools-2.4.6-17.el7.x86_64                             2/5 
+  验证中      : apr-1.4.8-3.el7.x86_64                                      3/5 
+  验证中      : apr-util-1.5.2-6.el7.x86_64                                 4/5 
+  验证中      : httpd-2.4.6-17.el7.x86_64                                   5/5 
+
+已安装:
+  httpd.x86_64 0:2.4.6-17.el7                                                   
+
+作为依赖被安装:
+  apr.x86_64 0:1.4.8-3.el7                 apr-util.x86_64 0:1.5.2-6.el7       
+  httpd-tools.x86_64 0:2.4.6-17.el7        mailcap.noarch 0:2.1.41-2.el7       
+
+完毕！
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf
+[root@server0 ~]# mkdir /var/www/1 /var/www/2 /var/www/3
+[root@server0 ~]# echo '<h1>大圣归来' > /var/www/1/index.html
+[root@server0 ~]# echo '<h1>大圣又归来' > /var/www/2/index.html
+[root@server0 ~]# echo '<h1>大圣累了' > /var/www/3/index.html
+[root@server0 ~]# vim /etc/httpd/conf.d/
+autoindex.conf  README          welcome.conf    
+nsd01.conf      userdir.conf    
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+listen 8909
+<VirtualHost  *:80>
+ ServerName server0.example.com
+ Documentroot /webroot
+</VirtualHost>
+<VirtualHost  *:80>
+ ServerName www0.example.com
+ Documentroot /var/www/2
+</VirtualHost>
+<VirtualHost  *:8909>
+ ServerName webapp0.example.com
+ Documentroot /var/www/3
+ WsgiScriptAlias   /  /var/www/3/webinfo.wsgi
+</VirtualHost>
+
+
+
+
+
+[root@server0 ~]# mkdir /var/www/
+1/       2/       3/       cgi-bin/ html/    
+
+22222222222222222222222222222222222222222222
+[root@server0 ~]# mkdir /var/www/1/private
+[root@server0 ~]# echo '<h1>大圣偷偷归来' > /var/www/1/
+index.html  private/    
+[root@server0 ~]# echo '<h1>大圣偷偷归来' > /var/www/1/private/index.html
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf/ 
+httpd.conf  magic       
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# firefox server0.example.com/private
+
+(process:2122): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@server0 ~]# firewall-cmd --set-default-zone=trusted
+success
+[root@server0 ~]# firefox server0.example.com/private
+
+(process:2314): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# systemctl restart httpd
+[root@server0 ~]# firefox server0.example.com/private
+
+(process:2402): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+
+33333333333333333333333333333333333333333333333333333333333333
+[root@server0 ~]# mkdir /webroot
+
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf/httpd.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd02.conf 
+[root@server0 ~]# !sys
+systemctl restart httpd
+[root@server0 ~]# firefox server0.example.com
+
+(process:2548): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@server0 ~]# chcon -R --reference=/var/www  /webroot/
+[root@server0 ~]# ls -Zd /webroot
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /webroot
+[root@server0 ~]# ld -Zd /var/www
+ld：无法识别的选项‘-Zd’
+ld：使用 --help 选项以获取使用信息
+[root@server0 ~]# ls -Zd /var/www
+drwxr-xr-x. root root system_u:object_r:httpd_sys_content_t:s0 /var/www
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# !sys
+systemctl restart httpd
+[root@server0 ~]# firefox server0.example.com
+
+(process:2649): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# cd /var/www/
+1/       2/       3/       cgi-bin/ html/    
+[root@server0 ~]# cd /var/www/3/
+[root@server0 3]# ls 
+index.html
+[root@server0 3]# mkdir /abc
+[root@server0 3]# ls
+index.html
+[root@server0 3]# mkdir abc
+[root@server0 3]# ls
+abc  index.html
+
+
+
+
+
+444444444444444444444444444444444444444444444444444
+
+
+
+[root@server0 3]# wget http://classroom/pub/materials/webinfo.wsgi
+--2019-08-14 17:43:03--  http://classroom/pub/materials/webinfo.wsgi
+正在解析主机 classroom (classroom)... 172.25.254.254
+正在连接 classroom (classroom)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：397
+正在保存至: “webinfo.wsgi”
+
+100%[======================================>] 397         --.-K/s 用时 0s      
+
+2019-08-14 17:43:03 (56.6 MB/s) - 已保存 “webinfo.wsgi” [397/397])
+
+[root@server0 3]# yum -y install wsgi
+已加载插件：langpacks
+没有可用软件包 wsgi。
+错误：无须任何处理
+[root@server0 3]# yum -y install mod_wsgi
+已加载插件：langpacks
+正在解决依赖关系
+--> 正在检查事务
+---> 软件包 mod_wsgi.x86_64.0.3.4-11.el7 将被 安装
+--> 解决依赖关系完成
+
+依赖关系解决
+
+================================================================================
+ Package           架构            版本                 源                 大小
+================================================================================
+正在安装:
+ mod_wsgi          x86_64          3.4-11.el7           rhel_dvd           76 k
+
+事务概要
+================================================================================
+安装  1 软件包
+
+总下载量：76 k
+安装大小：197 k
+Downloading packages:
+mod_wsgi-3.4-11.el7.x86_64.rpm                             |  76 kB   00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  正在安装    : mod_wsgi-3.4-11.el7.x86_64                                  1/1 
+  验证中      : mod_wsgi-3.4-11.el7.x86_64                                  1/1 
+
+已安装:
+  mod_wsgi.x86_64 0:3.4-11.el7                                                  
+
+完毕！
+[root@server0 3]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 3]# !sys
+systemctl restart httpd
+Job for httpd.service failed. See 'systemctl status httpd.service' and 'journalctl -xn' for details.
+[root@server0 3]# cd
+[root@server0 ~]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 ~]# cd /var/www/3/
+[root@server0 3]# ls
+abc  index.html  webinfo.wsgi
+[root@server0 3]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 3]# !sys
+systemctl restart httpd
+Job for httpd.service failed. See 'systemctl status httpd.service' and 'journalctl -xn' for details.
+[root@server0 3]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 3]# systemctl restart httpd
+Job for httpd.service failed. See 'systemctl status httpd.service' and 'journalctl -xn' for details.
+[root@server0 3]# ls /var/www/
+1/       2/       3/       cgi-bin/ html/    
+[root@server0 3]# ls /var/www/3/
+abc/          index.html    webinfo.wsgi  
+[root@server0 3]# ls /var/www/3/
+abc/          index.html    webinfo.wsgi  
+[root@server0 3]# ls /var/www/3/abc/
+[root@server0 3]# rm -rf /var/www/3/abc
+[root@server0 3]# ls /var/www/3/
+index.html  webinfo.wsgi
+[root@server0 3]# vim /etc/httpd/conf.d/nsd01.conf 
+[root@server0 3]# semanage port -a -t http_port_t -p tcp 8909
+[root@server0 3]# !sys
+systemctl restart httpd
+[root@server0 3]# firefox webapp0.example.com:8909
+
+(process:3019): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+[root@server0 3]# 
+[root@server0 3]# 
+[root@server0 3]# 
+[root@server0 3]# 
+[root@server0 3]# 
+[root@server0 3]# yum -y install mod_ssl
+已加载插件：langpacks
+正在解决依赖关系
+--> 正在检查事务
+---> 软件包 mod_ssl.x86_64.1.2.4.6-17.el7 将被 安装
+--> 解决依赖关系完成
+
+依赖关系解决
+
+================================================================================
+ Package         架构           版本                     源                大小
+================================================================================
+正在安装:
+ mod_ssl         x86_64         1:2.4.6-17.el7           rhel_dvd          97 k
+
+事务概要
+================================================================================
+安装  1 软件包
+
+总下载量：97 k
+安装大小：219 k
+Downloading packages:
+mod_ssl-2.4.6-17.el7.x86_64.rpm                            |  97 kB   00:00     
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  正在安装    : 1:mod_ssl-2.4.6-17.el7.x86_64                               1/1 
+  验证中      : 1:mod_ssl-2.4.6-17.el7.x86_64                               1/1 
+
+已安装:
+  mod_ssl.x86_64 1:2.4.6-17.el7                                                 
+
+完毕！
+[root@server0 3]# ls /etc/http/conf.d
+ls: 无法访问/etc/http/conf.d: 没有那个文件或目录
+[root@server0 3]# ls /
+abc/     dev/     lib/     mnt/     root/    srv/     usr/     webroot/
+bin/     etc/     lib64/   opt/     run/     sys/     var/     
+boot/    home/    media/   proc/    sbin/    tmp/     weboot/  
+[root@server0 3]# ls /etc/
+Display all 267 possibilities? (y or n)
+[root@server0 3]# ls /etc/httpd/conf
+conf/           conf.d/         conf.modules.d/ 
+[root@server0 3]# ls /etc/httpd/conf
+conf/           conf.d/         conf.modules.d/ 
+[root@server0 3]# ls /etc/httpd/conf
+conf/           conf.d/         conf.modules.d/ 
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf      ssl.conf        welcome.conf
+nsd01.conf      README          userdir.conf    
+[root@server0 3]# ls /etc/httpd/conf.d/
+autoindex.conf  nsd02.conf  ssl.conf      welcome.conf
+nsd01.conf      README      userdir.conf
+
+5555555555555555555555555555555555555555555555555555
+[root@server0 3]# cd /etc/pki/tls/certs/
+[root@server0 certs]# ls
+ca-bundle.crt        localhost.crt    Makefile
+ca-bundle.trust.crt  make-dummy-cert  renew-dummy-cert
+[root@server0 certs]# wegt http://classroom/pub/tls/certs/server0.crt
+bash: wegt: 未找到命令...
+相似命令是： 'wget'
+[root@server0 certs]# wget http://classroom/pub/tls/certs/server0.crt
+--2019-08-14 17:57:18--  http://classroom/pub/tls/certs/server0.crt
+正在解析主机 classroom (classroom)... 172.25.254.254
+正在连接 classroom (classroom)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：3505 (3.4K)
+正在保存至: “server0.crt”
+
+100%[======================================>] 3,505       --.-K/s 用时 0s      
+
+2019-08-14 17:57:18 (517 MB/s) - 已保存 “server0.crt” [3505/3505])
+
+[root@server0 certs]# wget http://classroom/pub/example-ca.crt
+--2019-08-14 17:58:00--  http://classroom/pub/example-ca.crt
+正在解析主机 classroom (classroom)... 172.25.254.254
+正在连接 classroom (classroom)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：1220 (1.2K)
+正在保存至: “example-ca.crt”
+
+100%[======================================>] 1,220       --.-K/s 用时 0s      
+
+2019-08-14 17:58:00 (130 MB/s) - 已保存 “example-ca.crt” [1220/1220])
+
+[root@server0 certs]# ls
+ca-bundle.crt        example-ca.crt  make-dummy-cert  renew-dummy-cert
+ca-bundle.trust.crt  localhost.crt   Makefile         server0.crt
+[root@server0 certs]# cd /etc/pki/certs
+-bash: cd: /etc/pki/certs: 没有那个文件或目录
+[root@server0 certs]# cd /etc/pki/tls/private/
+[root@server0 private]# ls
+localhost.key
+[root@server0 private]# wget http://classroom/pub/tls/private/server0.key
+--2019-08-14 17:59:16--  http://classroom/pub/tls/private/server0.key
+正在解析主机 classroom (classroom)... 172.25.254.254
+正在连接 classroom (classroom)|172.25.254.254|:80... 已连接。
+已发出 HTTP 请求，正在等待回应... 200 OK
+长度：916
+正在保存至: “server0.key”
+
+100%[======================================>] 916         --.-K/s 用时 0s      
+
+2019-08-14 17:59:16 (74.1 MB/s) - 已保存 “server0.key” [916/916])
+
+[root@server0 private]# vim /etc/httpd/conf.d/ssl.conf 
+[root@server0 private]# !sys
+systemctl restart httpd
+[root@server0 private]# firefox https://www0.example.com
+
+(process:3339): GLib-CRITICAL **: g_slice_set_config: assertion `sys_page_size == 0' failed
+
