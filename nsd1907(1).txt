@@ -1,0 +1,2406 @@
+**************************************************************************************
+远程拷贝文件的地址:ftp://176.209.102.5
+****************************************
+day01		admin01
+1.计算机通信三要素
+   IP地址/子掩码/网关
+2.什么是IP地址
+    标识网络中的某个节点的地址
+   IP地址分为IPv4和IPv6,
+   IPv4是32位二进制,每个字段最大范围是255(2的8次方)
+   IPv6是??位十六进制,
+3.IP地址分类:5类
+    IP类型     字段范围             IP地址组成                默认子网掩码
+   A类:          1~127       网络位+主机位+主机位+主机位    255.0.0.0
+   B类:          128~191     网络位+网络位+主机位+主机位    255.255.0.0
+   C类:          192~223     网络位+网络位+网络位+主机位    255.255.255.0
+   D类:组播     224~239
+   E类:科研     240~254
+4.IP地址的组成:网络位+主机位
+   网络位:标识一个网络(例如电话区号)
+   主机位:标识具体的一个主机(例如具体号码)
+5.子网掩码
+   作用:判断IP地址的网络位,相同网络位的主机可以直接通信
+6.网关
+   作用:从当前网络去往其他网络的出口,与当前IP地址在同一个网段
+   现实生活中,一般是路由器或防火墙
+
+课后习题
+1. 访问京东查看服务器价格和配置信息
+2. 为什么IDC数据中心的服务器没有显示器,键盘,鼠标
+3. 为什么企业会把核心服务器放到IDC数据中心
+4. 传一个ipv4-ipv6激情小视屏
+5. 为什么主机设置的网关地址和本机ip在同一网段
+6. 请问ABC三类地址,那类地址容纳主机数最多?那类容纳主机数最少?
+7. 假设主机选择自动获取IP,但是网络中心没有dhcp服务器可以分配地址的时候怎么办?
+8. 电脑能够正常上QQ,但是打不开baidu,sina等网站?
+    因为QQ是直接使用ip访问,而其他网站是通过域名访问,域名需要通过网络???解析成对应的ip地址.
+
+问题:
+1/  如何区分一个ip地址组成中那些是网络位那些是主机位?
+2/  同一个网络里通信不需要网关,可是网关在配置时不一致,是否能通信?
+3/  什么是idc数据中心?
+
+***************************************************************************8
+Day02  	admin02
+1.Linux系统分类
+   系统分为:收费版:Red Hat Enterprise Linux(RHEL)
+            社区版(不稳定) :Fedora Core  
+            延后2周版:CentOS
+2.Linxu系统的文件分类
+    1)  / :根目录,Linux系统的起点(起始目录)
+   2) dev:存放设备相关的目录
+   3) Root: 管理员用户的家目录
+   4) home:存放普通用户的家目录
+3. /dev/xdy  查看系统的硬盘信息
+   xd分为: hd/sd/vd
+      hd:IDE接口的硬盘
+      sd:非IDE接口的硬盘(sata/scsi)
+      vd:虚拟硬盘
+    y代表的是第几个硬盘,yy表示第几个硬盘的第几个分区
+4.切换控制台
+   tty1~6:Ctrl+Alt+Fn
+    tty1:图形控制台
+    tty2~6:字符控制台
+5.Ctrl+Alt = 鼠标回到真机
+     在部分虚拟机中,可能出现鼠标无法返回真机的情况.
+
+
+习题:
+1/ 为什么计算机的时间是冲1970年1月1日开始?
+   因为32位操作系统表示的最长时间是68年,考虑到计算机产生的年代和应用时限,综合取了1970年1月1日
+  https://mixer-biteye.com/blog/1563869
+2/ C语言之父 
+   丹尼斯,里奇
+3/ 什么是Linux?看pdf文档
+4/ 如何破解Linux密码
+
+问题:
+1/ 什么是sata/scsi接口的硬盘
+
+*********************************************************************
+day03  admin03
+1.Linxu系统的文件分类
+boot :启动相关的目录,内核文件
+proc :虚拟目录,内存中的内容,关机丢失
+tmp  :临时目录,默认10天不做操作直接删除
+etc  :配置文件存放目录,
+        以.conf结尾的文件是配置文件.
+mnt  :系统提供的挂载点
+2.命令格式:
+  命令字 选项 参数
+   选项用来调控命令的执行方式
+    分短选项/长选项/多选项
+     短选项用 - 单个字符 
+     长选项用 -- 单词
+     多选项用 - 多个单字符
+3.Tab键
+   自动补齐,排错
+4.快捷键
+   Ctrl+L:清屏
+   Ctrl+C:终止命令
+   Esc+. 或 alt+.:粘贴上一个参数
+   Ctrl+u:清空至行首
+   Ctrl+w:往前删除一个单词,从光标到空格为止
+   Ctrl+a:光标移至行首
+5. /dev/cdrom 光驱的快捷文件
+   /dev/sr0   真正的光驱文件
+   /dev/sd??  U盘的地址
+    nount.ntfs-3g /dev/sd?? /mnt    挂载U盘
+6. mount 设备目录  挂载点(系统提供的目录/mnt)  : 挂载外件
+   umount 设备目录 或 umount 挂载点           : 卸载外件
+7. 通配符:
+   * :通配多个字符
+   ? :通配单个字符
+  [a-z] :多个字符或连续范围中的一个,无则忽略
+  [a-z,0-9]
+  {a,min,xy}:多组不同的字符串,全匹配,无匹配有提示
+
+
+问题:
+1/ [a-z]如何匹配多个字符?
+*********************************************************************************
+day04		admin04
+1.vim 编辑文件
+2.重定向输出 > 或 >>
+    覆盖重定向: 命令 > 文件路径
+    追加重定向: 命令 >> 文件路径   
+    追加指定内容到文件:  echo 内容 >> 文件路径
+    例如:ls  --help >  /opt/ls.txt
+       hostname   >> /opt/ls.txt
+    
+3.管道操作 |
+   结合多条命令一起,由最后的命令进行输出,不同的顺序输出结果会由差异
+   例如: cat -n | head -12 /etc/passwd | tail -5
+
+3.系统用户与组
+   用户的唯一标识:UID
+   组的唯一标识:GID
+   组的分类:基本组  附加组(从属组)
+   创建用户时,Linux自动创建一个与用户名相同的组(基本组)
+    1-999: 一般服务器中有其他用户占用,一般指定时使用1000以上
+4. /etc/passwd 存储用户信息的文件
+    内容解读  root:X:0:0:root:/root:/bin/bash
+              用户名:密码占位符:UID:基本组GID:用户描述信息(可为空):用户家目录:解释器程序(默认为/bin/bash)
+5. /etc/shadow 存储用户密码信息的文件,只有管理员可查看
+      组成:  用户名:密码加密后的字符串:上一次修改密码的时间(自1970年1月1日到修改时间的天数):密码最短使用期限:密码最长使用期限:提前几天警告:::
+6. /etc/shells文件 将命令翻译位内核的可读信息
+    命令--通过编译器将命令编译为计算机可识别的信息-->内核---通过命令调配所有的---->硬件---->完成对应的程序
+
+7.  /etc/group  存储组信息的文件
+     构成: 组名:组的密码占位符:组GID:组成员列表
+8. /etc/gshadow 存储组密码信息的文件
+
+9. Linux平台压缩格式
+      gzip  ------>压缩包格式:.gz   ---->速度快,压缩比例小
+      bzip2 ------>压缩包格式:.bz2  ---->速度中,压缩比例中
+      xz    ------>压缩包格式:.xz   ---->速度最慢,压缩比例大
+
+10.cron 计划任务
+    作用:根据指定的时间反复执行某一项固定的系统任务
+     软件包:cronie/crontabs
+     系统服务:crond
+     日志文件: /var/log/crond
+   相关命令  crontab 
+     计划的书写格式:  
+          分 时 日 月 周     任务命令行
+          *  *   *  *  *     每分钟都匹配
+    例如: 30 23  *  *  *     每天晚上23:30
+          0  8   *  *  5     每周5早上8点
+          0  8   *  *  1-5   周一至周五早上8点
+          0  8   *  *  1,5   周一和周五早上8点
+          0  8   1  *  5     每月1号和每周五早上8点
+          0  */2 *  *  *    每隔2个小时       
+ 注意:  时间是24小时制
+
+
+
+***************************************************************************************
+day05		admin05
+1.自定义还原 的 shell脚本
+/usr/local/bin/rht-vmctl
+命令: rht-vmctl 控制指令  虚拟机名称
+     控制指令    : reset       还原
+     教学用虚拟机: classroom   提供资源用
+	         server      提供服务
+ 	         desktop     提供客户机
+2. ~/.bashrc 永久别名的配置文件
+
+
+3. 基本权限
+                                            文本文件                           目录
+       读取:  r  : read     : cat  less  head  tail grep :  可ls查看目录下内容
+       写入:  w  : write    : vim  >     >>              :  可在目录下新建/修改/删除文件及目录
+       执行:  x  : execute  : Shell      Pyhton          :  可cd进入
+   
+4. 权限对象
+   所有者(属主)  : 文件/目录的用户   -user  -u
+   所属组(属组)  : 文件/目录的组     -group -g
+   其他用户      : 其他的用户         -other -o
+   判断用户的权限
+   匹配及停止    : 所有者  >  所属组  >  其他用户
+5.  文件属性:  文件类型 所有者权限-组权限-其他用户权限-acl权限 文件数 创建者 所属组 大小 更新时间 文件名
+   	       文件类型:     d  : 目录
+       			     -   :  文件
+   		 	    l  : 快捷方式
+   
+6.  附加权限(特殊权限)
+      附加权限: s  :附加在所属组x位上的附加权限(Set GID) 
+                      原有x权限表现为s,原无x权限表现为S 
+                作用:适用于文件夹,在目录下新建的文件将继承父目录的所属组
+          	添加格式:chmod g+s 目录路径  (使用=设置时,需讲x和s一起使用,否则将取消x权限)
+          	删除格式:chmod g-s 目录路径
+      附件权限: u  :附加在所有者x位上的附加权限(Set UID)
+                     原有x权限表现为s,原无x权限表现为S 
+                作用:适用于可执行文件,让使用者适用执行文件时,具有执行文件属主的身份和部分权限(创建的文件继承执行文件的属主身份)
+                添加格式:chmod u+s 目录路径  (使用=设置时,需讲x和s一起使用,否则将取消x权限)
+                删除格式:chmod u-s 目录路径
+
+      附加权限: t  :附加在其他用户x位上的附加权限(Sticky Bit) 
+               作用:适用于开放W权限,文件夹下只有文件所有者才可适用进行对应操作(根下默认的tmp文件有附加权限t)
+               添加格式:chmod o+t 目录路径  (使用=设置时,需讲x和s一起使用,否则将取消x权限)
+               删除格式:chmod o-t 目录路径
+      附加权限: +  :acl权限
+                
+
+7. acl 访问控制列表
+     作用: 能对个别用户/个别组设置独立权限
+     命令:setfacl
+
+
+习题:
+设置文件权限,使用户a具备权限.
+   1.通过其他用户权限设置
+   2.通过所属组权限设置
+  3.通过所有者权限设置
+  4.通过acl权限设置   
+
+
+***************************************************************
+day06		admin06
+1.软件包管理
+   1)零散软件管理
+  2)Yum配置及使用
+  备注:教学机提供的各种资源网址:classroom.example.com
+
+2.下载软件包 wget
+   下载到指定地点: wget 目标路径 -p 路径
+3. rpm 管理软件
+格式 : rpm 选项 软件名
+   选项:  -q 软件名   查询是否安装 (注意不是安装包名,是软件名)
+       -ivh 软件包名-版本号.rpm   安装软件包 (自动将软件安装到指定位置,vh表示进度条)
+       -e 软件名    卸载软件
+   
+4. Yum软件包仓库,自动解决软件安装的依赖关系
+       分为服务端和客户端,双方连接的协议分为FTP(文件传输协议)和HTTP(超文本传输协议)
+      服务端: 1.众多的软件包  2.仓库数据文件(清单)  3.构建web服务
+
+         利用web服务提供的http协议连接
+
+      客户端:指定服务端位置
+          配置文件: /etc/yum.repos.d/*.repo
+             配置文件格式:(注意仓库名不能有空格,全文不能有中文)
+                 [仓库名称]                         仓库标识
+             name=                      仓库描述信息
+             baseurl=                   服务网络地址
+             enabled=0(不启用)/1(启用)    是否启用文件
+             gpgcheck=0(不检测)/1(检测)   检测是否有红帽签名
+          列出所有厂库信息:  yum repolist
+
+
+
+
+5. 分区规划及使用
+   
+   磁盘   >   磁道   >  扇区
+    一个扇区默认(最小)512字节
+   
+    识别硬盘     分区规划      格式化       挂载使用
+    lsblk     fdisk       mkfs    mount 和 df
+             MBR或GPT
+    -----------------------------------------------------------------------------
+   lsblk  显示当前系统识别的所有硬盘       
+   
+    -------------------------------------------------------------------------------------
+    分区模式(fdisk 命令) : MBR(主引导记录分区模式,最大空间支持2.2TB)  
+                                 1~4个主分区或3个主分区1个扩展分区(在扩展分区上划分无数逻辑分区) 
+                       GPT(最大空间支持18EB,EB--PB--TB--GB--MB--KB--B)
+
+        分区类型 : 主分区(可用) 扩展分区(不可用)  逻辑分区(可用)
+        分区表   : 存放硬盘素有分区信息表格              
+
+   partprobe 刷新分区表(分区后未显示修改后的分区信息)
+    ----------------------------------------------------------------------------------
+    格式化(mkfs.文件系统 命令)   : 赋予空间文件系统的过程
+        文件系统 : 空间存储数据的规则
+            windows的文件系统分为  : FAT           NTFS 
+            Linux的文件系统分为    :  ext4(RHEL6)  优点:文件数量多,文件小   
+                                  xfs(RHEL7)   优点:文件大,但是数量不多
+
+     blkid 分区路径  : 查看分区文件系统
+    ---------------------------------------------------------------------------------------
+    挂载使用  :   mount 分区文件路径  挂载点
+              df -h    
+        开机自动挂载   :  修改/etc/fstab配置文件
+    
+    开机自动挂载配置文件格式:
+       设备路径        挂载点      文件系统类型   参数         备份标记                 检测顺序(检测分区与文件系统)
+      /dev/vdb1   /mypart1  ext4        defaults    0(不备份)/1(备份)    0(不检测)/1(检测)
+        
+   [dump 备份]
+   mount -a 检测开机自动挂载文件有无问题
+   
+*************************************************************************
+day07		admin07
+
+LVM 逻辑卷
+ 1)整合分散的空间
+ 2)空间可以扩大
+   将众多的物理卷(PV),整合成卷组(VG),再从卷组划分出逻辑卷(LV) 
+   注意:制作逻辑卷,被整合的分区不能有文件系统(格式化)
+  ________________________________________________
+  |         零散空间         |     整合位虚拟磁盘     |         虚拟分区           |
+  |          物理卷          |         卷组            |         逻辑卷             |
+ |  Physical Volume   |   Volume Group    |   Logical Volume     |
+  |_______________________________________________|
+
+工具集
+  ______________________________________________
+ |       功能             物理卷管理        卷组管理        逻辑卷            |
+ |  Scan扫描         pvscan         vgscan       lvscan         |
+ |  Create创建      pvcreate       vgcreate     lvcreate       |
+ |  Display显示     pvdisplay      vpdisplay    lvdisplay      |
+ |  Remove删除      pvremove       vgremove     lvremove       |
+ |  Extend扩展      /                  vgextend     lvextend       |
+ |_____________________________________________|
+
+  successfully 表示成功
+
+1.查看信息
+ pvs 或 ????? 查看物理卷
+ vgs             查看卷组信息
+ lvs             查看逻辑卷信息(空间大小)
+ df -h           查看文件系统大小
+2. 创建卷组
+ 格式: vgcreate 卷组名 设备路径
+
+3. 创建逻辑卷
+ 格式: lvcreate -n 逻辑卷名称 -L 卷大小(需要单位)  卷组名称
+     选项:  -n  逻辑卷名称
+         -L  指定大小,单位M/G
+         -l  指定大小,单位PE
+  逻辑卷在dev下的文件名 :
+            原文件   : dm-[0-9]
+            快捷文件 : 卷组名/逻辑卷名
+3. 格式化逻辑卷
+ 格式: mkfs.xfs 逻辑卷路径
+    查看逻辑卷格式 : blkid 逻辑卷路径
+    挂载: mount 逻辑卷路径 挂载点
+
+4.逻辑卷扩展
+  1)扩展空间大小
+ 格式: lvextend -L +空间大小(或者扩展后空间大小) 逻辑卷路径
+  2)扩展文件系统大小(刷新文件系统)
+ 格式  (ext4)  : resize2fs  逻辑卷路径
+      (xfs) : xfs_growfs  逻辑卷路径
+5.卷组扩展
+ 格式: vgextend 卷组名 物理卷路径
+
+6. 逻辑卷缩小
+
+7. 卷组变小
+   ext4可变小
+   xfs不可变小
+8. 卷组划分空间的单位:PE  默认4M一个
+     修改卷组PE单位的大小  :  vgchange -s 单位大小 卷组名
+  
+9. 删除逻辑卷
+   1) 卸载挂载  :  umount 挂载点
+   2) 删除逻辑卷  :  lvremove 逻辑卷
+
+----------------------------------------------
+1.find 递归式查找
+格式: find  目录 条件
+     find 目录 条件 -a 条件  根据多个条件查找(可取消-a,and) 
+     find 目录 条件 -o 条件  满足其中一个条件(or)
+     条件:
+     -type 类型(f:文本文件,d:目录,l:快捷方式)
+     -name "名称"(名称需加双引号)
+     -size +|-??(k,M,G)(+:大于多少,-:小于多少)   
+     -user 用户名(按照文件所有者查找)
+     -mtime +|- 天数(+:多少天之前, -:最近多少天内)
+2.find 结果处理
+格式find 目录 条件 -exec 其他命令 \;
+      -exec : 表示结果用于下一条命令  
+        -\;     :  表示命令结束
+        其他命令 :  在命令中用 {} 表示find的查询结果内容.
+   例如: find 目录 条件 -exec cp -r {} 拷贝到路径 \;
+
+-----------------------------------------------------------
+1.NTP 时间同步
+  NTP协议(Network Time Protocol 网络时间协议)
+     NTP 服务端
+     NTP 客户端
+安装NTP客户机
+1. 安装chrony软件,沟通时间服务器
+2. 修改配置文件, /etc/chrony.conf
+    server 服务端位置 iburst
+3.重启程序(重启服务)
+     程序名(服务名) : chronyd  (d : daemon 守护神)
+     systemctl restart chronyd (重启)
+     systemctl enable  chronyd (开机自动启动)
+
+4. 修改时间
+ 格式 : date -s "年-月-日 时:分:秒"
+
+
+*****************engineer*******************************************************
+  day08	engineer1
+--------Shell 脚本基础-------------------------
+1. Shell文件的后缀为sh
+2.  需要赋予可执行权限X
+3. Shell脚本组成: 
+      环境  
+         标识符  #!
+         指定编译器,默认为 /bin/bash  
+            Python编译器:/usr/bin/python
+      注释  标识符  #
+      可执行代码
+4.  重定向输出
+     >   : 只收集前面命令的正确输出
+     2>  : 只收集前面命令的错误输出
+     &>  : 只收集前面命令的正确和错误输出
+
+5. 引号
+    单引号   :  取消所有字符的特殊意义,原样输出
+    双引号   :  
+    三引号   :
+
+5.  黑洞设备,专用于收集用户不要的输出信息
+      信息重定向到    /dev/null
+
+------------------变量----------------------------------
+    1)查看/引用变量 
+            $变量名         :  查看 
+            ${变量名}       :  引用变量名时紧跟其他内容,如${}
+            $(命令) 或  ``  :  将命令的输出直接作为参数参与下一次运行.
+            
+   date +%F  只查看年月日
+    示例: mkdir nsd-$(date +%F)   创建当前日期的文件夹
+    cant -n ???   (-n显示行号)
+
+   2)read
+       作用;  产生交互
+              记录用户输入的内容
+              讲记录的内容赋值给一个变量存储
+      格式:read 选项 变量名
+             选项 :   -p '提示信息'  (显示提示内容) 
+    3) 变量命名规则:
+         等号两边不要有空格
+         变量名只能由字母,数字,下划线组成,区分大小写
+         变量名不能以数字开头,不要使用关键字和特殊字符
+         若变量名已存在,相当于重新赋值
+    4)变量种类
+         环境变量 : 变量名一般为大写,由系统定义并赋值完成
+            USER : 默认是当前登录的用户名
+         位置变量 : 在执行脚本时提供的命令行参数,由系统定义病赋值完成
+               $1/$2/$3......
+               解释: 运行脚本时,输入的参数自动赋值给$1/$2......
+               $0为当前执行脚本路径
+         预定义变量 : 可以接调用的特殊变量,不能直接修改 
+              $#  : 已加载的位置变量个数
+              $?  : 程序退出后的状态值,0表示正常,非0表示有异常
+         自定义变量 : 用户自己定义的变量
+-----------------条件测试及选择-----------------
+1. 条件测试
+    测试表达式:每一部分都要有空格,写在中括号中,例如 : [ 测试选项 文件路径 ]
+      测试选项
+        检查文件状态(例如: [ -f /etc/passwd ])
+         -e  :  存在为真
+         -d  :  存在且必须是目录
+         -f  :  存在且必须是文件
+        比较整数大小(例如: [ 10 -gt 10 ])
+         -gt : 大于 
+         -ge : 大于等于
+         -eq : 等于
+         -ne : 不等于
+         -lt : 小于
+         -le : 下雨等于
+         (g:大,l:小,e:等,n:不)
+        字符串对比
+	   ==  : 一直为真,0
+           !=  : 不一致为真,0
+2. if选择结构
+1) if 双分支
+ 格式:  if [条件测试];then
+            命令
+      else
+            命令
+      fi
+2) if 多分支
+格式:  if [条件测试];then
+		语句     
+	elif [条件测试];then
+		语句
+     else
+		语句
+     fi
+3. 运算符
+   算数运算符
+      使用:expr使用计算工具进行计算
+      格式: 变量名=`expr 2 + 2 `
+
+-------------循环------------------------
+1.for 循环结构
+格式1: for 变量名 in 值列表
+     do
+	语句
+     done
+造数工具 : {起始值..结束值}
+暂    停 : sleep 秒数
+将命令输出作为值输出:  $(命令)
+格式2: for 
+     do
+	语句
+     done
+
+
+正则表达式
+    [[ "$变量名" =~ ^[0-9]+$ ]]   判断变量是否为数字
+
+ >&2  将输出信息当做错误输出
+ exit ? 规定退出的状态值
+
+curl 网址
+
+
+
+*****************************************************************
+day09		 engineer2
+SElinux(Security-Enhanced Linux) 安全
+1.  作用:增强Linux安全的体系
+2.  状态: 
+	enforcing (强制)
+      permissve (宽松)
+      disabled  (彻底禁止)
+3.  切换模式:
+      临时切换 : setenforce 1|0  #只影响当前系统此次开机状态,1强制,0宽松
+      固定切换 : /etc/selinux/config  #永久配置,每次开机的默认状态
+      查看状态 : getenforce  
+    注意 : 切换到disabled模式或从disabled切换到enforcing模式,需要重启系统
+------------------------------------
+配置用户环境
+1. 影响用户解释环境,每次开启 bash 生效(重开终端)
+    只影响指定用户:  ~/.bashrc       
+    影响所有用户  :  /etc/bashrc
+
+---------------------------------
+防火墙策略管理
+  作用 :  隔离 
+     防火墙分为 : 硬件防火墙  软件防火墙
+1.软件防火墙
+   系统服务 : firewalld软件
+   管理工具 : firewall-cmd (命令工具) 和 firewall-chonfig (图形工具)
+2. 对网络分区域
+      public   : 仅允许访问本机的ssh dhcp ping 少数几个服务
+      trusted  : 允许任何访问
+      block    : 阻塞任何来访请求(明确拒绝,给出回应)
+      drop     : 丢弃任何来访的数据包(不给回应,节省服务器资源)
+3. 防火墙进入区域的判断:
+    1 查看客户端请求数据包中源ip地址,然后检测自己所在区域中,哪个区域有次IP地址规则,则进入该区域
+    2 不满足第一条则进入默认区域 (默认位public)
+
+4. 数据包内容 : 源IP地址  目标IP地址 数据 端口
+
+5. 防火墙默认区域
+   firewall-cmd --get-default-zone   查看默认区域
+   firewall-cmd --set-default-zone=区域名 修改默认区域
+6. 查看防火墙区域规则
+   firewall-cmd --zone=区域名 --list-all
+7. 在区域中添加允许的协议
+   firewall-cmd --zone=public --add-service=协议名    
+   firewall-cmd --permanent --zone=区域名 -add-service=协议名   #添加永久协议,需要重启
+8. 添加永久协议后,需要重新加载防火墙所有配置规则或重启服务器
+   firewall-cmd --reload
+9. 单独拒绝一个主机访问
+    firewall-cmd --zone=block --add-source=ip地址
+10. 删除协议    
+    firewall-cmd --zone=区域名 --remove-source=ip地址            
+
+
+-------------------------------------------------------------------------
+端口
+1. 介绍
+   程序或服务或协议编号
+     http默认端口80
+      ftp默认端口21
+2. 端口映射
+    从客户机访问端口1的请求,自动映射到本机端口2
+3. 格式:将请求包端口号映射为本机端口号
+   firewall-cmd --zone=区域名 --add-forward-port=port=请求端口:proto=协议:toport=本机端口号
+    协议分为 : tcp协议 和 udp协议
+构建web服务器
+1. 介绍
+   web服务 : 提供网页,需要使用http协议(超文本协议)或文本协议.目前软件如下:
+     httpd  : 历史悠久,功能完善
+     Nginx  : 对并发访问支持最多
+	     Tengine  : 淘宝发起的项目,在Nginx的基础上针对大访问量添加功能
+     Tomcat
+2. 搭建web服务步骤
+   1) 安装httpd软件 : 使用yum -y install httpd
+   2) 重启服务 : 使用systemctl restart httpd
+   3) 访问测试 : firefox ip地址 或firefox http://ip地址
+3. web页面设置
+    默认存放路径 /var/www/html/
+    文件名必须是 index.html
+
+
+构建FTP服务器
+1. 介绍
+   ftp协议:  由 vsftpd 软件支持
+    
+2.搭建ftp服务步骤
+   1)安装vsftpd软件 : 使用yum -y install vsftpd
+   2)重启服务 :  systemctl restart vsftpd 
+   3)访问测试 : firefox ftp://ip地址 
+3. ftp 页面设置
+   默认共享文件路径: /var/ftp
+
+
+-----------------------------   
+echo输出命令
+格式:  echo 选项 输出内容
+   选项:
+
+特殊内容:  
+    -e '\e[1;颜色 输出内容 \e[0m'   输出内容有颜色
+    颜色:   30~37m 字体颜色
+         40~47m 背景颜色
+
+-------------------------------------------------------------------
+格式化文件系统
+swap 格式
+	mkswap 路径		     //格式化
+	swapon  -a            //检测/etc/fstab交换分区，书写正确会进行启用
+	swapon  -s            //查看交换分区启用情况 
+
+*********************************************************************************************
+day10 		engineer3
+----------------------------------------------------------------------------------------
+交换空间(虚拟内存)
+1. 作用: 当物理内存不够用,暂时将物理内存中的数据放入交换空间中,缓解物理内存不足
+   swap
+2.制作步骤
+   1) 分区
+   2) 格式化分区 
+       格式: mkswap 分区路径
+   3) 启用交换空间
+       格式: swapon 分区路径
+   4) 查看交换空间组成
+      格式: swapon -s
+   5) 自动挂载
+     文件路径 :  /etc/tstab   挂载点写为 swap
+   6) 检查并重新启用自动挂载
+      格式 : swapon -a
+   7) 停用交换空间
+      格式: swapoff 分区路径
+--------------------------------------------------------------
+LDAP认证
+1. 作用:实现网路用户认证,达到用户的集中管理
+      网络用户:用户信息会放在网络中LDAP服务器
+      本地用户:用户信息会放在/etc/passwd
+   分为服务器和客户端
+2. 客户端安装LDAP认证
+   1)  安装sssd软件      使用yum安装
+   2)  检查安装           rpm -q 软件名
+   3)  安装LDAP图书工具  yum -y install authconfig-gtk
+   4)  运行LDAP图形软件  yum authconfig-gtk
+   5)  配置LDAP
+   4)  检查认证           id 用户名
+
+*************************************************************************************
+day11 云计算应用管理		engineer4
+----------------iSCSI共享存储-----------------------------------------
+iSCSI网络磁盘(Internet SCSI)
+介绍:
+    一种给予CS架构的虚拟磁盘技术,由服务器提供磁盘空间,客户机连接病当成本地磁盘使用.
+构成:
+   backstore,后端存储
+      对应到服务端提供实际存储空间的设备,需要一个管理名称
+   target,磁盘组
+      客户端的访问目标,作为一个框架,由多个lun组成
+   lun,逻辑单元
+      每个lun需要关联一个后端存储设备,在客户端视为一个虚拟硬盘
+步骤
+ 1.准备分区(划分新的分区)
+ 2.环境准备(防火墙设置)
+ 3.安装服务端软件包(提供共享存储,软件包名称:targetcli)
+ 4.配置targetcli(运行targetcli)
+ 5.重启服务
+    systemctl restart target
+    systemctl enable target
+ 6.安装客户端软件包(访问服务端,软件包名称:iscsi-initiator-utils)
+ 7.设置客户端名称(文件路径:/etc/iscsi/initiatorname.iscsi)
+    InitiatorName=服务端中设置的客户端名称
+ 8.刷新服务端名称
+    systemctl restart targetcli
+    systemctl enable targetcli
+ 9.发现服务端共享存储.
+     iscsiadm -m discovery -t st -p  服务端地址[:端口]
+     iscsiadm --mode discoverydb --type sendtargets --portal 服务端地址 --descover
+    可利用man查找 :
+       1)man iscsiadm 
+         2)通过/example 查找examples
+ 10.重启iscsi服务,加载使用共享存储
+    systemctl daemon-reload  #
+    systemctl restart iscsi
+    systemctl enable iscsi
+ 11.连接共享磁盘   
+    iscsiadm  -m node -L all
+
+
+
+服务端配置targetcli说明
+ 1.终端输入软件名,targetcli 
+ 2.生成后端存储(backstores)  
+    backstores/block create name=后端存储名称 dev=设备路径
+ 3.生成磁盘组(target)
+    iscsi/ create 磁盘组名称   : 创建磁盘组
+        磁盘组命名规则(ISCSI Qualified Name):iqn.年份-月份.倒序域名:自定义标识
+        例如:iqn.2019-08.com.example:server0
+        注意:月份必须是两位数
+    iscsi/ delete 磁盘组名称  : 删除磁盘组
+ 4.将后端存储放置磁盘组,lun
+     iscsi/磁盘组/tpg1/luns create 后端存储
+ 5.设置访问控制(客户端声称的名字)
+     iscsi/磁盘组/tpg1/acls create 客户端名称
+ 6.设置服务端在那个ip地址上提供服务,以及开放端口
+     iscsi/磁盘组/tpg1/portals create ip_address=ip地址 ip_ports=端口号
+      注意:
+         1)  不指定端口,默认为 3260
+       2) ip指定位0.0.0.0则表示任意ip都可访问
+ 7.保存配置的信息
+      saveconfig 
+
+
+
+客户端配置iscsi-initiator-utils说明
+ 1.检查是否安装(rpm -q iscsi-initiator-utils)
+ 2.安装软件(yum -y install iscsi-initiator-utils)
+
+
+
+
+
+--------数据库服务MariaDB-----------------------------------------------
+介绍
+  存放数据的仓库
+
+部署mariadb数据库
+ 1. 服务端安装 : mariadb-server
+ 2. 客户端安装 ; mariadb
+ 3. 重启服务 : systemctl restart mariadb
+ 4. 进入数据库 : mysql -u 用户名 -p密码
+       本地登录     mysql -u root@localhost  
+                mysql -u root@172.0.0.1
+                mysql -u root@::1
+       域名登录     mysql -u root -h域名
+常用命令:
+1. 查看库
+  show databases;
+2. 新建库
+  create dastabase 库名;
+3. 删除库
+   drop database 库名;
+4. 使用库
+   use 库名;
+5. 查看表
+   show tables;
+6. 查询表结构
+   desc 表名;
+7. 结束当前输入内容
+    \c
+
+
+设置数据库管理员密码
+  数据库管理员信息放在mysql库user表中
+ 设置密码:  mysqladmin [-u 用户名] [-p旧密码] password '新密码'
+  注意: 1) 用户名没有密码,可取消-p旧密码
+        2) 只输入-p需要在enter password中输入旧密码
+       3)在-p直接给出旧密码时,-p与旧密码之间不能有空格
+
+MariaDB主配置文件路径: /etc/my.cnf
+  skip-networking  跳过网络监听
+
+导入数据
+  1. 下载备份文件  : wget 
+  2. 导入数据 : mysql -u root -p密码 库名 < /root/users.sql
+
+查询数据
+1. select 字段名 from 库名.表名 where 条件(表字段='值');
+2. select 字段名 from 库名.表名 where 库名.表名.字段名 in (select 库名.表名.字段名 from 库名.表名 where 条件);
+3. select 字段名 from 库名.表名,库名.表名 where 条件(库名.表名.字段名="值" and/or 库名.表名.字段名="值" );
+
+删除数据
+1.delete from 库名.表名 where 条件;
+
+数据库授权
+  命令:grant 权限列表 on 数据库名.表名 to 用户名@客户机地址 identified by '密码';
+    权限列表:select/update/delete/insert /all  
+    客户机地址; localhost 本地登录
+    数据库名和表名可用*表示全部
+
+刷新用户表(避免重启数据库)
+  flush privileges;
+
+******************************************************
+day12		engineer４
+----NFS共享-----------------------------------
+NFS 介绍
+  全称 : Network File System 网络文件系统
+  用途 : 为客户机提供共享的文件夹
+  协议 : NFS(TCP/UDP 2049) / RPC(TCP/UDP 111)
+  所需软件包 : nfs-utils
+  系统服务 : nfs-server
+
+创建NFS共享
+   1. 检查软件 nfs-utils
+   2. 创建共享文件夹
+   3. 修改配置文件  /etc/exports
+        文件夹路径  客户端地址(权限) 客户端地址(权限)
+        注意:
+         ro 只读权限
+         rw 读写权限,添加  ,no_root_squash  标识允许修改
+   4. 重启服务 nfs-server
+
+客户机访问NFS共享文件
+  1. 创建访问点
+  2. 挂载NFS文件到访问点 mount 共享方IP地址:/共享目录路径 挂载点
+  3. 查看挂载
+  4. 开机自动挂载 
+      注意: 权限名需要加 ,_netdev  #例如defaults,_netdev
+
+   查看NFS共享文件
+  showmount -e server0
+
+------- http服务----------------------------------
+介绍 
+    提供一个网页内容的服务(web服务)
+基本概念
+    基于B/S(Browser/Server)架构的网页服务,服务端提供网页,浏览器下载并显示
+协议
+   Hyper Text Markup Language (html,书写网页内容) ,超文本标记语言
+   Hyper Text Transfer Protocol (http,传输页面内容) ,超文本传输协议
+
+配置文件
+   /etc/httpd/conf/httpd.conf  主配置文件
+   /etc/httpd/conf.d/*.conf    调用配置文件
+     Include0ptionall conf.d/*.conf
+  
+   manual
+默认配置
+   1. Listen : 监听地址:端口(80)
+   2. ServerName : 本站点注册的DNS名称(可空缺)
+          验证DNS解析命令 : nslookup 域名
+   3. DocumentRoot : 网页根目录(/var/www/html)
+          可修改主配置文件修改根目录 ,然后重启服务
+          网络路径(浏览器输入的路径)与实际路径(服务端存放页面的路径)
+   4. DirectoryIndex : 起始页/首页文件名(index.html)
+
+web访问控制 : 针对网页文件存放目录
+    父目录定义访问控制,子目录自动继承
+    除非针对
+修改步骤:
+  1.  新建web目录
+  2.  修改docmentroot路径
+  3.  设置访问控制 (directory)
+  4.  设置SELinux访问控制 (setenforce)
+
+独立web主机
+
+虚拟web主机(软件级虚拟化)
+介绍
+  由一台服务器提供多个web站点,
+     一旦使用了虚拟web主机,所有的网站都必须利用虚拟web主机实现
+    默认利用ip地址访问,服务端会返回第一个虚拟web主机的内容
+区分方式 :
+     基于域名的虚拟主机
+     基于端口的虚拟主机
+     基于IP地址的虚拟主机
+配置文件
+   配置文件地址  /var/httpd/conf.d/*.conf
+
+   每个虚拟站点的配置方式(容器类型的配置方式)
+  <VirtualHost ip地址:端口>   #本机所有ip监听80端口   *:80
+     ServerName 站点DNS名称
+     DocumentRoot  站点的根目录
+  </VirtualHost>
+
+***********************************************************************************
+day13		engineer6
+网页内容访问
+使用<Directory>配置区段
+    每个文件夹自动继承其父目录的ACL访问权限,除非针对子目录明确设置
+ <Directory 目录的绝对路径>
+    Require ip ip地址       #设置访问ip
+    Require ALL granted   #运行所有
+    Require All en??       #拒绝所有
+ </Directory>
+
+httpd程序运行的身份是apache,安装软件自动创建的用户
+
+-------------SELinux----------------------
+1.  安全上下文(为重点目录进行标识)  
+    使用 semanage 命令查看SELinux的信息
+2.  设置上下文步骤
+    1)  semanage --fcontext -l  # 查看系统中所有文件的安全上下文
+    2)  ls -Zd  目录路径  # 查看文件的安全上下文
+    3)  chcon [-R] --reference=/var/www 目标路径   #将/var/www的安全上下文复制给目标路径
+  
+布尔值
+非默认端口的开放
+
+--------------------------部署动态网址------------------------
+静态页面 : 文本(txt/html)/图片(jpg/png)
+动态页面 : PHP网页/Python页面/JSP网页
+
+动态页面
+ 1.在配置文件中设置页面跳转/页面别名/地址重写
+      alias  网络路径  实际路径
+   注意: 
+       1)  一般是写在VirtualHost根目录配置文件中
+       2)  页面跳转必须是在根目录代码行的下方
+       3)  网络路径是从网络根目录开始书写(例如 : 从网络路径的根开始 则书写为 / )
+ 2. 安装mod_wsgi翻译Python的软件
+       1)  修改页面跳转代码, 将 Alias 改为 WsgiScriptAlias 
+
+修改访问端口
+ 1. 设置监听端口 :  Listen 端口号
+ 2. 修改VirtualHost 配置文件 
+ 3. 修改SELinux策略的端口设置  #httpd中,端口优先级最高
+     1) semanage port -l | grep http
+     2) semanage port -a -t http_port_t -p tcp 8909  # 添加8909端口
+         解说:  -a 添加
+            -t 类型
+            -p 协议
+
+------------------安全web服务-------------------------------
+加密通道
+  https : 安全的超文本传输协议 默认端口 : 443
+  http  : 超文本传输协议       默认端口 : 80
+
+KPI公钥
+  公钥
+  私钥
+  数字证书
+  数字认证中心
+软件 
+   mod_ssl  提供加密支持的功能
+
+构建步骤
+  1. 安装软件包  mod_ssl
+  2. 部署网站证书 
+       位置 : /etc/pki/tls/certs/
+  3. 部署根证书
+       位置 : /etc/pki/tls/certs/
+  4. 部署私钥
+       位置 : /etc/pki/tls/private
+  5. 修改配置文件
+       位置 : /etc/httpd/conf.d/ssl.conf
+       修改内容:
+         1. ServerName             # 取消注释并修改域名及端口
+         2. DocumentRoot           # 取消注释并修改根路径
+         3. SSLCertificateFile     # 修改网络证书
+         4. SSLCertificateKeyFile  # 修改私钥
+         5. SSLCACertificateFile   # 取消注释并修改根证书
+?????????????????????????????
+*******************************************************************************
+day14		 engineer7
+------------------------------------------
+网络参数的配置
+方式1 : nmtui
+方式2 :
+  1. 主机名 
+     echo '主机名' > /etc/hostname
+  2. 修改IP地址 子网掩码 网关
+     1) nmcli connection show  # 查看识别的网卡名称
+     2) nmcli connection modify '网卡名称' ipv4.method manual ipv4.addresser '新ip/子网掩码 网关地址' connection.autoconnect yes  # 修改ipv4的网址及方式
+          命令  连接  修改  网卡名称 ipv4.方法 手动 ipv4.地址 'ip地址/子网掩码 网关地址' 连接.开机自动 是
+             无法Tab的单词  manual 手动 
+                              
+     3) nmcli connection up '网卡名称'  # 激活网卡
+     4) ifconfig | head -2   #查看ip及子网掩码
+     5) coute -n   # 查看网关  
+ 3. 指定DNS服务器地址
+     echo 'nameserver 服务器地址'  >  /etc/resolv.conf # 指定域名
+     nslookup 域名 #检查域名解析
+          
+-------------------------------------------------
+配置IPv6
+
+ipv4 : 32个二进制组成 (4组二进制) 点分十进制,用点号分割
+ipv6 : 128个二进制组成(8组十六进制)  用冒号分割
+
+检查网络连接 
+  ping6 ipv6地址  # 检查ipv6地址
+  ping  ipv4地址  # 检查ipv4dizhi 
+
+------------------------------------------------------
+配置聚合连接  (链路聚合)
+作用 : 提高网卡的高可用性
+   
+命名(潜规则) : team0 组队
+
+配置聚合连接
+ 方式 1 : 轮巡方式
+
+ 方式 2 : 热备份方式
+   1. 生成虚拟网卡team0 
+    格式 : nmcli connection add type team con-name 配置文件名称 ifname 网卡名称 autoconnect yes config '{"runner":{"name":"activebackup"}}'
+    格式解说  命令 连接网络设备 添加 类型 team(聚合) 配置文件名 网卡名 开机自动启用 配置运行方式 活跃热备份方式
+    配置文件路径 : /etc/sysconfig/network-scripts/ifcfg-team0
+   2. 添加成员
+    格式 : nmcli connection add type team-slave con-name 成员配置文件名 ifname 网卡名 autoconnect yes master 聚合设备名
+    格式解说 : 命名 连接网络设备 添加 类型 聚合成员 成员配置文件名 网卡名 开机自动启用 主设备 主设备名 
+   3. 配置ip
+    格式 : nmcli connection modify team0 ipv4.method manual ipv4.addresses 网址/子网掩码 connection.autoconnect yes
+   4. 激活ip配置
+    格式 : nmcli connection up team0
+   5. 查看聚合状态
+    格式 :  teamdctl 聚合名 state 
+
+   删除配置
+    格式 : nmcli connection delete team0   
+
+------------------------------------------------------------------------------
+分区
+ MBR分区模式 (fdisk)
+
+ GPT分区模式 (parted)
+   最多128个主分区
+   使用 parted 分区工具
+ 分区步骤:
+  1. parted 设备路径   # 进入分区工具
+  2. mktable gpt     # 设定分区方案
+  3. mkpart          # 进入分区1编辑模式
+     1)  分区名称
+     2)  文件系统类型 
+     3)  起始点 0
+     4)  结束点 3G
+  4. unit GB         # 切换查看单位
+  5. print           # 查看分区方案
+  6. quit            # 退出分区工具
+
+
+------------------------------------------------------------------------------
+基础邮件服务
+
+构建基本邮件服务器
+  1. 安装软件包 
+        yum -y instarll postfix
+  2. 修改主配置文件 /etc/postfix/main.cf
+        myorigin = 域名          #默认补全的域名后缀
+        inet_inertfaces = all #本机所有网卡均提供服务
+        mydestination = 域名   #利用本字段的值,判断为本域邮件
+  3. 重启服务
+        systemctl restart postfix
+  4. 验证
+      1) 发信
+          方式1 :
+          mail -s '邮件标题' -r 发件人  收件人
+             正文
+             .  回车
+          方式2 :    
+          echo '正文' | mail -s '邮件标题' -r yg xln
+      2) 收信
+         mail -u 收件人
+
+-----------------------------------------------------------------------------
+Samba 共享
+作用 : 提供共享使用的文件夹 ( windows 与 Linux 之间的共享目录)
+                   nfs (Linux 与 Linux 之间的共享目录)
+协议 : smb协议
+共享文件步骤 :
+   1. 安装软件包 (samba) 
+        yum -y install samba
+   2. 创建专门用于samba 共享验证的用户(samba账户)
+      特点: 基于本地用户
+            密码有samba程序独立管理
+        1) useradd 用户名        #创建用户
+        2) pdbedit -a 用户名    #设置samba密码
+        3) pdbedit -L  #查看所有samba用户
+        4) pdbedit -x 用户名  #删除Samba用户名
+  3. 创建共享目录
+        mkdir 路径/目录名
+  4. 修改主配置文件
+      文件位置 :  /etc/samba/smb.conf
+      在文件中添加内容:
+	      [ ] 		#设置共享名
+	     path = 	#实际路径
+  5. 重启Samba服务
+      systemctl restart smb
+  6. SELinux 布尔值策略
+        getsebool -a	#查看SELinux布尔权限
+        setsebool Samba_export_all_ro on	#开启读取权限
+
+访问共享文件步骤
+  1. 安装客户端软件,支持Samba共享挂载(支持Cifs文件系统)
+	yum -y install cifs-utils
+  2. 挂载访问点
+	mount -o username=用户名,password=密码 //对方的ip地址/共享名 挂载点
+     或 mount -o user=用户名,pass=密码 //对方ip地址/共享名 挂载点
+  3. 自动挂载
+        文件位置 : /etc/fstab 
+        添加内容:
+          //对方ip地址/共享名  挂载点 文件系统格式(cifs) defaults,user=用户名,pass=密码,_netdev 0 0 
+
+  注意: 防火墙
+
+####################################################
+day15  server1
+搭建虚拟机
+ 1. 使用自建的clone-vm7命令创建虚拟机
+ 2. 修改主机名
+	echo '主机名' > /etc/hostname
+	hostname 主机名 
+ 3. 修改ip地址
+       nmcli connection modify 网卡名 ipv4.method manual ipv4.addresses ip地址/子网掩码 connerctiont.autoconnect yes
+
+文件结构 ( man hier)
+	/boot 存放系统引导必须的文件,
+	/bin /sbin 存放各种命令程序
+	/dev
+	/tec  存放LInux系统及各种程序的配置文件
+	/root /home/
+	/var  存放日志文件/邮箱目录等经常变化的文件
+	/proc 存放内存中的映射数据,不占用磁盘
+	/tmp  存放系统运行过程中使用的一些临时文件
+
+
+------------------------------------------
+权限的数值表示
+	基本权限 r=4 w=2 x=1
+	附加权限 suid=4 sgid=2 sticky bit=1
+   修改权限
+	chmod Xabc 文件名  #a=u权限和,b=g权限和,c=o权限和,X=附加权限和
+-------------------------------------
+补充命令
+   1. history  	# 以列表查看历史命令 
+	history -c	# 清空历史命令         
+		配置文件位置 : /etc/profile
+        	记录数量 : HISTSIZE = ??
+    2.  !数字 	#执行历史命令中对应行的命令
+	!???	#执行最近以???开头的命令
+   3. du	#查看文件大小
+      du -sh 文件名	#只统计文件的大小
+   4. date
+	date +%F	#年月日
+	date +%Y	#年
+	date +%m	#月
+	date +%d	#月
+	date +%R	#时 : 分
+	date +%H	#小时
+	date +%M	#分钟
+	date +%S	#秒
+	date -s 'YYYY-mm-dd hh:mm:ss'
+    5.  制作快捷方式 (软连接)
+	特点 : 可以跨分区,跨文件系统.	原始文件删除,不可再用.
+	格式 : ln -s /路径/源数据  /路径/快捷方式名称
+    6.  制作快捷方式 (硬链接)
+	特点 : 原始文件删除,也还可用.	不能跨分区,跨文件系统,   只能是文件,不能是目录
+	格式 : ln /路径/源数据  /路径/快捷方式名称
+    7.  获取命令帮助
+		--help
+		man [1-9] 命令	# 有9中帮助类型,默认为1(命令帮助),5是配置文件帮助
+
+归档压缩(zip)
+	特点 :  跨平台压缩工具,兼容性好
+	
+	软件名 : zip
+    格式:
+	压缩格式 : zip -r 备份文件名.zip 被归档文件
+	解压格式 : unzip 备份文件名.zip -d 解压到路径
+
+
+-----------------------------------------------------------
+搭建yum仓库
+   1. 安装 vsftpd 软件包
+   2. 查看服务状态  systemctl status vsftpd
+   3. 挂载共享数据路径
+       mkdir /var/ftp/文件夹名
+       mount /iso/CentOS7-1804.iso /var/ftp/centos-1804
+         在自动挂载中 光盘的文件系统格式为iso9660
+
+访问yum仓库
+   1. 设置yum配置文件 
+      /etc/yum.repos.d/local.repo 
+		[ ]
+		name=
+		baseurl=
+		enabled=1
+          	gpgcheck=0
+   2. 重载yum配置文件
+		yum repolist
+
+自定义yum仓库
+  
+   1.  具备从互联网下载的软件包
+   	方式 1 : fdb
+	方式 2 : web
+	方式 3 : nfs
+	方式 4 : Samba
+	方式 5 : 从其他机器传输
+		命令 : scp /文件路径 用户名@ip地址: /路径
+   2.  验证软件包是否下载
+   3.  安装yum检测软件
+	yum -y install createrepo
+   4.  检测并生成仓库数据文件
+	createrepo /软件包所在文件夹路径
+   5.  修改yum配置文件
+	/etc/yum.repos.d/local.repo
+   6.  将程序转入后台运行
+	命令 &
+   7.  删除运行的程序
+	killall 程序名 
+
+-------------------------------------------------------------------------------------------------
+Vim编辑
+    命令模式 : 
+	上下左右
+	home键 | ^0 	#跳转行首
+	end键  | $键	#跳转行尾
+	pgue键	#上翻页
+	pgdn键	#下翻页
+	G		#尾行
+	gg		#首行
+	yy		#拷贝
+	dd		#删除
+	p		#粘贴
+	x | delte	#删除单个字符
+	d^		#删除至行首
+	d$ | D	#删除至行尾
+	u		#撤销
+	U		#撤销光标行所有修改
+	C		#删除至行尾,进入插入模式
+	Ctrl + r	#取消撤销操作
+	ZZ		#保持并退出
+   末行模式 :
+	:r 其他文件				#在光标下方读取并写入其他文件内容
+	:s/被替换内容/替换为内容 		#只替换光标第一个
+	:s/被替换内容/替换为内容/g		#替换光标行
+	:n,m s/被替换内容/替换为内容/g	#替换n-m行所有
+	:%s/被替换内容/替换为内容/g		#替换全文所有
+	:set nu|nonu			#行号
+	:set ai|noai			#自动缩进
+
+----------------------------------------------------------------------------------------------------
+源码编译安装
+    源码包优点 : 
+	最近版本,及时修复BUG,
+	可选择安装位置
+	软件功能可按需选择/定制,有更多软件可供选择
+	适用于各种平台 
+   
+    步骤 :
+	1. 下载源码包
+	2. 安装gcc和make编译源码包工具
+		yum -y install gcc make
+	3. tar解包,释放至指定目录
+		tar -xf 源码包 -C 文件夹
+	4. ./configure 配置,指定安装目录/功能模块等
+		./configure --prefix=位置  指定安装位置
+	5. make 编译,生成可执行的二进制文件
+		make
+	6. make install 安装,将编译好的文件复制到安装目录
+		make install
+	
+*********************************************************************************************
+
+
+day16  server2
+克隆一个虚拟机
+	命令	clone-vm7	
+
+
+
+------------------------------------------
+kvm构建及管理
+介绍
+		虚拟产品
+  系列		        PC/服务器版本代表
+VMware	VMware workstation / vSphere
+Microsoft	VirtualPC / Hyper-V
+RedHat	KVM / RHEV
+Citrix	Xen
+Oracle	Oracle VM VirtualBox
+
+组成
+	xml配置文件(虚拟机描述文件):
+		定义虚拟机的名称/UUID/cpu/内存/虚拟磁盘/网卡等各种参数设置
+		位置:  /etc/libvirt/qemu/
+	磁盘镜像文件:
+		保持虚拟机的操作系统及文档数据,镜像路径取决于xml配置文件中的定义
+		位置: /var/lib/libvirt/images/
+
+
+搭建kvm服务器
+前提:
+1.  查看cpu是否支持虚拟化功能
+	lscpu | grep vmx
+2.  进入BIOS开启virtualization功能
+步骤:
+1. 设置主机名
+	hostnamectl set-hostname "主机名"
+2. 关闭防火墙
+	firewall-cmd --set-default-zone=trusted
+3. 设置SELinux
+	vim /etc/selinux/config
+		selinux=permissive
+
+4. 设置网卡
+	nmcli connection show
+	nmcli connection modify '网卡名' ipv4.method manual ipv4.addresses "ip地址/24" connection.autoconnect yes
+	nmcli connection up "网卡名"
+
+5. 构建yum仓库
+	vim /etc/yum.repos.d/dvd.repo
+		[dvd]
+		name=my_yum
+		baseurl=ftp://192.168.4.254/centos-1804	#需要先在该ip上搭建ftp共享
+		enabled=1
+		gpgcheck=0
+	yum repolist
+
+
+主要软件包
+1. 提供底层仿真支持 
+	qemu-kvm
+2. libvirtd 守护进场,管理虚拟机
+	libvirt-daemon
+3. 用户端软件,提供客户端管理命令
+	libvirt-client
+4. 连接qemu的驱动
+	libvirt-daemon-driver-qemu
+5. 图形管理工具
+	virt-manager
+
+打开虚拟软件命令
+	virt-manager
+------------------------------------
+virsh控制工具
+介绍
+	提供管理各虚拟机的命令接口
+格式 : virsh 控制指令 [ ]  
+
+#列出正在运行的虚拟机
+	virsh list
+#查看kvm节点(服务器)信息
+	virsh nodeinfo 
+#列出虚拟网络
+	virsh net-list [--all]
+#列出指定虚拟机的信息
+	virsh dominfo 虚拟机名称
+#设置虚拟机自动运行
+	virsh autostart 虚拟机名称
+#设置虚拟机不自动启动
+	virsh autostart --disable 虚拟机名称
+#运行 | 重启 | 关闭 指定虚拟机
+	virsh start | reboot | shutdown 虚拟机名称
+#强制关闭指定的虚拟机
+	virsh destroy 虚拟机名称
+#查看虚拟机内容
+	virsh dumpxml nsd01
+#生成一个UUID
+	uuidgen
+
+命令创建虚拟机
+1. 创建镜像文件
+#切换到存放磁盘镜像文件的目录
+	cd /var/lib/libvirt/images/
+#查看现有的磁盘镜像文件	
+	ls
+#拷贝一个镜像文件到本路径
+	cp .node_base.qcow2 nsd01.img
+#查看拷贝的文件大小
+	du -sh nsd02.img
+
+2. 创建虚拟机配置文件
+#查看一个虚拟机的配置文件
+	virsh dumpxml nsd01(一个虚拟机的配置文件)
+#将一个虚拟机配置文件重定向为一个新的配置文件
+	virsh dumpxml nsd01(一个虚拟机的配置文件) >  /etc/libvirt/qemu/nsd02.xml(新配置文件名) 
+#编辑配置文件
+	vim 	/etc/libvirt/qemu/nsd02.xml 
+		#修改配置文件内容
+		name=虚拟机名称
+		#删除UUID行,或使用uuidgen生成一个新的拷贝
+		#修改镜像文件的路径		
+		<source file='/var/lib/libvirt/images/nsd02.img'>
+		#删除网卡id信息  mac
+
+3. 导入虚拟机信息
+#导入配置文件
+	virsh define /etc/libvirt/qemu/nsd02.xml 
+#查看虚拟机信息
+	virsh list --all
+
+#三合一命令: (导出 修改 导入)   可代替第二,第三步骤
+	virsh edit 虚拟机名
+		#修改配置文件内容
+		name=虚拟机名称
+		#删除UUID行,或使用uuidgen生成一个新的拷贝
+		#修改镜像文件的路径		
+		<source file='/var/lib/libvirt/images/nsd02.img'>
+		#删除网卡id信息  mac
+
+删除虚拟机步骤
+#关闭虚拟机
+	virsh destroy 虚拟机名
+#取消虚拟机定义
+	virsh undefine 虚拟机名
+#删除磁盘镜像文件
+	ls /var/lib/libvirt/images/镜像文件名
+	rm -rf /var/lib/libvirt/images/镜像文件名
+	
+-------------------------------------------------------------------------------------
+磁盘镜像文件格式
+
+ 特点/类型			raw			qcow2
+KVM默认			否			是
+I/O效率			高			较高
+占用空间			大			小
+压缩				不支持			支持
+后端盘复用			不支持			支持
+快照				不支持			支持
+-------------------------------------------------------------------------------------
+cow技术原理:可以快速产生虚拟机磁盘镜像文件
+Copy On Write 写时复制
+作用:
+	直接映射原始盘的数据内容
+	当原始盘的旧数据有修改时,在修改之前自动将旧数据存入前端盘
+	对前端盘数据进项修改,不会修改原始盘
+	注意:创建前端盘后,原始盘不可做任何更改,否则前端将崩溃
+
+创建前端盘
+qemu-img create -f qcow2 -b 原始盘 前段盘 大小
+
+ 1. 创建磁盘镜像文件
+	qemu-img create -f qcow2 -b 原始盘路径/原始盘文件名 前端盘路径/前端盘文件名 
+ 2. 查看前段盘信息
+	qemu-img info 后端文件名
+
+---------------------------
+docker
+lamp
+k8s
+openst
+--------------------------------
+
+
++++++++++++++++++++++++++++++++++++++++++
+day17 server3
+------------------------
+DNS 服务基础
+   软件包:  bind 和 bind-chroot
+		bind 			域名服务包
+			
+		bind-chroot		提供虚拟根支持(牢笼政策)
+			运行的虚拟环境 : /var/named/chroot
+   服务名称 : named
+   默认端口 : 53 
+   协议     : TCP/UDP 
+ DNS功能
+	正向解析: 根据注册的域名查找对应的IP地址
+	反向解析: 根据IP地址查找对应的注册域名,不常用
+  DNS分类
+	根域名服务器		
+	一级dns服务器
+	二级dns服务器
+	三级dns服务器
+	主机站点
+  DNS的域名分布式结构 : 树形结构
+	1) 所有的域名都必须以点作为结尾,所有浏览器自动补全最后的点
+	2) 一级域名 (以国家区分) :  .cn(中国) .tw(台湾) .hk(香港) .us() .jp(日本) .kr(韩国)
+	3) 二级域名 : .com.cn(商业组织)  .net.cn(运营商) .org.cn(非盈利机构)  .tedu.cn(教育机构)
+	4) 三级域名 : 
+	5)完整的主机名 ( FQDN : Full QuallFied Domain Name) : 主机头部 + 合格的域名 
+
+IANA 互联网数字分配机构
+NNIC 中国互联网络信息中心
+BIND (Berkeley Internet Name Daemon) : 伯克利internet 域名服务
+
+#设置本dns服务器负责解析的域名
+	主配置文件 : /etc/named.conf
+#设置完整的主机名与IP地址的对应关系
+	地址库文件 : /var/named/
+
+
+构建DNS服务器步骤
+1. 安装软件包 
+	yum -y install bind bind-chroot
+2. 修改配置文件
+	#备份配置文件
+	cp /etc/named.conf /etc/named.bak
+	#修改文件
+	vim /etc/named.conf
+		#只保留并改为
+		options {
+			#地址库路径
+			directory  "/var/named";
+		};
+		#监听的域名
+		zone "tedu.cn" IN {		#tedu.cn 为域名
+			type master;		#类型 master 为主服务器, slave 为附服务器
+			file "tedu.cn.zone";	#配置文件名称,格式一般以域名.zone
+		};
+
+3. 新建地址库文件
+	#保持权限不变复制一个数据库文件
+	cp -p /var/named/named.localhost /var/named/tedu.cn.zone
+	#修改地址库文件内容
+	vim /var/named/tedu.cn.zone
+		#域名声明记录  NS ( name server),域名需完整,要有点结尾
+		tedu.cn. NS svr7.tedu.cn.		#域名tedu.cn 由 svr7.tedu.cn 负责解析
+		#地址记录	A
+		svr7.tedu.cn.   A 192.168.4.7		#服务器的ip地址是多少
+		#ipv记录	AAAA  (暂时不要)
+
+4. 指定dns配置文件
+	echo	nameserver=192.168.4.7 > /etc/resolv.conf
+
+
+----------------------------------------------------------------------------
+主机名映射文件 :  /etc/hosts   #直接起到dns域名解析的作用,但是只能为本机提供解析,优先级最高
+
+
+
+----------------------------------------------------------------------
+特殊的解析记录
+1.  NDS轮询,基于NDS的站点负载均衡
+	一个域名,多个不同的ip地址
+2.  泛域名解析:(地址库:/var/nemed/????)
+	*.域名		A	对应ip地址
+3.  有规律的泛域名解析
+	内置函数 : $GENERATE   制造连续的数字
+	格式 : $GENERATE 	起始点-结束点
+	示例 :	$GENERATE 1-30 	$.tedu.cn.	A	192.168.4.$
+4.   解析记录别名
+	#在域名解析位置文件中添加以下内容
+	vip	CNAME	ftp	# vip 的域名解析与ftp的一直
+
+
+--------------------------------------------
+NDS的资源解析记录有那些?
+	NS解析记录	:	DNS服务器声明记录
+	A解析记录	:	正向地址解析记录
+	CNAME解析记录	:	解析记录的别名
+
+
+=====================================
+DNS子域授权
+	在主  DNS服务器位置文件中添加以下内容:
+		
+		从域名		NS	从DNS服务器
+		从DNS服务器	A	从DNS IP 地址	
+
+
+递归解析 : 客户端发送请求给主DNS服务器,主DNS服务器与其他DNS服务器交互最终将解析结果带回来的过程
+迭代解析 : 主DNS服务器与其他DNS服务器交互
+
+--------------------------------------------------------------------------------------------
+DNS主/从结构 : 
+主要作用: 从做备份.解决单点故障
+以 QQ.com 域名为例
+
+虚拟机A:构建主DNS服务器
+1. 修改主配置文件,允许虚拟机B进行同步数据
+	#通过man帮助查找格式
+	man named.conf
+	/allow 
+	allow-transfer
+	#在主配置文件添加允许主机的网址
+	vim /etc/named.conf
+		options {
+			...
+			allow-fransfer { 192.168.4.207; };
+		};
+2. 在地址文件中,声明从服务器的ip地址
+	#在配置文件添加从服务器
+	qq.com	NS	pc207
+	pc207		A	192.168.4.207
+
+3. 从服务器安装dns软件包
+	yum -y install bind bind-chroot
+
+4. 从服务器修改主配置文件
+	vim /etc/named.conf
+		options {
+			directory "/var/named"
+		};
+		#将解析域名定义为主服务器域名
+		zone "qq.com" IN {
+			type slave;				#将类型定义为从服务器类型
+			file "slaves/qq.com.slave"	#将主服务器位置文件放置slaves文件夹下
+                                                                 (注:/var/named/文件夹无写入权限)
+			masters { 192.168.4.7; };	#指定主服务器位置
+		}
+	
+5. 客户端C进行验证
+	在/etc/resolv.conf中设置dns服务器
+	echo nameserver 192.168.4.7 > /etc/resolv.conf		#首选dns服务器
+	echo nameserver 192.168.4.207 >> /etc/resolv.conf		#备用DNS服务器
+
+
+数据更新,主DNS服务器完成
+1. 更新位置文件内容	
+	vim /etc/named/????.zone
+		修改内容,serial必须变大
+		serial	#数据的版本号,格式(10位数):年月日次数
+		refresh	#主与从同步数据时间间隔 (1D : 1天)
+		retry		#失联后同步数据时间间隔 (1H : 1小时)
+		expire	#完全失效时间间隔	  (1W : 1周)
+		minimun	#无效记录的记忆时间(记录没有记录的有效时间)
+
+	systemctl restart named
+
+======================================================
+day18 server4
+
+#默认从/etc/resolv.conf中查dns服务器并解析域名
+nslookup 域名
+#直接从指定的ip进行域名解析
+nslookup 域名 ip
+
++++++++++++++++++++++++++++++++++++
+缓存DNS : 缓存解析结果,加速解析
+
+构建缓存DNS步骤
+1. 修改主配置文件
+	forwarders { 公共DNS; };
+
+--------------------------------------------------------------------------
+Split 分离解析 ( 视图解析 )
+
+	能够区分客户机的来源地址,
+	为不同类别的客户机提供不同的解析结果,
+	不同客户端解析同一个域名,得到解析结果不同
+	为客户端提供网络中最近的服务器
+
+
+格式 :
+	view "类别1" {
+		match-clients { 来源地址1; }; 	#客户端来源IP地址
+		zone " 域名 " IN {
+			type master;
+			地址库1;
+		};
+	};
+	view "类别2" {
+		match-clients { 来源地址1; };
+		zone " 域名 " IN {
+			地址库2;
+		};
+	};
+	view "other" {
+		match-clients { any; };
+		zone " 域名 " IN {
+			地址库3;
+		};
+	};
+注意 : 	分类要合理,所有客户端都要找到自己的分离
+	由上到下进行依次匹配,
+
+
+多区域的分离解析
+	每一个 view 中,zone 的分类以及负责的域名都要保持一致 
+
+
+ACL地址列表
+	为大批量的客户机地址建立列表
+主配置文件中
+	acl 变量名 { IP地址;IP地址; };
+	view "类别" {
+		match-clients { 变量名; };
+	};
+
+测试DNS解析的命令
+	nsloopup
+	dig
+
+-----------------------------------------------------------------------------------
+RAID  廉价冗余磁盘阵列  (Redundant Arrays of Inexpensive Disks)
+	通过硬件/软件技术,将多个较小/低速的磁盘整合成一个大磁盘
+	列阵的价值 : 提升 I/O 效率 硬件级别的数据冗余
+	不同RAID级别的功能 特性各不相同
+
+RAID 0 (条带模式)
+	同一个文档分散存放在不同磁盘
+	并行写入以提高效率
+	至少需要两块磁盘
+RAID 1 (镜像模式)
+	至少需要两块磁盘
+	一个文档复制成多分,分别写入不同磁盘
+	多份拷贝提高可靠性,效率无提升
+RAID 5 (高性价比模式)
+	至少需要3个磁盘
+	相当于RAID0和RAID1的折中方案
+	需要至少一块磁盘的容量来存放校验数据
+    原理 : 产生奇偶校验
+RAID 6 (高性价比/可靠模式)
+	至少需要4个磁盘
+	相当于扩展的RAID5列阵,地宫2份独立校验方案
+	需要至少两块磁盘的容量来存放校验数据
+    原理 : 产生奇偶校验
+RAID 0+1 或 RAID 1+0
+	至少需要四块盘
+	整合RAID 0 和  RAID 1 的优势
+	并行存取提高效率 进项写入提高可靠性
+-----------------------------------------------------------------------------------------------------------------
+进程管理
+	程序  :  静态的代码  		占用磁盘空间资源
+	进程  :  动态指定的代码	耗用CPU与内存的资源
+		父进程 与  子进程 :  树形结构
+		进程编号 : PID
+		僵尸进程 :
+		孤儿进程 :   
+	线程  :  
+
+-----------------------------------------------
+查看进程   pstree  (Processes Tree )
+格式 : pstree  选项  PID或用户名
+	选项 : 	-a	显示完整的命令行
+		-p	列出对应PID编号
+
+	结构 :  systemd : 所有进程的父进程  上帝进程  接管所有孤儿进程
+
+查看进程快照	ps  (Processes Snapshot)
+格式 :  ps  选项
+	选项 :	aux	列出正在运行的进程详细信息
+			a  
+		-elf	列出正在运行的进程的父进程PID
+			PPID父进程ID值
+
+top 进程动态排名  交互式工具
+格式 :  top  [-d 刷新描述] [-u 用户名]
+		按P 进行CPU排序
+		按M 进行内存排序
+
+pgrep 检索进程 (Process Grep)
+格式 :  pgrep 选项 条件
+	格式 : 	-l 	输出进程名,不仅仅PID
+		-U	指定用户
+		-x	精确匹配完整的进程名
+
+------------------------------------------------------------------------------
+进程调度
+后台启动
+	在命令行后输入 & ,不占用当前终端
+暂停当前进程并转入后天
+	Ctrl+z
+查看后台任务列表
+	jobs
+	jobs -l	#显示进程PID
+将后台任务恢复到前台运行
+	fg
+激活后后台被挂起的任务
+	bg
+
+---------------------------------------------------
+杀死进程
+
+1. Ctrl+c			#中断当前命令程序
+
+2. kill [-9] PID		#以PID杀死进程  -9 强制删除
+   kill [-9] %后台任务编号
+3. killall [-9] 进程名	#以名称杀死进程 -9 强制删除
+
+4. pkill 查找条件		#包含查找条件的都杀死
+
+强制踢出一个用户 (杀死一个用户开启的所有进程)
+	killall -9  -u  用户名
+
+--------------------------------------------
+日志管理
+功能
+	记录系统/程序运行中发生的各种事件
+	通过查看日志,了解及排除故障
+	信息安全控制的依据
+
+内核及系统日志
+	由系统服务rsyslog统一记录/管理
+
+常见的日志文件
+	/var/log/messages		#记录内核消息/各种服务的公共消息
+	/var/log/dmesg		#记录系统启动过程的各种消息
+	/var/log/cron		#记录与cron计划任务相关的消息
+	/var/log/maillog		#记录邮件收发相关的信息
+	/var/log/secure		#记录与访问限制相关的安全信息
+
+用户日志
+	有登录程序负责记录/管理
+	记录登录用户的时间/来源/执行的命令等
+
+
+
+日志分析
+	通用分析工具	:	
+		tail tailf less grep等文本浏览/检索命令
+			tailf : 实时跟踪日志的变化
+		awk  sed等格式话过滤工具
+	专用分析工具
+		Webmin 系统管理套件
+		Webalizer  AWStats等日志统计套件
+
+用户登录分析
+  查看已登录的用户信息
+  users 或  who  或 w 命令
+	pts	: 图形命令行终端
+  查看最近登录成功/失败的用户信息
+   last  lastb 命令
+    格式 :  	last 	-数字	登录成功
+	    	lastb	-数字 	登录失败
+
+日志优先级
+	分为0-7 共8种优先级别,数值越小越紧急
+	0	emerg 	紧急
+	1	alert		警告
+	2	crit		严重
+	3	err		错误
+	4	warning	提醒
+	5	notice	注意
+	6	info		信息
+	7	debug		调试
+
+journalctl 工具
+	提取由 systemd-journal 服务收集的日志
+
+格式 :  journalctl -xe
+	journalctl -u  服务名
+	journalctl -n
+	journalctl -
+	journalctl -
+
+-------------------------------------------------------------------
+systemctl 控制
+systemd  : init程序  一个更高效的系统&服务管理器
+	是内核引导之后加载的第一个初始化进程(PID=1),负责掌控整个Linux的运行 服务资源组合
+	配置目录 :  /etc/systemd/system/ 
+	服务目录 :  /lib/systemd/system/
+systemctl restart 服务名
+		start
+		stop	
+		status	
+		enable
+		disable
+		
+	RHEL5  : system v
+	RHEL6  : upstart 
+
+-----------------------------------------------------------------------
+RHEL6 运行级别
+切换级别 : init 数字
+	0	关机
+	1	单用户模式(基本功能的实现,破解Linux密码)
+	2	多用户字符界面(不支持网络)
+	3	多用户字符界面(支持网络)服务器默认的运行级别
+	4	未定义
+	5	图形界面
+	6	重启
+RHEL 7 运行模式
+字符模式 : multi-user.target
+图形模式 : 
+
+切换 :
+	systemctl isolate multi-user.taget	#直接切换到字符模式
+	systemctl isolate graphical.target	#直接切换到图形模式
+	systemctl get-default			#查看默认进入模式
+	systemctl set-default multi-user.target
+	reboot					#设置默认进入模式
+
+
+====================================================
+day19  server5   网路装机
+
+DHCP服务
+   作用 (Dynamic Host Confiquration Protocol)
+	给互联网中其他
+	动态主机配置协议,由IETF(Internet 网路工程师任务小组)组织定制,用来简化主机地址分配管理
+   主要分配一下入网参数
+	IP地址 子网掩码  广播地址
+	默认网关地址  DNS服务器地址
+   原理
+	DHCP地址分配的四次会话,整个过程以广播形式进行,先到先得  
+	DISCOVERY -->  OFFER --> REQUEST -->  ACK
+	一个网络中只能有一个dhcp服务器
+
+网络装机的优势
+	规模化 	:	同时装配多台主机
+	自动化 	:	装系统/配置各种服务
+	远程实现 	:	不需要光盘/U盘等物质安装介质
+
+PXE (Pre-Boot eXecution Environment)
+	预启动执行环境,在操作系统之前运行
+	可用于远程安装
+   工作模式
+	pxe client 集成在网卡的启动芯片中,
+	当计算机引导时,从网卡芯片中把pxe clien调入内存执行,获取pxe server 配置,显示菜单,根据用户选择将远程引导程序下载到本机运行
+
+
+web  <-----------------   客户	-------------1  广播请求ip--------->	 dhcp
+       ------------------------------>    机	<----------2  给予ip ------------
+				  /\
+				   ||
+				  3||
+				 请||4
+		   		 求||给
+				 配||予
+			 	 置||配
+				 文||置
+				 件||文
+				   ||件
+				   ||
+				  \/
+		     		 tftp(简单的文件传输协议,默认端口号 : 69 )
+
+
+
+	ftp		文件传输协议		21
+	tftp		简单的文件传输协议	69
+	ssh		远程管理协议(加密)	22
+	telnet	远程管理协议(明文)	23
+	snmp		简单的网络管理协议	161	
+	smtp		邮件协议(发邮件)	25
+	pop3		邮件协议(收邮件)	110
+	DNS		域名解析协议		53
+	http		超文本传输协议		80
+	https		安全的超文本传输协议	443
+		
+
+
+
+步骤:
+1.  安装dhcp软件
+	yum -y install dhcp
+
+2. 修改主配置文件
+	vim /etc/dhcp/dhcpd.conf
+		在末行模式读入其他文件内容
+		:r	/usr/share/doc/dhcp*/dhcpd.conf.example
+		subnet 192.168.4.0(网段) netmask 255.255.255(子网掩码)	#设置分配的网段
+		range 192.168.4.100(起始ip)  192.168.4.200(结束ip)		#设置分配ip的范围
+		option domain-name-servers 服务器地址			#分配的dns地址
+		#option domain-name "  ";					#域名
+ 		#option routers ;						#路由/网关
+ 		#option broadcast-address ;				#
+  		default-lease-time 600;					#租用时间
+  		max-lease-time 7200;					#最大租用时间
+		next-server 192.168.4.7;					#指定下一步服务器的ip
+		filename "pxelinux.0"					#指定网卡引导文件名称(安装说明书,二进制文件)
+
+3. 重启dhcp服务
+	systemctl restart dhcpd
+
+4. 安装tftp-server软件包
+	yum -y install tftp-server
+	(默认共享数据的路径 : /var/lib/tftpboot/)
+
+5. 重启tftp服务
+	systemctl restart tftp
+
+6. 部署网卡引导文件pxelinux.0
+	#查看文件产生的软件包
+	yum provides */pxelinux.0
+	#安装软件包
+	yum -y install  syslinux
+	#查看软件包安装产生的文件
+	rpm -ql syslinux
+	#拷贝软件到tftp的默认路径
+	cp /文件路径	/var/lib/tftpboot/
+
+	备注:  pxelinux.0  读取指向菜单文件  /var/lib/tftpboot/pxelinux.cfg/default
+
+7. 部署菜单文件
+	#让光盘内容出现系统中
+		关机 --> 添加光驱 --> 加载光盘 --> 开机 --> 挂载光盘
+	#创建文件夹
+		mkdir /var/lib/tftpboot/pxelinux.cfg/
+	#拷贝光盘的菜单文件(isolinux.cfg)到指定文件夹中并改名
+		cp /mnt/isolinux/isolinux.cfg  /var/lib/tftpboot/pxelinux.cfg/default
+
+8. 部署图形的模块和背景图片
+	#将vesamenu.c32(图形模块) splash.png(背景图片) 拷贝tftpboot文件中
+	cp /mnt/isolinux/vesamenu.c32  /mnt/isolinux/splash.png /var/lib/tftpboot/
+9. 部署启动的内核与驱动程序
+	#vmlinuz(启动内核)和 initrd.img(驱动程序) 拷贝到tftpboot文件中
+	cp /mnt/isolinux/vmlinuz /mnt/isolinux/initrd.img /var/lib/tftpboot/
+
+10. 修改菜单文件内容
+	1 default vesamenu.c32		#默认加载图形模块
+  	2 timeout 600			#默认读秒时间60秒
+	10 menu background splash.png	#指定背景图片
+	11 menu title NSD1907 PXE Server		#标题
+	61 label linux
+ 	62   menu label ^Install CentOS 7		#菜单选项内容, ^ 表示键盘上快捷键
+	     menu default			#读秒结束后默认选择
+	63   kernel vmlinuz		#加载内核
+	64   append initrd=initrd.img 	#加载驱动程序
+
+11. 重启服务
+	systemctl restart dhcpd
+	systemctl restart tftp
+	systemctl disable ftfp	#不能开机自启
+
+12. 验证
+	新建虚拟机,选择网络引导安装
+	
+13. 搭建web服务
+	#安装httpd软件
+	yum -y install httpd
+	#在默认路径创建文件夹centos
+	mkdir /var/www/html/centos
+	#挂载光驱到centos
+	mount /dev/cdrom /var/www/html/centos
+	#重启httpd服务
+	systemctl restart httpd
+	
+14. 部署无人值守安装(生成应答文件)
+	#安装图形软件
+	yum -y install system-config-kickstart
+	#以英文运行图形软件
+	LANG=en system-config-kickstart
+		#Basic Configuration  
+			Default Language 	选择语言
+			Keyboard		键盘
+			Time Zone		时区 选择Asia/Shanghai
+			Root Password	Root密码
+			Confirm Password	确认密码
+			Reboot system after installation	装机后重新启动
+			是否字符安装,不选择默认图形(Graphical)
+		#Installation Method
+			全新安装
+			选择HTTP安装方式
+				HTTP Server 	#http网址
+				HTTP Directory	#目录,写网络路径(centos)
+		#Boot Loader Options
+			选第一个安装全新的引导文件
+		#Partiton Information
+			清除记录
+			???
+			重新分区
+			添加分区
+				挂载到根
+				用所有剩余空间
+		#Network	添加网卡
+		#Firewall
+			关闭SELinux
+			关闭防火墙
+		
+		#Package Selection 选择安装包  (被禁用,需要将指向光盘的yum标识改为development)
+			最少需要安装system base  基本系统
+		#Post-Installtion Script 安装后脚本
+			Use an interpreter 使用的脚本
+			Type your %post script below 脚本内容
+
+	#保存选择的配置并生成文件
+
+	#利用web服务共享应答文件
+		将应答文件拷贝到web目录同级文件中(/var/www/html/)
+
+	#利用菜单文件指定应答文件位置
+		在加载驱动程序后添加 ks=http://192.168.4.7/ks.cfg
+
+
+
+内存最少2G 最好4G
+===========================================================
+day20 server6
+
+同步操作=rsync 
+作用
+	增量拷贝,只传输变化过的数据
+
+格式 : rsync 选项 源目录 目标目录
+	注意 :  源目录结尾无斜杠则同步文件夹
+		源目录结尾有斜杠则只同步文件夹下内容
+
+	选项 : 	-n		测试同步过程,不做实际操作
+		--delete	删除目录文件夹内多余的文档
+		-a		归档模式,相当于-rlptgoD
+		-v		显示详细操作信息
+		-z		传输过程中启用压缩/解压
+
+
+--------------------------------------------------------------------------------
+远程同步=rsync+SSH
+
+格式 : 
+	下行 :	rsync [...] user@host:远程目录  本地目录
+	上行 :  rsync [...] 本地目录  user@host:远程目录
+  例如 : rsync -av -delete /nsd05/ root@192.168.207:/opt/
+
+-----------------------------------------------------------------------------------------
+实时同步
+
+1. 生成公钥与私钥,实现ssh无密码验证
+	#生成公钥和私钥
+	ssh-keygen
+	
+	#/root/.ssh/文件夹下的文件解读
+	known_hosts	#记录曾经远程管理过的人
+	id_rsa	#私钥
+	id_rsa.pub	#公钥
+        
+2. 将公钥传递给其他电脑
+	ssh-copy-id root@192.168.4.207
+
+3. 安装目录变化监控工具(inotify-tools)
+	
+	gcc
+	make
+	make install
+
+4. 监控文件命令使用
+格式 : inotifywait 选项 目标文件
+	选项 : 	-m	持续监控(捕获一个事件后不退出监控)
+		-r	传递监控/包括子目录及文件
+		-q	减少屏幕输出信息(双q不要任何输出)
+		-e	指定监视的modify move create delete attrib 等事件类别
+	
+5. 书写同步脚本
+	while inotifywait -rq /nsd05 $> /dev/null
+	do
+		rsync -av -delete /nsd05/ root@192.168.4.207:/opt/
+	done	
+
+while循环 : 
+	while 条件
+   	do
+		执行代码
+	done
+
+环境变量 :
+	$PATH=储存命令程序搜索路径
+
+------------------------------------------------------------------------
+cobbler 装机平台
+
+介绍
+
+
+平台部署
+1. 安装软件包
+	yum -y install dhcp httpd mod_ssl 
+2. 安装cobbler软件包
+	yum -y install /opt/cobbler/*.rqm
+	
+	yum -y install cobbler cobbler-web dhcp tftp-server pykickstart httpd xinetd
+
+3. 启动服务
+	systemctl start xinetd.service
+	systemctl start httpd
+	systemctl start cobblerd.service
+4. 修改 cobbler主配置文件
+	vim /etc/cobbler/settings
+		next_server:	192.168.4.123	#设置下一个服务为本机
+		server:		192.168.4.123	#设置本机为cobbler服务器
+		manage_dhcp:	1			#设置cobbler管理dhcp服务
+		pxe_just_once:	1			#防止客户端重复安装操作系统
+
+5. 配置cobbler的dhcp配置文件
+	vim /etc/cobbler/dhcp.template
+		:%s /192.168.1/192.168.4/g		:%s /旧/新/g #全文替换内容
+	
+6. 绝对路径解压cobbler_boot.tar.gz		
+	tar -tf /cobbler/cobbler_boot.tar.gz		#查看压缩包内容
+	tar -xPf /cobbler/cobbler_boot.tar.gz	#绝对路径解压
+	等同于 tar -xf /cobbler/cobbler_boot.tar.gz -C /var/lib/cobbler/
+7. 重启服务
+	systemctl restart cobblerd
+	systemctl enable cobblerd
+	systemctl restart httpd
+	systemctl enable httpd
+	systemctl restart tftp
+	systemctl enable tftp
+	systemctl restart rsyncd
+	systemctl enable rsyncd
+
+8. 同步刷新
+	cobbler sync
+
+7. 运行cobbler
+	Firefox https://192.168.4.123/cobbler_web
+		用户名 : cobbler
+		密  码 : cobbler
+
+8. cobbler应用
+	mkdir /dvd
+	mount /dev/chrom /dvd
+	du -sh /dvd/
+	#导入光盘中的内容到/var/www/cobbler/ks_mirror 
+	cobbler import --path=/dvd(挂载点) --name=Centos7.5(系统写入名称)	
+	
+
+
+自定义应答文件需要删除ks应答文件install上方的注释内容
+
+开机启动项:匹配及停止
+	1. 硬盘启动
+	2. 光驱启动
+	3. U盘
+	4. 网卡引导
+
+================================================================
+day21 network1
+
+按地域范围分类　：
+	广域网  WAN (Wide-Area Network)
+	作用:
+		用于连接远距离的计算机网络
+	局域网  LAN (Local-Area Network)
+	作用:
+		用于连接较短距离的计算机
+	城域网　MAN
+
+按技术划分
+	对等网	:	网络中主机具有相同角色
+	Ｃ/Ｓ	:	客户机／服务器
+	Ｂ/Ｓ	:	浏览器／服务器
+
+按安全划分
+	ｉｎｔｒａｎｅｔ	：	内部网络
+	ｅｘｔｒａｎｅｔ	：	外部网络
+	Ｉｎｔｅｒｎｅｔ	：	国际互联网
+
+交换机 : 二层设备
+路由器 : 三层设备
+------------------------
+网络拓扑结构
+线缆连接计算和网络设备的布局
+	点对点
+		互联网上常有，ＬＡＮ几乎没有
+	总线性
+		几乎没有
+	星型拓扑
+		优点 : 　易于实现,易于网络扩展,易于故障排查
+		缺点 : 　中心节点压力大,
+	网状拓扑
+		优点：　一个节点与其他多个节点相连，提供冗余性和容错性，可靠性高，
+		缺点：　组网成本高
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+　　ｏｓｉ七层模型　　　　　		　　　协议数据单元	TCP/IP　５层
+	应用层		用户的接口界面				应用层
+	表示层		数据格式
+	会话层		回话的管理
+	传输层		ＴＣＰ／ＵＤＰ		数据段		传输层
+	网络层		路由器			数据包		网络层
+	数据链路层	交换机			数据帧		数据链路层
+	物理层		硬件			比特流		物理层
+
+	ＴＣＰ　协议族
+		应用层：　http / tfp    / tftp    / ssh   / dns
+		传输层 :   80   /  tcp21  / udp69   / tcp22 / udp53
+		网络层：　IP
+  应表会传网数物
+	数据传输过程　
+		发送方，数据自上向下总是增加头部内容，称作封装过程
+		接收方，数据自下向上将发送方加入的头部移除，称作解封装过程
+	1. 应用层程序准备好数据
+	2. 表示层负责将数据转换格式
+	3. 会话层负责建立会话连接，不是所有应用都有次步骤
+	4. 传输层负责把数据切割成一个个片段，称作数据段：ｓｅｇｍｅｎｔ．
+		每个数据段加上编号，称作序列号．
+		还需要指定使用的是ＴＣＰ或ＵＤＰ协议，以及端口号
+	5. 网络层负责给数据加上ｉｐ地址，打成数据包：ｐａｃｋａｇｅ．
+	6. 数据链路层负责给数据加上ｍａｃ地址，打成数据帧：ｆｒａｍｅ．
+	７．物理层将数据转换成二进制的０和１，称作比特（流），在物理介质上传输．
+
+
+---------------------------------------------------------------------------------
+网络设备管理
+接口
+	console: 控制台接口，连接控制线缆到ｐｃ机，相当于为设备提供键盘，鼠标，显示器
+	FastEthernet:快速以太网接口，速度１００Ｍbps
+	GigabitEthernet:吉比特接口　　速度１０００Mbps
+
+
+交换机配置
+	命令需要在不同的模式下执行，不同模式有不同的指令
+		用户视图：　只能执行一些基本的查询指令：　		＜主机名＞
+		系统视图：　可以执行管理命令：			[主机名]
+		接口视图：　只对某一接口生效的指令在这里执行：　	[主机名－接口]
+		协议视图：　配置相关协议时使用的视图	：		[主机名－协议]
+
+相关命令：
+	？　显示该模式下所有的命令
+切换语言
+	language－mode 语言
+用户视图切换到系统视图	
+	system－view
+后退一步视图
+	quit
+直接返回到用户视图
+	return 或 Ctrl+Z
+修改主机名
+	sysname 主机名
+
+在华为设备上，任务与显示相关的命令，都以display开头
+    显示所有端口的简要信息	
+	display　interface brief
+    显示设备的版本号和运行时间
+	display version
+　　显示设备当前生效的配置
+	display current-configuration 
+　　配置密码
+	aaa	＃进入ＡＡＡ认证模式，（Athentication（认证）,Athorization（授权）,Audit(审计)）
+	local-user 用户名 password cipher 密码　	#cipher加密存储,simple明文密码
+	quit
+	user-interface console 0				＃进入控制台接口模式
+	authentication-mode aaa				#配置使用ａａａ认证，退出后再次进入需要密码
+　　保存配置
+	save	
+恢复出厂设置.
+	reset saved-configuration	#注意:擦除的是已保存的配置,不是当前内存中的配置.需要重启才会恢复最初
+	reboot	#系统首先比较内存的中的配置与保存的配置是否一直,发现不一致提示是否要把当前配置保存,
+
+其他命令
+调整控制台锁屏时间
+	进入系统模式
+	system-view
+	进入端口模式
+	user-interface console 0
+	修改等待时间
+	idle-timeout 分钟数
+
+
+交换机的工作原理
+	MAC地址 : MAC是介质访问控制
+		MAC地址也叫物理地址,因为设备在生成的时候,MAC地址已经烧到印制电路版中了
+		网卡也有MAC地址,交换机,路由器每个端口也有mac地址
+		MAC地址共48位(48个二进制数)  6个字节
+		表示的时候,往往是把2进制转换成16进制进行表示,每两个16进制数之间用冒号或减号分隔,共六段
+		MAC地址前24位是厂商的唯一标识符,即OUI,后24位厂商自定义
+	二进制与16进制的转换
+		每4位二进制数转换成一个16进制数
+
+	原理
+		交换机内部有张MAC表,记录了每个端口连接设备的MAC地址
+		MAC地址表在开机的时候是空的,他要动态学习每个端口连接的设备MAC地址
+		当某一终端发送数据帧到交换机时,交换机根据数据帧的源MAC地址构建MAC地址表
+		交换机根据数据帧的目标MAC地址发送数据到指定端口
+		如果交换机在MAC地址表中找不到目标MAC地址连接在自己的那个端口上,将会把数据帧向除接收端口以外的所有端口发出
+
+1. 取消监测
+	undo terminal monitor
+2. 虚拟局域网:	分割
+	vlan
+
+1. 取消监测
+	undo terminal monitor
+2. 进入系统视图 
+	system-view
+3. 创建vlan
+	vlan batch 10 20
+4. 进入10  
+	interface vlanif 10
+5. 编辑
+	interface vlanif 10
+	ip address
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
