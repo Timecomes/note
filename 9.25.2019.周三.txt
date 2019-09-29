@@ -1,0 +1,341 @@
+ceph 注意事项
+
+  快照
+
+rbd snap ls dc  查看共享是否有快照 
+
+rbd snap create dc --snap dc-snap1
+创建快照             那个磁盘          名字
+
+注意 要还原快照时 要先取消 客户端上的挂载
+
+umount /mnt/
+#客户端
+
+rbd snap rollback dc --snap dc-snap1
+#服务端 快照回滚                            名字
+
+mount /dev/rbd0 /mnt/
+#客户端重新挂载
+
+
+镜像 克隆 新镜像
+不能直接 对共享进行快照  有新数据加入时 整体会有错
+dc ---- 快照 ----> 克隆
+           #快照+保护   避免在克隆中 被删掉
+
+
+rbd snap protect dc --snap dc-snap1
+rbd snap unprotect dc --snap dc-snap1 /取消保护
+ 保护快照
+
+rbd clone dc --snap dc-snap1 dc-clone --image-feature layering
+克隆          
+rbd ls
+查看 克隆下来的共享
+
+
+[root@node1 ~]# rbd info dc-clone  #克隆快照的信息
+rbd image 'dc-clone':
+	size 7168 MB in 1792 objects
+	order 22 (4096 kB objects)
+	block_name_prefix: rbd_data.148aa238e1f29
+	format: 2
+	features: layering
+	flags: 
+	parent: rbd/dc@dc-snap1
+	overlap: 7168 MB
+#克隆镜像很多数据都来自于快照链
+#如果希望克隆镜像可以独立工作，就需要将父快照中的数据，全部拷贝一份，但比较耗时！！！
+
+>>rbd flatten image-clone
+此时 parent 选项不在有父文件
+就可以删除 之前的镜像源文件
+
+取消保护
+删除文件
+> rbd snap unprotect image --snap image-snap1     
+#取消快照保护
+> rbd snap rm image --snap image-snap1    
+                         共享名                 镜像名
+ #可以删除快照
+
+> umount /mnt/   #取消挂载
+
+> rbd showmapped  #查看要取消的ceph共享盘
+
+> rbd unmap /dev/rbd0  #走你
+
+
+-----------------------------------
+
+ceph 块共享
+给虚拟机加云盘
+云主机
+
+创建磁盘镜像
+
+> rbd create vm1-image --image-feature  layering --size 10G
+> rbd  list
+> rbd  info  vm1-image
+
+Ceph认证账户
+Ceph默认开启用户认证，客户端需要账户才可以访问，默认账户名称为client.admin，key是账户的密钥。
+ceph auth添加新账户
+
+
+> cat /etc/ceph/ceph.conf       //配置文件 
+[global]
+mon_initial_members = node1, node2, node3
+mon_host = 192.168.2.10,192.168.2.20,192.168.2.30
+auth_cluster_required = cephx
+                                //开启认证
+auth_service_required = cephx
+                                //开启认证
+auth_client_required = cephx
+                                //开启认证
+
+> cat /etc/ceph/ceph.client.admin.keyring        
+  //账户文件
+[client.admin]  #用户名
+key = AQBTsdRapUxBKRAANXtteNUyoEmQHveb75bISg==
+             密码
+
+
+
+真机上
+virsh define +配置文件     #查找虚拟机
+
+
+>virsh secret-list #查看
+无数据
+
+新建文件 
+> vim secret.xml   #文件只有用户名
+<secret ephemeral='no' private='no'>
+        <usage type='ceph'>
+                <name>client.admin secret</name>
+        </usage>
+</secret>
+
+#> virsh define  #生成虚拟机
+> virsh secret-define secret.xml  #命令生成ID号
+
+733f0fd1-e3d6-4c25-a69f-6681fc19802b       
+//随机的UUID，这个UUID对应的有账户信息
+#使用XML配置文件创建secret
+
+> virsh secret-set-value --secret +UUID --base64 +密码
+
+KVM虚拟机的xml配置文件默认位于： /etc/libvirt/qemu/虚拟机名.xml 
+
+
+> virsh edit tedu_node01         #虚拟机配置文件               
+//tedu_node01为虚拟机名称
+
+                  #网盘
+<disk type='network' device='disk'>
+      <driver name='qemu' type='raw'/>
+      <auth username='admin'>  #用户名
+      <secret type='ceph' uuid='733f0fd1-e3d6-4c25-a69f-6681fc19802b'/> #密码位置 
+      </auth>
+      <source protocol='rbd' name='rbd/vm1-image'>
+                                                               #设备名
+        <host name='192.168.4.11' port='6789'/>
+       </source>    #网盘所在位置
+    <target dev='vda' bus='virtio'/>  #
+ </disk>  
+
+
+块 共享完成 不过 客户端需要 格式化,挂载
+文件系统共享  ---------------   客户端直接挂载
+ceph-mds
+
+
+
+Ceph文件系统  mds 
+
+添加一台新的虚拟机，要求如下：
+
+IP地址:192.168.4.14
+
+主机名:node4
+
+配置yum源（包括rhel、ceph的源）
+
+与Client主机同步时间
+
+node1允许无密码远程node4
+
+2）部署元数据服务器
+
+登陆node4，安装ceph-mds软件包
+
+> yum -y install ceph-mds 
+
+
+登陆node1部署节点操作
+> cd  /root/ceph-cluster
+    //该目录，是最早部署ceph集群时，创建的目录
+> ceph-deploy mds create node4
+    //远程nod4，拷贝配置文件，启动mds服务
+如果没有配置文件则可以通过admin命令重新发送配置和密钥（备选操作）
+> ceph-deploy admin node4
+    //同步配置文件和key
+创建存储池
+> ceph osd pool create cephfs_data 128
+    //创建存储池，对应128个PG  #类似目录 个数为2的次方个
+> ceph osd pool create cephfs_metadata 128
+    //创建存储池，对应128个PG
+创建Ceph文件系统
+
+> ceph fs new myfs1 cephfs_metadata cephfs_data
+new fs with metadata pool 2 and data pool 1
+//注意，先写medadata池，再写data池
+//默认，只能创建1个文件系统，多余的会报错
+#metadata 元数据 储存文件信息
+
+ceph fs ls
+name: myfs1, metadata pool: cephfs_metadata, data pools: [cephfs_data ]
+
+> mount -t ceph 192.168.4.11:6789:/  /mnt/cephfs/ -o name=admin,secret=AQBTsdRapUxBKRAANXtteNUyoEmQHveb75bISg==
+  
+
+ 
+ //注意:文件系统类型为ceph
+    //192.168.4.11为MON节点的IP（不是MDS节点）
+    //admin是用户名,secret是密钥
+    //密钥可以在/etc/ceph/ceph.client.admin.keyring中找到
+      #密钥在服务器 node1上
+
+
+
+
+     格式化
+
+inode 储存头信息  256字节 
+block 储存源文件  单个小格子 4k 给格子编号 加速查找
+inode存储文件的描述信息（metadata元数据），block中存储真正的数据。
+
+
+
+创建对象存储服务器
+
+对象存储 -- 百度云盘
+(编写一个程序 通过程序让服务器读写资料)
+不能挂载 不会多硬盘
+
+node1 ceph-cluster]# ceph-deploy rgw create node3
+  注意当前位置   在配置文件中      脚本自启服务只需要指定 哪台装了radosgw安装包的机器
+
+
+
+修改服务端口
+
+登陆node5，RGW默认服务端口为7480，修改为8000或80更方便客户端记忆和使用
+
+    [root@node5 ~]#  vim  /etc/ceph/ceph.conf
+##最后面加入    
+[client.rgw.node5]
+    host = node5
+    rgw_frontends = "civetweb port=8000"
+    //node5为主机名
+    //civetweb是RGW内置的一个web服务
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

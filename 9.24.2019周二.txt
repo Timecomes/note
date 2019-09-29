@@ -1,0 +1,331 @@
+
+
+
+ ceph  ceph  ceph
+ 100G  100G  100G
+   
+        300G
+
+
+
+http://docs.ceph.org/start/intro
+
+
+自动装秘钥 无密码ssh访问其他主机
+#!/bin/bash
+ssh-keygen   -f /root/.ssh/id_rsa    -N ''
+#当系统存在 秘钥 私钥时 有bug 会出现交互指令 询问是否覆盖之前文件
+for i in 10  11  12  13
+do
+  ssh-copy-id  192.168.4.$i
+done
+
+vim /etc/chrony.conf
+#同步时间 时间有误差 报错
+
+
+修改/etc/hosts并同步到所有主机
+cat /etc/hosts
+192.168.4.10  client
+192.168.4.11     node1
+192.168.4.12     node2
+192.168.4.13     node3
+
+确保yum源 有此软件
+实验 
+
+mount /linux-/02/ceph-  /var/ftp/ceph/ 
+
+cat /etc/yum.repos.d/ceph.repo
+[mon]
+name=mon
+baseurl=ftp://192.168.4.254/ceph/MON
+gpgcheck=0
+[osd]
+name=osd
+baseurl=ftp://192.168.4.254/ceph/OSD
+gpgcheck=0
+[tools]
+name=tools
+baseurl=ftp://192.168.4.254/ceph/Tools
+gpgcheck=0
+
+
+for i in  client  node1  node2  node3
+do
+scp  /etc/yum.repos.d/ceph.repo   $i:/etc/yum.repos.d/
+done
+
+物理机上为每个虚拟机准备3块20G磁盘
+
+yum -y install ceph-deploy   
+#python脚本自动部署ceph  可多个虚拟机上
+
+>root> mkdir ceph-cluster
+执行该脚本 必须要cd到新建的目录下
+
+创建Ceph集群配置,在ceph-cluster目录下生成Ceph配置文件
+ceph-deploy new node1 node2 node3
+
+给所有节点安装ceph相关软件包
+
+ceph-cluster]# for i in node1 node2 node3
+    do
+    ssh  $i "yum -y install ceph-mon ceph-osd ceph-mds ceph-radosgw"
+    done 
+
+批量启服务初始化所有节点的mon服务，也就是启动mon服务
+[root@node1 ceph-cluster]# ceph-deploy mon create-initial      #注意当前位置  注意免密ssh远程连接
+
+
+osd  三副本 (最少三台)
+mon 过半原则 (最少三台)不负责储存 只负责监控 
+两者 要求独立    实际生产环境最少6台起
+
+
+创建OSD 
+ vdb分2个区
+vdb1           vdc
+vdb2           vdd
+缓存盘ssd      
+固态盘
+速度快
+读写快
+不存实际数据
+
+for i in node1 node2 node3
+do
+   ssh $i "parted /dev/vdb mklabel gpt"
+   ssh $i "parted /dev/vdb mkpart primary 1 50%"
+   ssh $i "parted /dev/vdb mkpart primary 50% 100%"
+done
+
+划分 分区
+
+brw-rw---- 1 root disk 253, 17 9月  24 15:36 /dev/vdb1
+brw-rw---- 1 root disk 253, 18 9月  24 15:36 /dev/vdb2
+分区 权限 错误 要修改权限
+chown  ceph.ceph  /dev/vdb1
+chown  ceph.ceph  /dev/vdb2
+三个都要做 权限修改临时
+永久修改权限
+vim /etc/udev/rules.d/70-vdb.rules
+ENV{DEVNAME}=="/dev/vdb1",OWNER="ceph",GROUP="ceph"
+ENV{DEVNAME}=="/dev/vdb2",OWNER="ceph",GROUP="ceph"
+三台机器都要做
+
+初始化清空磁盘数据  存储盘格式化
+ceph-deploy disk  zap node1:vdc node1:vdd node2:vdc   node2:vdd  node3:vdc   node3:vdd   
+
+创建OSD存储空间
+root@node1 ceph-cluster]# ceph-deploy osd create \
+ node1:vdc:/dev/vdb1 node1:vdd:/dev/vdb2  
+  执行命令位置  
+//创建osd存储设备，vdc为集群提供存储空间，vdb1提供JOURNAL缓存，
+//每个存储设备对应一个缓存设备，缓存需要SSD，不需要很大
+[root@node1 ceph-cluster]# ceph-deploy osd create \
+ node2:vdc:/dev/vdb1 node2:vdd:/dev/vdb2
+[root@node1 ceph-cluster]# ceph-deploy osd create \
+ node3:vdc:/dev/vdb1 node3:vdd:/dev/vdb2 
+
+
+ceph  -s
+
+
+
+
+
+
+
+6 台 机器  
+3台  起 mon
+3台 分区vdb1,2 格式化vdc/vdd 起osd
+
+yum -y install ceph-deploy
+
+for i in node{1..3}
+do
+ yum -y install ceph-mon
+done
+for i in node{4..6}
+do
+yum -y install ceph-osd
+done
+
+
+ceph-deploy mon create-initial
+#起mon服务
+
+
+#创建OSD
+#vdb1和vdb2这两个分区用来做存储服务器的journal缓存盘
+for i in node4 node5 node6
+do
+     ssh $i "parted /dev/vdb mklabel gpt"
+     ssh $i "parted /dev/vdb mkpart primary 1 50%"
+     ssh $i "parted /dev/vdb mkpart primary 50% 100%"
+ done
+
+#修改权限
+for i in node4 node5 node6
+do 
+ ssh $i "chown ceph.ceph /dev/vdb1"
+ ssh $i "chown ceph.ceph /dev/vdb2"
+done
+#永久有效
+for i in node4 node5 node6
+do
+ ssh $i "echo "ENV{DEVNAME}=="/dev/vdb1",OWNER="ceph",GROUP="ceph"
+ENV{DEVNAME}=="/dev/vdb2",OWNER="ceph",GROUP="ceph"" > /etc/udev/rules.d/70-vdb.rules"
+done
+
+#初始化清空磁盘数据
+ceph-deploy disk  zap  node4:vdc   node4:vdd  node5:vdc   node5:vdd node6:vdc   node6:vdd
+#空格可以一起执行
+#创建OSD存储空间   最后一步 最关键  三个都要设
+for i in node4 node5 node6
+do
+ ceph-deploy osd create $i:vdc:/dev/vdb1 $i:vdd:/dev/vdb2
+done
+
+ceph-deploy osd create node2:vdc:/dev/vdb1 node2:vdd:/dev/vdb2               #远程node2把vdc共享出来
+                                          #缓存器为/dev下的/vdb1
+
+
+#创建osd存储设备，vdc为集群提供存储空间，vdb1提供JOURNAL缓存，每个存储设备对应一个缓存设备，缓存需要SSD，不需要很大
+
+#验证
+[root@node1 ~]#  ceph  -s
+
+
+查看存储池
+ceph osd lspools
+创建镜像、查看镜像
+root@node1 ~]# rbd create demo-image --image-feature  layering --size 10G
+root@node1 ~]# rbd create rbd/image  --image-feature  layering --size 10G
+
+#这里的demo-image和image为创建的镜像名称，可以为任意字符。
+
+#--image-feature参数指定我们创建的镜像有哪些功能，layering是开启COW功能。快照功能 用于保存数据 恢复数据
+
+#提示：ceph镜像支持很多功能，但很多是操作系统不支持的，我们只开启layering。
+
+
+[root@node1 ~]# rbd create demo-icc --image-feature layering --size 10G
+[root@node1 ~]# rbd create rbd/dc --image-feature layering --size 10G
+[root@node1 ~]# rbd create cd --image-feature layering --size 10G
+
+>ceph osd lspools
+0 rbd,
+
+>rbd ls
+cd
+dc
+
+>rbd info cd
+rbd image 'cd':
+	size 10240 MB in 2560 objects
+	order 22 (4096 kB objects)
+	block_name_prefix: rbd_data.1040238e1f29
+	format: 2
+	features: layering
+	flags: 
+
+镜像 内存可以随意改变
+
+[root@node1 ~]# rbd resize --size 20G dc
+Resizing image: 100% complete...done.
+[root@node1 ~]# rbd info dc
+rbd image 'dc':
+	size 20480 MB in 5120 objects
+	order 22 (4096 kB objects)
+	block_name_prefix: rbd_data.103d2ae8944a
+	format: 2
+	features: layering
+	flags: 
+
+[root@node1 ~]# rbd resize --size 7G dc
+rbd: shrinking an image is only allowed with the --allow-shrink flag
+
+[root@node1 ~]# rbd resize --size 7G dc --allow-shrink
+Resizing image: 100% complete...done.
+磁盘可以减小 报错有提示
+
+[root@node1 ~]# rbd info dc
+rbd image 'dc':
+	size 7168 MB in 1792 objects
+	order 22 (4096 kB objects)
+	block_name_prefix: rbd_data.103d2ae8944a
+	format: 2
+	features: layering
+	flags: 
+
+
+
+客户端通过KRBD访问
+客户端需要安装ceph-common软件包
+#拷贝配置文件（否则不知道集群在哪）
+#拷贝连接密钥（否则无连接权限）
+
+> yum -y  install ceph-common
+
+> scp node1:/etc/ceph/ceph.conf /etc/ceph/
+Warning: Permanently added 'node1' (ECDSA) to the list of known hosts.
+ceph.conf                                                         100%  235   115.0KB/s   00:00
+    
+> scp node1:/etc/ceph/ceph.client.admin.keyring /etc/ceph/
+ceph.client.admin.keyring   
+
+
+> rbd map dc  #rbd map +创建的镜像名
+
+
+> rbd map dc
+/dev/rbd0
+
+> lsblk
+NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+vda    253:0    0  30G  0 disk 
+└─vda1 253:1    0  30G  0 part /
+rbd0   252:0    0   7G  0 disk 
+
+> rbd showmapped   #查看一挂载的 镜像
+id pool image snap device    
+0  rbd  dc    -    /dev/rbd0 
+
+[root@client ~]# rbd showmapped   #挂载顺序 排序
+id pool image    snap device    
+0  rbd  dc       -    /dev/rbd0 
+1  rbd  cd       -    /dev/rbd1 
+2  rbd  demo-icc -    /dev/rbd2 
+
+
+客户端格式化、挂载分区
+    [root@client ~]# mkfs.xfs /dev/rbd0
+    [root@client ~]# mount /dev/rbd0 /mnt/
+    [root@client ~]# echo "test" > /mnt/test.txt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

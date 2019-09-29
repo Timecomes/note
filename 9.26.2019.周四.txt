@@ -1,0 +1,43 @@
+developer.ibm.com ibm文章
+codex.word
+
+10 以内调度器
+10-20 web
+20-30 数据库
+31-40 共享
+
+
+
+/etc/rclocal   >> 开机自启脚本  默认没有可执行权限 加权限
+
+/usr/lib/systemd/system
+
+*.service     在该文件夹下有.service结尾的文件 可以开机自启
+*.target    类似一个组群 可以启动target下的所有 可执行文件
+uu.target  /usr/lib/systemd/system/uu/
+
+
+type=semple (简单模式不识别子进程) forking (识别子进程)
+
+    [root@centos7 ~]# vim /usr/lib/systemd/system/nginx.service
+    [Unit]
+    Description=The Nginx HTTP Server
+    #描述信息
+    After=network.target remote-fs.target nss-lookup.target
+    #指定启动nginx之前需要其他的其他服务，如network.target等
+    [Service]
+    Type=forking
+    #Type为服务的类型，仅启动一个主进程的服务为simple，需要启动若干子进程的服务为forking
+    ExecStart=/usr/local/nginx/sbin/nginx
+    #设置执行systemctl start nginx后需要启动的具体命令.
+    ExecReload=/usr/local/nginx/sbin/nginx -s reload
+    #设置执行systemctl reload nginx后需要执行的具体命令.
+    ExecStop=/bin/kill -s QUIT ${MAINPID}
+    #设置执行systemctl stop nginx后需要执行的具体命令.
+    [Install]
+    WantedBy=multi-user.target
+
+
+
+
+

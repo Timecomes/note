@@ -1,0 +1,235 @@
+VRRP 虚拟路由器
+
+做两个 porxy 服务器
+
+                  web1
+  客户端 ----- proxy 
+           proxy
+                  web2
+
+
+keepalived  实现 vrrp           1
+keepalived  可以自动配置 lvs      2
+keepalived  带健康检查                   3
+
+配ip
+web1-2  yum -y install keepalived.x86_64 pali
+
+ 修改配置文件
+vim /etc/keepalived/keepalived.conf
+router_id  web2       //设置路由ID号（实验需要修改）
+
+virtual_ipaddress {               
+ 192.168.4.80                //谁是主服务器谁配置VIP（实验需要修改）
+ }   
+
+web1  systemctl start keepalived
+web2  systemctl start keepalived
+
+
+
+Keepalived+LVS服务器
+
+首先要关掉 web1,web2 的 keeplived服务
+web1 systemctl stop keepalived
+web2 systemctl stop keepalived
+
+
+
+延时3秒再试一次;
+重连3次;
+每3秒测试一次;
+
+
+nginx
+LVS
+Haproxy
+
+性能 LVS>Haproxy>nginx
+功能 nginx>Haproxy>LVS
+
+正则 nginx>Haproxy
+
+
+配置网络环境
+Web1
+    [root@web1 ~]# nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.4.100/24 connection.autoconnect yes
+    [root@web1 ~]# nmcli connection up eth0
+    [root@web1 ~]# yum -y install httpd
+    [root@web1 ~]# echo "192.168.4.100" > /var/www/html/index.html
+    [root@web1 ~]# systemctl restart httpd
+Web2
+    [root@web2 ~]# nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.4.200/24 connection.autoconnect yes
+    [root@web2 ~]# nmcli connection up eth0
+    [root@web2 ~]# yum -y install httpd
+    [root@web2 ~]# echo "192.168.4.200" > /var/www/html/index.html
+    [root@web2 ~]# systemctl restart httpd
+
+配置proxy主机的网络参数
+    [root@proxy ~]# nmcli connection modify eth0 ipv4.method manual ipv4.addresses 192.168.4.5/24 connection.autoconnect yes
+    [root@proxy ~]# nmcli connection up eth0
+
+
+安装Keepalived软件
+两台Web服务器做相同的操作
+
+    [root@web1 ~]# yum install -y keepalived
+    [root@web2 ~]# yum install -y keepalived 
+
+
+web1服务器Keepalived配置文件
+
+
+    [root@web1 ~]# vim /etc/keepalived/keepalived.conf
+    global_defs {
+      notification_email {
+        admin@tarena.com.cn                //设置报警收件人邮箱
+      }
+      notification_email_from ka@localhost    //设置发件人
+      smtp_server 127.0.0.1                //定义邮件服务器
+      smtp_connect_timeout 30
+      router_id  web1                        //设置路由ID号（实验需要修改）
+    }
+    vrrp_instance VI_1 {
+      state MASTER                         //主服务器为MASTER（备服务器需要修改为BACKUP）
+      interface eth0                    //定义网络接口
+      virtual_router_id 51                //主备服务器VRID号必须一致
+      priority 100                     //服务器优先级,优先级高优先获取VIP
+      advert_int 1
+      authentication {
+        auth_type pass
+        auth_pass 1111                       //主备服务器密码必须一致
+      }
+      virtual_ipaddress {                   //谁是主服务器谁获得该VIP（实验需要修改）
+    192.168.4.80 
+    }    
+    }
+
+    [root@web2 ~]# vim /etc/keepalived/keepalived.conf
+    global_defs {
+      notification_email {
+        admin@tarena.com.cn                //设置报警收件人邮箱
+      }
+      notification_email_from ka@localhost    //设置发件人
+      smtp_server 127.0.0.1                //定义邮件服务器
+      smtp_connect_timeout 30
+      router_id  web2                        //设置路由ID号（实验需要修改）
+    }
+    vrrp_instance VI_1 {
+      state BACKUP                             //备服务器为BACKUP（实验需要修改）
+      interface eth0                        //定义网络接口
+      virtual_router_id 51                    //主辅VRID号必须一致
+      priority 50                             //服务器优先级（实验需要修改）
+      advert_int 1
+      authentication {
+         auth_type pass
+         auth_pass 1111                       //主辅服务器密码必须一致
+      }
+      virtual_ipaddress {                 //谁是主服务器谁配置VIP（实验需要修改）
+    192.168.4.80 
+     }   
+    }
+
+启动服务
+
+    [root@web1 ~]# systemctl start keepalived
+    [root@web2 ~]# systemctl start keepalived
+
+
+配置防火墙和SELinux
+    [root@web1 ~]# iptables -F
+    [root@web1 ~]# setenforce 0
+    [root@web2 ~]# iptables -F
+    [root@web1 ~]# setenforce 0
+
+    [root@web1 ~]# ip addr show eth0
+    [root@web2 ~]# ip addr show eth0
+
+
+
+Keepalived+LVS服务器
+
+
+配置网络环境
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+关闭之前服务
+ipvsadm -C 清空vip 集群
+systemctl stop keepalived.service  
+前后 热备份 会成为一体 调度器+web真实服务器
+
+
+>yum -y install haproxy
+>vim /etc/haproxy/haproxy.cfg
+删除62 main 下所有 数据 再加上 listen
+#---------------------------------------------------------------------
+# main frontend which proxys to the backends
+#---------------------------------------------------------------------
+
+listen websrv *:80
+server web1 192.168.2.100:80 check inter 2s rise 5 fall 3
+server web1 192.168.2.200 check inter 2s rise 5 fall 3
+              check inter 2s         两秒检查一次
+                 rise 5           失败5次才算失败
+                fall 3            成功3次才算成功
+查看 80 端口是否被占用
+>ss -tunlp | grep 80
+启服务
+>systemctl start haproxy.service
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
