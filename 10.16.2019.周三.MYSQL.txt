@@ -1,0 +1,127 @@
+修改复制模式
+    主从结构  一般 异步复制
+
+     主服务器   改为半同步复制模式
+        从服务    改半同步复制模式
+
+
+    加载模块   ---   启用模块(命令行/配置文件)
+
+
+    第一步   查看 系统是否允许 加载模块
+mysql> show  variables  like  'have_dynamic_loading';
+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
+
+
+         输出值为 YES
+
+
+    第二步   加载模块   一个mysql可以加载 (主+从)模块
+mysql> install  plugin   rpl_semi_sync_master   SONAME   "semisync_master.so";   主
+
+mysql> install  plugin   rpl_semi_sync_slave SONAME  'semisync_slave.so';     从
+
+配置文件中 开启自动加载模块(永久有效)
+vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so; rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled = 1      启动主
+rpl-semi-sync-slave-enabled = 1       启动从
+
+
+
+查看是否加载成功    (ACTIVE)
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';
+
+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
+| rpl_semi_sync_slave  | ACTIVE        |
+
+
+    第三步  启用模块
+
+mysql> set  global rpl_semi_sync_master_enabled = 1; 
+                                       主
+mysql> set  global rpl_semi_sync_slave_enabled = 1;
+                                       从
+查看模块是否启用    ( ON/OFF )
+
+mysql>  show  variables  like  "rpl_semi_sync_%_enabled";
+
+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
+
+
+-==-=-=--=-=-=====================================
+
+                         数据库 读写分离
+  
+     直接使用代理服务器  实现  读写分离 (  select/insert )
+
+  确保后端数据库 是否是主从结构 并且主从启动无误
+     mysql> show slave status \G;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

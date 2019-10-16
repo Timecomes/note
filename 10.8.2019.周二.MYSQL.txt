@@ -1,0 +1,332 @@
+静静老师
+
+panglj@tedu.cn
+
+
+
+
+1.数据库服务 概述
+关系型数据库 : mysql sql-server db2 oracle  关联操作
+非关系型 : redis memcache mongodb
+
+
+ls /etc/my.cnf  配置文件
+ls /var/lib/mysql  数据存储位置
+yum安装时 会自动创建 用户和用户组   用户用户组 都为 mysql
+
+首次启动 会初始化数据  启动较慢  systemctl start mysqld
+开机自启  enable
+
+mysql 默认端口 3306
+
+错误日志文件 
+ls /var/log/mysqld.log
+
+
+ps -C           单独查进程
+
+
+数据库默认 仅允许 root本地连接
+首次登录密码在安装时 随机生成  密码中有特殊符号  '' 号 规避
+密码位置  /var/log/mysqld.log
+
+[root@mysql450 ~]# grep password /var/log/mysqld.log 
+2019-10-08T02:29:46.816386Z 1 [Note] A temporary password is generated for root@localhost: B#p-Mfq.q3m-
+
+连接数据库 
+
+mysql -hlocalhost -uroot -p'B#p-Mfq.q3m-'
+            本地连接      用户 root    密码:
+                                于系统用户root有差别
+
+mysql> show databases;
+ERROR 1820 (HY000): You must reset your password using ALTER USER statement before executing this statement.
+提示 修改本机root登录用户的密码
+
+alter user root@"localhost" identified by "Rms";
+                                                             有要求   新密码
+                                                 数字,字母,大小写,长度
+alter user root@"localhost" identified by "123456";
+
+[root@mysql450 ~]# mysql -hlocalhost -uroot -p'B#p-Mfq.q3m-'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+密码修改后 初始密码不可再访问 数据库
+
+
+简单的登录数据库
+
+   mysql -uroot -p密码
+
+如何修改密码 改为简单密码  123456
+
+   修改密码策略 
+查看数据库 密码策略
+show variables like "%password%";
+
+
+mysql> show variables like "%password%";
++---------------------------------------+--------+
+| Variable_name                         | Value  |
++---------------------------------------+--------+
+| default_password_lifetime             | 0      |
+| disconnect_on_expired_password        | ON     |
+| log_builtin_as_identified_by_password | OFF    |
+| mysql_native_password_proxy_users     | OFF    |
+| old_passwords                         | 0      |
+| report_password                       |        |
+| sha256_password_proxy_users           | OFF    |
+| validate_password_check_user_name     | OFF    |
+| validate_password_dictionary_file     |        |
+| validate_password_length              | 8      |长度
+| validate_password_mixed_case_count    | 1      |
+| validate_password_number_count        | 1      |
+| validate_password_policy              | MEDIUM |密码策略
+| validate_password_special_char_count  | 1      |
++---------------------------------------+--------+
+14 rows in set (0.01 sec)
+
+
+
+0 or LOW 长度    ----只检查密码长度
+1 or MEDIUM(默认) 长度;数字,大小写,特殊字符
+2 or S
+ 可修改配置文件 永久有效  命令行临时有效
+
+>set global 配置项 =数字;
+>set global validate_password_length=6;
+修改密码指定个数
+>set global validate_password_policy=0;
+简单的密码策略
+永久
+vim /etc/my.cnf
+[mysql]中
+配置可以不用加分号"  ;  "
+validate_password_policy=0
+validate_password_length=6
+:wq(保存)
+
+
+----------------------------------------------------------------------------------------------
+
+mysql> set global validate_password_length=6;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> set global validate_password_policy=0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> alter user root@"localhost" identified by "123456";
+Query OK, 0 rows affected (0.01 sec)
+
+
+--------------------------------------------------------------------------------------------------
+
+重启服务 永久生效文件起作用  临时配命令失效
+
+
+
+在51  mysql
+密码 123456..A
+
+
+--------------------------
+
+DB 数据库
+DBMS 数据库服务软件
+DBS  数据库服务器  pc机
+
+----------------------------------
+use mysql;
+show tables;
+show databases;
+
+数据库格式储存的文件 只能数据库服务查看
+系统命令cat 不可查看
+
+在mysql里查看
+
+>select * from +表名  查看数据
+-----------------------------------------------------------
+
+使用 mysql
+-mysql -h服务器ip -u用户名 -p密码
+也可以 -mysql -h服务器ip -u用户名 -p密码  [直接+库名]
+可以指定到达的库
+
+
+
+>select database();     获取当前所在库 库名 
+                 函数
+
+>select user();   获取当前 登录用户
+             是个函数
+
+
+
+sql命令 不可做表名 库名 特殊符号也不行
+------------------------
+连接mysql服务
+1 命令行
+2 web页面
+3 图形软件
+4 脚本
+------------------------
+SQL规则 
+命令不区分大小写
+每条命令;结束
+不支持tab
+\c 终止命令  反斜杠c  ctrl+c也行
+
+
+
+数据定义语言 DDL 如 : create alter drop
+
+数据操作语言 DML insert update delete
+
+数据控制语言 DCL grant revoke
+
+数据事物语言 DTL commit rollback savepoint
+
+
+库名 命名规则
+
+不能纯数字 --可以数字 字母 下划线 
+区分大小写 唯一性
+不可使用关键字 特殊字符
+
+========================================
+mysql> desc t1;     查看表创建信息
+mysql> show databases;  查看所有库
+mysql> select user();  查看用户登录信息
+mysql> select database();  查看当前库名
+
+mysql> use mysql   使用库
+mysql> show tables    显示库中表格
+
+mysql> create database db1;    创建库
+mysql> use db1   进入库
+
+mysql> drop database db1; 删除库
+
+越长的单词越容易打错 注意是否打错单词
+==========================================
+
+mysql>create table 库名 表名(
+字段名1  第一行,第一列,列明
+字段名2  类型 (宽度)
+.........
+.....
+)DEFAULT CHARSET=utf8;     //指定中文字符集 可以识别中文
+                             常用字符集 
+默认 创建时可以写中文  但是 输入数据时 中文不指定就不识别
+
+----------------------
+mysql>create table db1.stuinfo(
+name char(15),homeaddr char(20)
+
+);
+
+>desc 表名;
+查看建表信息
+
+表信息文件           都为加密文件 不可直接查看
+/var/lib/mysql/
+表储存的数据
+
+create table db1.stuinfo(name char(15), homeaddr char(20));
+创建表名 以及表规则    第一行提示数据信息   开头行
+
+insert into db1.stuinfo values (),(),()
+
+insert into db1.stuinfo values ("bob","USA"),("lisi","CHINA"),("dc","USA");
+           写入数据
+
+查看 表中数据
+select * from db1.stuinfo;
+
+修改数据 
+update db1.stuinfo set homeaddr="beijing";
+如果当前在 此库中 可以不加库名直接写表名
+
+delete from 表名     //只删除表中数据 不删除表 表创建信息还在
+
+drop database 库名  //删库
+
+
+符号不能用中文符号  会报错  仔细查看每一个符号所占的位置
+
+
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+重点   数据类型
+
+字符类型   定长char 固定长度  最大 255 ,不够空格补, 超过无法写入
+        char 不指定字符数时 默认为 1
+              
+               变长varchar 按照实际大小分配储存空间
+                          1-65532  超出指定个数无法写入
+ 
+               大文本; text/blob
+                  字符大于65535储存时使用
+
+          insert into 库名.表名 values ("","",""),();
+
+
+数值类型
+              整型   无小数点的整数
+
+              浮点型 有小数点的数
+
+
+                                                 默认有符号存储范围
+   整型   类型            名 称             有符号范围      无符号范围
+      tinyint    微小整数           -128~127          0~255
+      smallint   小整数          -32768~32767     0~65535
+      mediumint  中整型            
+      int        大整型
+      bigint     极大整型    
+      unsigned 使用无符号范围
+
+  不在范围内 都会报错 注意 使用无符号范围时 带 - 号会报错 
+  在整型中 小数输入 显示的数  会四舍五入   不会输出小数点
+
+
+浮点型 
+         单精度   float   
+         双精度   double 
+
+字段名  类型
+字段名  类型(总宽度,小数位数)
+                      (4,2)
+                  2位整数  2位小数 总共4位数
+
+大于范围数时 报错 指定总位数(5,2)时 整数 上千报错
+                                     指定了小数点时 没小数点自动补齐
+                                          不会四舍五入
+
+
+mysql> select * from t5;
++-------+--------+
+| name  | pay    |
++-------+--------+
+| john  | 999.00 |
+| johnA | 999.12 |
+| johnB | 999.99 |
++-------+--------+
+
+
+日期时间类型
+
+datetime 日期时间   年 月 日 时 分 秒
+date 日期 
+year 年 
+time 时间
+timestamp  年 月 日 时 分 秒
+
+
+
+enum 单选  enum(值1,值2,值3)
+set 多选  set(值1,值2,值N)
+
+
