@@ -1,0 +1,526 @@
+timestamp     datetime    的区别
+T 没赋值时自动添加当前时间
+D 没赋值时 值为NULL (空)
+
+使用 时间函数 获取时间日期 给 日期时间赋值
+
+
+year类型使用 2位数字赋值特点
+范围: 1901~2155
+格式 yyyy
+
+两位数赋值 时
+01~69 视为 2001~2069
+70~99 视为 1970~1999
+
+mysql> insert into t6(name,csnf) values ("john",21),("jerry",71),("jack",2071);
+Query OK, 3 rows affected (0.05 sec)
+
+| john  | 2021 | NULL   | NULL  | NULL    |
+| jerry | 1971 | NULL   | NULL  | NULL    |
+| jack  | 2071 | NULL   | NULL  | NULL 
+表结构 
+              约束条件
+
+ NULL >> yes   是否允许赋空值
+   创建表时 name char(10) not null;  可以定义不允许空值
+              默认允许空值
+
+  键 值    Key   约束条件
+
+ default 默认值
+   class char(7) not null default "nsd1902"
+                                                          默认值可以自定义 
+                                                 但要符合 当前列的规则
+
+  Extra 额外值
+
+
+总结 : 给出限定条件后 不符合条件的地方都将报错 
+    给了默认值的 可以使用默认值  只需要限定赋值给 值不能为空且没有默认值的列  
+
+
+select >>>>>>>
+ curtime()  获取当前系统时间
+ curdate()  获取当前系统日期
+ now()      当前时间日期
+ year(now())  年
+ month(now()) 月
+ day( now()) 日
+ date(now()) 日期
+ time(now()) 时间
+
+date
+date +%y-%m-%d
+date +%Y-%m-%d
+
+
+mysql> desc t6;
++----------+----------+------+-----+---------+-------+
+| Field    | Type     | Null | Key | Default | Extra |
++----------+----------+------+-----+---------+-------+
+| name     | char(10) | YES  |     | NULL    |       |
+| csnf     | year(4)  | YES  |     | NULL    |       |
+| up_time  | time     | YES  |     | NULL    |       |
+| birthday | date     | YES  |     | NULL    |       |
+| party    | datetime | YES  |     | NULL    |       |
++----------+----------+------+-----+---------+-------+
+
+>insert into t6 values("tom",year(now()),curtime(),curdate(),now());
+
+
+为特定字段赋值时 
+>insert into t6(name,csnf) values("tom",year(now()));
+                          指定 要赋值的列
+
+---------------------------------------------------------------------------------
+mysql> create table db1.t9 (               //案例
+    -> name char(10),
+    -> meetting datetime,
+    -> party timestamp);
+Query OK, 0 rows affected (0.62 sec)
+
+mysql> insert into db1.t9 values ("bob",20190109112845,20191009213025);
+Query OK, 1 row affected (0.32 sec)
+
+mysql> insert into db1.t9 values ("tom",20191224204558);
+ERROR 1136 (21S01): Column count doesn't match value count at row 1
+mysql> insert into db1.t9(name,meetting) values ("tom",20191224204558);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into db1.t9(name,party) values ("jemmy",20170303100000);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from db1.t9;
++-------+---------------------+---------------------+
+| name  | meetting            | party               |
++-------+---------------------+---------------------+
+| bob   | 2019-01-09 11:28:45 | 2019-10-09 21:30:25 |
+| tom   | 2019-12-24 20:45:58 | 2019-10-09 09:49:51 |
+| jemmy | NULL                | 2017-03-03 10:00:00 |
++-------+---------------------+---------------------+
+
+------------------------------------------------------------------------------------------
+
+
+mysql> create table db1.t12 ( name char (10) not null, homeaddr char(30) not null default "");
+Query OK, 0 rows affected (0.23 sec)
+
+mysql> desc t12;
++----------+----------+------+-----+---------+-------+
+| Field    | Type     | Null | Key | Default | Extra |
++----------+----------+------+-----+---------+-------+
+| name     | char(10) | NO   |     | NULL    |       |
+| homeaddr | char(30) | NO   |     |         |       |
++----------+----------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> insert into db1.t12 values (null,null);
+ERROR 1048 (23000): Column 'name' cannot be null
+
+mysql> insert into db1.t12 values ("bob",null);
+ERROR 1048 (23000): Column 'homeaddr' cannot be null
+
+mysql> insert into db1.t12(name) values ("bob");
+Query OK, 1 row affected (0.08 sec)
+
+mysql> select * from t12;
++------+----------+
+| name | homeaddr |
++------+----------+
+| bob  |          |
++------+----------+
+1 row in set (0.00 sec)
+
+              null 不加引号 代表 空
+             "null" 加引号 代表 字符串
+mysql> insert into db1.t12 values ("null","null");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from t12;
++------+----------+
+| name | homeaddr |
++------+----------+
+| bob  |          |
+| null | null     |
++------+----------+
+2 rows in set (0.00 sec)
+
+----------------------------------------------------------------------------------
+
+
+修改表结构 
+     主要是修改之前 的限制更改限制
+
+add 添加新字段  默认在所有字段后   
+   after+ 位置地址/ first (在什么后/前)
+modify 修改
+change 修改字段名
+
+
+---------------------------------------------------------------------------
+alter table  db1.t1 add school char(15) not null;
+                                                加一行 school 在最后 
+
+mysql> alter table db1.t1 modify name varchar(15) not null default "";
+   修改限制条件 char 改为 varchar
+
+
+mysql> alter table db1.t1 modify name varchar(15) not null default "" after stu_num;
+       修改 name 行位置  改到stu_num之后 class之前
+     注意修改位置时  附带的限制条件都要一并带走
+
+修改限制条件时   与原始数据有冲突 会报错
+--------------------------------------------------------------
+change 字段名 + 表结构 都可以修改   直接 一段话 全改
+modify  只能 改表结构
+
+drop 删除 + 字段名 就行了  不用加附带的 限制条件
+   只删除 一列的东西 但会 将 表中所有该行 都删掉
+
+修改 表名
+mysql>alter table t9 rename school;
+
+多个操作 可以 逗号分隔
+
+
+
+mysql> desc db1.t1;
++--------+---------------------+------+-----+---------+-------+
+| Field  | Type                | Null | Key | Default | Extra |
++--------+---------------------+------+-----+---------+-------+
+| stu_id | int(11)             | YES  |     | NULL    |       |
+| name   | varchar(15)         | NO   |     |         |       |
+| class  | char(7)             | YES  |     | NULL    |       |
+| age    | tinyint(3) unsigned | YES  |     | 19      |       |
+| 学校   | varchar(30)         | YES  |     | tedu    |       |
++--------+---------------------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+
+mysql> alter table db1.t1 add qq char(11),add iphone char(11),modify class 
+    -> char(9),change name user varchar(15) not null default "" ,
+    -> drop 学校;
+
+mysql> desc db1.t1;
++--------+---------------------+------+-----+---------+-------+
+| Field  | Type                | Null | Key | Default | Extra |
++--------+---------------------+------+-----+---------+-------+
+| stu_id | int(11)             | YES  |     | NULL    |       |
+| user   | varchar(15)         | NO   |     |         |       |
+| class  | char(9)             | YES  |     | NULL    |       |
+| age    | tinyint(3) unsigned | YES  |     | 19      |       |
+| qq     | char(11)            | YES  |     | NULL    |       |
+| iphone | char(11)            | YES  |     | NULL    |       |
++--------+---------------------+------+-----+---------+-------+
+6 rows in set (0.00 sec)
+
+
+
+
+键值
+
+普通索引   index
+   类似 书目录  查找方式?
+
+btree   二叉树     如要查找数字7  第一先与4比较 
+
+                      4
+                   /    \
+                2          6
+              /  \        /\
+            1     3     5   7 
+
+
+优点  保障数据每一行数据的唯一性
+         可以加快数据查询速度
+缺点 对表进行增删改查 时 索引也要动态调整 降低数据维护速度
+         占物理空间
+                       
+          读 次数 远远大于 写的次数
+
+使用规则
+   一个表中 可以有 多个index字段
+ 字段的值允许重复 且可以赋 NULL值
+  字段提示符 MUL
+  
+
+建表时 创建索引
+   index 字段名
+已有表创建索引
+    create index 索引名 on 表名(字段名);
+删除索引 
+   drop index 索引名 on 表名;
+查看表索引 详细信息
+    show index from 表名 \G;  (\G 竖列显示)   
+         没索引 没输出
+   >>  create index xxx on db1.t3(name);
+   >>  show index from db1.t3 \G;
+   >>  drop index xxx on db1.t3;
+
+mysql> desc t3;
++-------+---------------------+------+-----+---------+-------+
+| Field | Type                | Null | Key | Default | Extra |
++-------+---------------------+------+-----+---------+-------+
+| name  | char(10)            | YES  |     | NULL    |       |
+| age   | tinyint(3) unsigned | YES  |     | NULL    |       |
++-------+---------------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+
+mysql> create index xxx on db1.t3(name);
+mysql> create index yyy on db1.t3(age);
+                               
+
+
+mysql> desc t3;
++-------+---------------------+------+-----+---------+-------+
+| Field | Type                | Null | Key | Default | Extra |
++-------+---------------------+------+-----+---------+-------+
+| name  | char(10)            | YES  | MUL | NULL    |       |
+| age   | tinyint(3) unsigned | YES  | MUL | NULL    |       |
++-------+---------------------+------+-----+---------+-------+
+2 rows in set (0.01 sec)
+
+
+mysql> show index from db1.t3 \G;
+*************************** 1. row ***************************
+        Table: t3
+   Non_unique: 1
+     Key_name: xxx
+ Seq_in_index: 1
+  Column_name: name
+    Collation: A
+  Cardinality: 1
+     Sub_part: NULL
+       Packed: NULL
+         Null: YES
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+*************************** 2. row ***************************
+        Table: t3
+   Non_unique: 1
+     Key_name: yyy
+ Seq_in_index: 1
+  Column_name: age
+    Collation: A
+  Cardinality: 2
+     Sub_part: NULL
+       Packed: NULL
+         Null: YES
+   Index_type: BTREE
+      Comment: 
+Index_comment: 
+2 rows in set (0.00 sec)
+
+-----------------------------   删除  索引
+mysql> drop index xxx on db1.t3;
+mysql> drop index yyy on db1.t3;
+
+--------------------------------创建新库 新表时 加入索引
+mysql> create database db2;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> use db2;
+Database changed
+mysql> create table db2.t1 (
+    -> name char(10),
+    -> age int,
+    -> sex enum("b","g"),
+    -> index(name) , index(sex)      #####加索引
+    -> );
+Query OK, 0 rows affected (0.44 sec)
+
+mysql> desc t1;                                                             +-------+---------------+------+-----+---------+-------+
+| Field | Type          | Null | Key | Default | Extra |
++-------+---------------+------+-----+---------+-------+
+| name  | char(10)      | YES  | MUL | NULL    |       |
+| age   | int(11)       | YES  |     | NULL    |       |
+| sex   | enum('b','g') | YES  | MUL | NULL    |       |
++-------+---------------+------+-----+---------+-------+
+3 rows in set (0.01 sec)
+
+select 
+
+
+
+主键使用   primary key主键
+
+  使用规则
+    字段值不允许重复 且不允许赋NULL值
+   多个字段都为主键 称复合主键 需要一起创建
+    主键标识 PRI
+    主键自加1  auto_increment 
+   通常表中 行号做主键
+
+建表时 建 主键
+ 
+   name char(10) primary key ,  直接加个primary key 就行
+
+  name char(10) ,  class char(7),primary key(name)
+                                                              指定 一个值               
+
+
+mysql> create table t2 (
+    -> name char(10) primary key,
+    -> age int,
+    -> class char(7));
+
+
+
+mysql> create table t3 (
+    -> name char(10),age int ,class char(7),primary key(name)
+    -> );
+
+mysql> insert into t3 values (null,19,"nsd1907");
+ERROR 1048 (23000): Column 'name' cannot be null
+mysql> insert into t3 values ("bob",19,"nsd1907");
+Query OK, 1 row affected (0.05 sec)
+
+
+mysql> select * from t3;
++------+------+---------+
+| name | age  | class   |
++------+------+---------+
+| bob  |   19 | nsd1907 |
++------+------+---------+
+1 row in set (0.00 sec)
+
+主键 primary key 作为唯一标识 类似 身份证号码 
+   唯一性
+
+
+复合主键 多字段一起做主键  一起创建
+  可以实现 多个字段的值不能同时重复
+
+
+mysql> create table pay (
+    -> name char (10), class char(7),pay enum("yes","no"),
+    -> primary key(name,class,pay)
+    -> );
+Query OK, 0 rows affected (0.25 sec)
+
+mysql> desc db2.pay;
++-------+------------------+------+-----+---------+-------+
+| Field | Type             | Null | Key | Default | Extra |
++-------+------------------+------+-----+---------+-------+
+| name  | char(10)         | NO   | PRI | NULL    |       |
+| class | char(7)          | NO   | PRI | NULL    |       |
+| pay   | enum('yes','no') | NO   | PRI | NULL    |       |
++-------+------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+--------------------------------------------------------------------------------------------
+mysql> insert into db2.pay values ("bob","nsd1907","yes");
+Query OK, 1 row affected (0.30 sec)
+
+mysql> insert into db2.pay values ("bob","nsd1907","no");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into db2.pay values ("bob","nsd1908","yes");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from pay;
++------+---------+-----+
+| name | class   | pay |
++------+---------+-----+
+| bob  | nsd1907 | yes |
+| bob  | nsd1907 | no  |
+| bob  | nsd1908 | yes |
++------+---------+-----+
+3 rows in set (0.00 sec)
+
+----------------------------------------------------
+primary key 与 auto_increment 连用
+  让字段 自增长 方式赋值   i=i+1 i++ 
+  
+
+mysql> create table db2.t4(
+    -> id int primary key  auto_increment,
+    -> name char(10),age tinyint unsigned,class char(7) default "nsd1907");
+
+
+mysql> desc t4;
+
++-------+---------------------+------+-----+---------+----------------+
+| Field | Type                | Null | Key | Default | Extra          |
++-------+---------------------+------+-----+---------+----------------+
+| id    | int(11)             | NO   | PRI | NULL    | auto_increment |
+| name  | char(10)            | YES  |     | NULL    |                |
+| age   | tinyint(3) unsigned | YES  |     | NULL    |                |
+| class | char(7)             | YES  |     | nsd1907 |                |
++-------+---------------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+
+mysql> insert into t4(name,age) values ("bob",19);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into t4(name,age) values ("tom",16);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into t4(name,age) values ("john",27);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> select  * from db2.t4;
+
++----+------+------+---------+
+| id | name | age  | class   |
++----+------+------+---------+
+|  1 | bob  |   19 | nsd1907 |
+|  2 | tom  |   16 | nsd1907 |
+|  3 | john |   27 | nsd1907 |
++----+------+------+---------+
+3 rows in set (0.00 sec)
+
+
+mysql> select  * from db2.t4 where id = 2;
+                       id号为唯一标识 只能找到唯一结果
++----+------+------+---------+
+| id | name | age  | class   |
++----+------+------+---------+
+|  2 | tom  |   16 | nsd1907 |
++----+------+------+---------+
+
+没给定自增长的值时  是自增长的 
+  写入 已经存在的自增长的值时 不可写入
+    可以指定 不存在的唯一值
+赋值 为null 时 自加1 会从前一行开始
+
+mysql> insert into db2.t4 values (6,"lili",18,"nsd1906");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into db2.t4 values (null,"hmm",28,"nsd1906");
+Query OK, 1 row affected (0.11 sec)
+
+mysql> select * from db2.t4;
++----+------+------+---------+
+| id | name | age  | class   |
++----+------+------+---------+
+|  1 | bob  |   19 | nsd1907 |
+|  2 | tom  |   16 | nsd1907 |
+|  3 | john |   27 | nsd1907 |
+|  6 | lili |   18 | nsd1906 |
+|  7 | hmm  |   28 | nsd1906 |  (null,"hmm",28,"nsd1906")
++----+------+------+---------+
+5 rows in set (0.00 sec)
+
+
+删除主键
+   单主键 drop primary key 就行
+   复合主键 drop primary key
+  带有自增长的主键  先取消自增长
+  modify 要改的主键行
+       再取消主键
+mysql> alter table db2.t4 modify id int not null;
+Query OK, 5 rows affected (0.48 sec)
+mysql> alter table db2.t4 drop primary key;
+Query OK, 5 rows affected (0.50 sec)
+
+
+nfs 防降权 (no_root_squash)
+         降权  (root_squah)  默认降权 服务器  rwx
+                                                     客户端root 只有 rx 权限
+
+
+注意中文空格 多空格应该是可以的
+
+
