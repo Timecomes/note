@@ -1,0 +1,305 @@
+
+
+   
+    mysql数据库集群 实现高可用
+
+
+]# ssh-keygen                      //创建秘钥对
+]# ssh-copy-id root@192.168.4.x    //传递公钥给x主机
+
+三台后端mysql服务器 互相能免密登录
+调度器 能无密码连接三台后端mysql服务器
+
+安装软件解释器
+]# yum -y install perl-*            //安装系统自带的perl软件包
+
+
+                      51/52/53 做主从
+log_bin=master51
+server_id=51/52/53
+
+mysql> grant replication slave on *.* to repluser@"%" identified by "123qqq...A";          //赋予权限
+
+mysql> change master to master_host="192.168.4.51" , master_user="repluser" ,master_password="123qqq...A" ,  master_log_file="master51.000001", master_log_pos=441;
+                                                                  //指定master
+
+start slave;
+show slave status \G;
+
+
+
+
+57 调度器
+yum -y install  mha4mysql-node-0.56-0.el6.noarch.rpm
+rpm -qa | grep  mha           //查看是否安装成功
+]# yum -y install perl-CPAN
+]# yum -y install perl-ExtUtils-Embed 
+
+]# tar -zxvf mha4mysql-manager-0.56.tar.gz
+
+]# cd mha4mysql-manager-0.56
+]# perl Makefile.PL            //配置
+]#  make                       //编译
+]#  make install               //安装
+]# ls /usr/local/bin/          //查看安装的命令
+
+masterha_check_status     masterha_master_monitor   masterha_stop
+masterha_check_repl       masterha_conf_host        
+
+
+]#  mkdir  /etc/mha               //创建工作目录
+]#  cp mha4mysql-manager-0.56/sample/conf/app1.cnf /etc/mha/ 
+                                                            //拷贝模板文件
+
+]#  vim /etc/mha/app1.cnf         //编辑主配置文件
+
+     [server default]             //管理服务默认配置
+   manager_workdir=/etc/mha       //工作目录
+   manager_log=/etc/mha/manager.log     //日志文件
+   master_ip_failover_script=/etc/mha/master_ip_failover 
+                                             //故障切换脚本  安装软件后存在模板文件
+   ssh_user=root                   //访问ssh服务用户
+   ssh_port=22                     //ssh服务端口
+   repl_user=repluser              //主服务器数据同步授权用户
+   repl_password=123qqq…A          //密码
+   user=root                       //监控用户
+   password=123qqq…A               //密码
+
+        [server1]   //指定第1台数据库服务器
+hostname=192.168.4.51    //服务器ip地址
+port=3306                //服务端口
+candidate_master=1               //竞选主服务器
+
+[server2]  //指定第2台数据库服务器
+hostname=192.168.4.52
+port=3306
+candidate_master=1  
+            
+[server3]  //指定第3台数据库服务器
+hostname=192.168.4.53
+port=3306
+candidate_master=1
+
+
+]# cp mha-soft-student/master_ip_failover /etc/mha/
+
+
+]# vim +35 /etc/mha/master_ip_failover
+
+my $vip = '192.168.4.100/24';  # Virtual IP  //定义VIP地址
+
+my $key = "1";                               //定义变量$key
+
+my $ssh_start_vip = "/sbin/ifconfig eth0:$key $vip"; 
+                                                                                //部署vip地址命令
+
+my $ssh_stop_vip = "/sbin/ifconfig eth0:$key down"; 
+                                                                               //释放vip地址命令
+
+
+]# chmod +x  /etc/mha/master_ip_failover
+
+51]# ifconfig  eth0:1  //部署之前查看
+
+51/52/53]# mysql -uroot -p123qqq...A
+mysql 51/52/53 > grant all on  *.*  to root@"%" identified by "123qqq...A";
+
+
+
+
+启用 51主机 半同步复制及禁止删除日志文件
+
+
+mysql 51]# vim /etc/my.cnf
+
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so" 
+                                                               //加载模块
+rpl_semi_sync_master_enabled=1     //启用master模块
+rpl_semi_sync_slave_enabled=1      //启用slave模块
+relay_log_purge=0                  //禁止自动删除中继日志文件
+
+]#  systemctl  restart  mysqld
+
+
+mysql 52/53]# vim /etc/my.cnf
+
+[mysqld]
+log-bin=master52
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so" 
+                                                               //加载模块
+rpl_semi_sync_master_enabled=1     //启用master模块
+rpl_semi_sync_slave_enabled=1      //启用slave模块
+relay_log_purge=0                  //禁止自动删除中继日志文件
+
+mysql 52/53]#  systemctl  restart  mysqld
+
+
+
+                                         测试主从环境
+
+调度器57 ]# masterha_check_ssh --conf=/etc/mha/app1.cnf 
+                //ssh连接测试 
+
+]# masterha_check_repl --conf=/etc/mha/app1.cnf 
+                            //测试主从
+
+MySQL Replication Health is OK.          //测试成功提示信息
+
+]# masterha_manager --conf=/etc/mha/app1.cnf 
+--remove_dead_master_conf    //删除主机的配件
+--ignore_last_failover       //忽略xxx.health文件
+                                                    //执行启动命令
+                                                    //监视状态 持续运行中
+
+
+
+]#  masterha_check_status  --conf=/etc/mha/app1.cnf
+                                                //查看运行状态
+
+app1 (pid:15806) is running(0:PING_OK), master:192.168.4.51
+                                                //服务运行，监视主服务器192.168.4.51
+
+--------------------------------------------------------------
+测试高可用
+mysql 51 ]# systemctl  stop  mysqld
+修复故障服务器
+mysql 51 ]# systemctl  start  mysqld
+备份 新主服务器数据
+]#  mysqldump -uroot -p123qqq...A  --master-data  db9 > db9.sql 
+]# scp db9.sql  root@192.168.4.51:/root/  //拷贝备份文件给host51主机
+]# mysql -uroot -p123qqq...A db9 < /root/db9.sql//host51 主机使用备份文件恢复数据
+]# grep master52 /root/db9.sql  //查看日志名及偏移量
+
+
+]# mysql -uroot -p123qqq...A
+mysql>change master to master_host="192.168.4.52",master_user="repluser",master_password="123qqq...A",master_log_file="master52.000001",master_log_pos=895;
+
+mysql> start slave;
+
+]# mysql -uroot -p123qqq...A -e "show slave status\G"
+
+
+修改配置文件，添加数据库服务器host51
+代理服务器 57 ]# vim /etc/mha/app1.cnf
+]# masterha_check_ssh --conf=/etc/mha/app1.cnf
+]# masterha_check_repl --conf=/etc/mha/app1.cnf
+
+]# masterha_manager --conf=/etc/mha/app1.cnf  --remove_dead_master_conf \
+--ignore_last_failover //启动管理服务
+
+]# masterha_check_status  --conf=/etc/mha/app1.cnf
+                 //查看新状态
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

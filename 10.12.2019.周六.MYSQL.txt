@@ -1,0 +1,297 @@
+
+
+    用户授权 + 新添加用户 
+                 在数据库服务器上添加新的连接用户
+     撤销权限 删除添加的用户对数据的访问权限
+
+授权库 :  mysql库
+    存储新添加的用户信息和权限信息
+
+
+命令 
+mysql> grant 权限列表(有什么权限)  on 库名(对那个库有权限)  to  用户名@"客户端地址" (网络中那个主机可以访问)   identified by "密码" // with grant  option(有授权 权限 可选) ;
+
+                    
+mysql> grant all on db4.* to yaya@"%" identified by "123qqq...A" ;                   "%" 网络中 所有主机
+
+
+select user();    显示登录用户 及客户端地址
+show grants ;  显示用户自身权限
+show grants for 用户名@   "客户端地址" 
+     查看某授权用户的权限
+
+set password=password("123456")
+修改 远程连接用户的密码
+      远程登录后自己修改 自己密码
+
+
+set  password for 用户名 @ "客户端地址"  =password("密码")
+服务器 修改授权用户的登录密码
+
+set password for yaya@"%" =password ("tarena");
+
+
+drop user 用户名@"客户端地址"
+drop user yaya@"%";    "%" 代表全网所有ip
+
+
+
+授予  指定权限  
+      -all  所有权限
+      -usage 无权限 
+     -select,update,insert  个别权限
+     -select,update(字段1,....,字段N)  指定字段
+
+     库 名
+     - *.*        所有库 所有表
+     -库名.*         一个库
+     -库名.表名      一个表
+
+   用户名 
+      授权时 自定义
+      存储在mysql库的user表中
+
+   客户端地址
+
+    -%           所有主机
+    -192.168.4.%   网段内所有
+    -192.168.4.1   一台主机
+  -localhost   
+
+grant select on *.*  to  root2@"localhost" identified by "123456";
+
+限制权限后 如果只有 对某个表的全限  那只能看到此表 其他库表看不见
+
+
+授权库 
+          mysql库  记录授权信息
+    
+     -user   授权用户及权限 
+     -db     用户对数据库的访问权限
+     -tables_priv   授权用户对表的访问权限
+     -columns       授权用户对字段的访问权限
+
+熟悉 musql下 各种 表内容 及 表结构
+同样 用户的各种权限 也是文件类型 通过修改文件内容 可以修改
+某一用户的权限  权限修改 有指定类型 (查看 mysql.tables_priv的建表信息的 Table_priv中的信息)
+
+update mysql.tables_priv set table_priv="select,insert,update,delete" 
+    -> where user="admin";
+
+flush privileges;  //刷新 文件 否则不会生效
+
+22 rows in set (0.00 sec) //有多少行
+
+条件 限定 永远在最后
+
+
+select * from db \G;
+show grants for admin2@"localhost";
+
+
+
+撤销权限 
+        
+    revoke 权限列表 on 库名.表 from 用户名@"客户端地址";
+        (insert ,delete)
+
+select user,host from mysql.user;
+show grants for admin2@"localhost";
+revoke update,delete on db3.* from admin2@"localhost";
+show grants for admin2@"localhost";
+
+
+不需要刷新 
+
+revoke all on *.* from root@"localhost";
+   撤销权限  为全部权限  (all) 为限定 权限种类
+grant select on webdb.* to webuser@"%";
+    重启单一权限    赋予权限
+取消某用户的 all 权限只保留 一个权限时
+  其主要的方法 就是取消 all权限 在另起 指定权限
+
+
+
+root 密码 (操作系统管理员 root用户才有权限)
+      修改数据库管理员root用户本机登录密码
+      恢复数据库管理员root用户本机登录密码
+
+
+mysqladmin 修改本机数据库管理员密码
+mysqladmin -hlocalhost -uroot -p123qqq...A password "abc123...A"
+
+
+mysqladmin -hlocalhost -uroot -p password "123qqq...A"
+ 会出现输入密码行 (隐藏密码)  输入的密码为 原密码
+
+
+
+忘记密码    恢复mysql 的  root密码
+   只能 是 系统 root用户才能修改   
+
+
+    1 停服务 systemctl stop mysqld
+    2  修改配置文件  vim /etc/my.cnf
+    [mysqld]
+    skip-grant-tables  --加入此行 并且把密码策略注释掉
+                                          否则起不了服务
+
+    3 重启服务
+  4 mysql 直接登录数据库服务器
+  5 mysql库下 user表中
+    authentication_string 行
+
+> select  host,user,authentication_string from mysql.user
+ > update mysql.user set authentication_string=password("123qqq...A") where user="root" and host="localhost";
+  > flush privileges;
+ 
+   修改 用户文件的密码
+    6 配置文件注释掉----回原样
+    7 重启服务
+   
+
+
+备份 与备份 恢复
+
+   完全 备份   
+            冷备份  关服务
+            热备份  开着服务
+              物理备份  cp .  tar
+               逻辑备份  mysqldump 备份命令
+                mysql 恢复命令
+
+
+
+   物理备份 及恢复
+
+      cp -r /var/lib/mysql  /root/mysql.bak(名字随意)
+      将备份的文件 拷贝给目标服务器
+     
+     scp -r /root/mysql.bak root@192.168.4.51:/root/
+    
+       停目标服务器的mysql服务
+       删掉数据库目录下全部 
+      rm -rf /var/lib/mysql/*
+
+       把传输过来的文件 放到 /mysql/目录下
+      cp  -r   /root/mysql.bak/*    /var/lib/mysql
+        修改现在 修改后的文件加的权限
+      chown -R mysql:mysql /var/lib/mysql
+
+        重启服务
+      现在的所有文件 都为源文件的复制  所以 密码同样修改成了
+   源数据库 密码登录
+
+
+数据备份策略
+     
+    完全备份
+        备份所有数据
+    增量备份
+        只备份增加的
+      1  完全备份  1 
+      1+2    备份  +2
+      1+2+3   备份  +3
+      1+2+3+4  备份  +4
+    差异备份
+         备份的是 从第一备份的完全备份后所增加的数据
+         类似于  第一天不变 后面加的累加备份
+          1   备份1                 第一天为完全备份 所以为1
+         1+1   备份 +1
+        1+1+1  备份 +1+1
+     
+
+
+
+binlog 日志文件 
+  server_id  与主机号关联 方便查看归类
+   log_bin    启动logbin日志文件  且可以指定文件存放位置
+                  同时要指定 文件名
+        like  log_bin=/mylod/db50
+                                               否则会报错     
+                               且要赋予mysql 读写权限
+   max_binlog_
+
+
+重启服务 systemctl restart mysqld
+mysql> show master status;
++---------------------+----------+--------------+------------------+-------------------+
+| File                | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++---------------------+----------+--------------+------------------+-------------------+
+| mysql450-bin.000003 |      154 |              |                  |                   |
++---------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+
+ls /var/lib/mysql    出现日志文件 且内容为乱码
+
+a.pem           db4             mysql                mysql.sock.lock     sys
+client-cert.pem  ib_buffer_pool  mysql450-bin.000001  performance_schema  webdb
+client-key.pem   ibdata1         mysql450-bin.000002  private_key.pem
+db1              ib_logfile0     mysql450-bin.000003  public_key.pem
+
+
+此 后 数据库中 所有除查看命令 之外所有命令 都将储存在指定文件中
+     binlog
+
+
+         手动生成新的日志文件
+
+  第一种
+       mysql> flush logs;
+       就会生成 新的日志文件  且 初始值都为154
+
+第二种 
+              重启服务生成新日志文件
+       systemctl restart mysqld   少用不科学
+第三种
+         数据备份同时生成新的日志文件
+    mysqldump -uroot -p123456  
+      --flush-logs db5 > /root/db5.sql
+
+          备份几个库 就会出现几个日志文件
+
+第四种
+       登录时 执行mysql的命令
+   mysql -uroot -p123456 -e "flush logs"
+
+
+
+      删除已有的日志文件
+
+  一   
+   mysql> purge master logs to "logbin日志文件";
+           删除 指定文件之前的所有日志文件 
+
+   二 
+         mysql>  reset master;
+
+  三
+             系统中
+    rm -rf /binlog日志文件存放处/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

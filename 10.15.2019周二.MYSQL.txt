@@ -1,0 +1,187 @@
+       mysql数据库
+
+
+  增量备份
+        备份上次备份后,所有新产生的数据
+
+
+   完全备份
+  ]#innobackupex --user root -password 123456  /fullbak
+ --no-timestamp
+
+mysql> insert into db5.a values (301);
+mysql> insert into db5.b values (903);
+
+增量备份
+ ]#innobackupex --user root -password 123456
+--incremental /new1dir  --inncremental-basedir=/fullbak
+--no-timestamp
+
+mysql> insert into db5.a values (301);
+mysql> insert into db5.b values (903);
+
+
+
+   ]#innobackupex --user root -password 123456
+--incremental /new2dir  --incremental-basedir=/new1dir
+--no-timestamp    此次存放位置                     上次存放数据
+
+------------------------------------------------------
+
+
+ls /fullbak (完全备份文件夹)
+   xtrabackup_checkpoints
+记录文件类型 以及存储数据的起始 位置
+-----------------------------------------------------------
+
+
+关闭服务
+]# systemctl stop mysqld
+
+准备数据恢复
+innobackupex --apply-log --redo-only /tmp/fullbak/
+
+
+  融合1 增量备份      完全+增量
+ innobackupex --apply-log --redo-only /tmp/fullbak/ --incremental-dir=/tmp/new2dir
+
+  融合2
+innobackupex --apply-log --redo-only /tmp/fullbak/ --incremental-dir=/tmp/new3dir
+
+
+将数据导入数据库中
+]# innobackupex --copy-back /tmp/fullbak/
+
+
+root权限用户 用命令导入的数据   默认使用权限root
+]# ls -l /var/lib/mysql/
+]# chown -R mysql:mysql /var/lib/mysql
+
+
+启服务
+]# systemctl start mysqld
+
+
+
+
+
+
+cp  tar  mysqldump  binlog  innobackupex
+
+
+
+
+
+
+-----------------------------------------------------------------------
+
+   mysql 主从同步
+
+一主多从 
+   主从从
+  
+
+
+
+
+
+授权 从服务器 的权限  replication(复制)  指定 用户名 repluser 
+ 
+mysql> grant replication slave on *.* to repluser@"%" identified by "123qqq...A";
+
+
+第二 传输主服务器的数据 
+]# mysqldump -uroot -p123456 --master-data db5 > /root/db5.sql
+]# scp db5.sql root@192.168.4.52:/root/
+
+第三 跳转到从服务器上  由于从服务器 没有任何数据
+
+创建 db5库
+mysql> create database db5;
+
+   导入数据
+]# mysql -uroot -p123qqq...A db5 <  /root/db5.sql
+
+
+第四步 指定主从服务 位置名字 文件名 
+
+mysql>change master  to master_host="192.168.4.51",master_user="repluser" ,
+master_password="123qqq...A" ,master_log_file="master51.000001" , master_log_pos=441 ;
+
+
+起主从服务
+start slave        出错: stop slave   停服务重新输入指定文件 
+
+查看状态    I/O , SQL
+mysql> show slave status \G;   查看报错信息 会有一行 erro
+
+
+ 报错2 删除文件 
+rm -rf master.info relay-log.info
+rm -rf host52-relay-bin.00000*
+rm -rf host52-relay-bin.index
+ 不删除完 会有文件遗留问题  mysql 会继续读取 以下文件
+再重新 输入指定 主服务器 同步数据
+
+
+show grants
+
+
+
+
+一主多从 mysql数据服务
+1 客户端 连接 才需要在连接 mysql时 使用特属权限用户 以此用户连接 
+主服务器 的mysql数据库 
+2 从服务在指定 主服务后 直接连接 本地 root用户就能查看 主从数据变动
+
+mysql> change master to master_host="192.168.4.51", master_user="repluser" , master_password="123qqq...A" , master_log_file="master51.000001" , master_log_pos=2869;         此处数据可以查看 mysql中
+                             show master status;查看
+
+
+          
+    主  从从       
+
+主   --->     从
+               主    - ->    从
+53           54             55
+
+    主从 同位  需要下面 命令 
+]# vim /etc/my.cnf 
+[mysqld]
+server_id=54                  
+log-bin=db54
+log_slave_updates     //允许级联复制   
+
+
+alter user  root@"localhost" identified by "123qqq...A";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                       
+
+
+
+
+
+
+
+
+
+
+
+
+

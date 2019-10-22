@@ -1,0 +1,331 @@
+
+
+ 
+                       数据分片
+
+部署MYCAT服务   支持MYSQL .Oracle .Sqlserver .Mongodb
+  测试配置             可提供读写分离  数据分片
+
+         10种分片规则
+
+
+                                     ------  数据库服务器
+客户端 ----- 分片服务器   -------- 数据库服务器
+                                     -----   数据库服务器
+
+
+
+安装 mycat     依赖java JDK
+]# yum -y install java-1.8.0-openjdk //安装JDK
+]# which java //查看命令
+]# java –version //显示版本
+]# tar -zxvf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz //解压源码
+]# mv mycat /usr/local/ //移动目录（非必须操作）
+
+/usr/local/mycat/conf 文件下  
+   server.xml  //文件逻辑库
+   rule.xml    //分片规则文件
+   schema.xml  //数据分片
+ *.propertie   //文件分片数据
+ 
+/usr/local/mycat/lib
+  java 文件  无修改
+
+/usr/local/mycat/log 日志
+
+
+创建连接用户  修改 配置文件
+
+]# vim /usr/local/mycat/conf/server.xml
+80行左右  配置 mysql
+   
+   定义分片
+]# vim /usr/local/mycat/conf/schema.xml
+  58~77注释的 是实现读写分离的数据
+
+]# sed -i '56,77d' /usr/local/mycat/conf/schema.xml 
+]# sed -i '39,42d' /usr/local/mycat/conf/schema.xml 
+]# sed -i '16,18d' /usr/local/mycat/conf/schema.xml 
+]# sed -i '45,47d' /usr/local/mycat/conf/schema.xml 
+]# sed -i '43d' /usr/local/mycat/conf/schema.xml 
+
+
+ <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">//对TESTDB库下的表做分片存储
+
+
+ <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />  //对travelrecord表做分片存储
+
+
+<table....... />     //对表做分片存储
+
+
+//定义数据库主机名及存储数据的库
+//指定数据节点名
+
+<dataNode name="dn1" dataHost="localhost53" database="db1" /> 
+<dataNode name="dn2" dataHost="localhost54" database="db2" />
+
+
+     //定义数据库服务器主机名 (ip地址)
+   
+<dataHost name="localhost54" maxCon="1000" minCon="10" balance="0"
+
+
+
+-------------------------------------------------------------------------------------------------
+
+    <dataNode name="dn1" dataHost="mysql53" database="db1" />
+        <dataNode name="dn2" dataHost="mysql54" database="db2" />
+        <dataNode name="dn3" dataHost="mysql55" database="db3" />
+
+        <dataHost name="localhost1" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="localhost:3306" user="root"
+                                   password="123456">
+                </writeHost>
+        </dataHost>
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+                <!-- auto sharding by id (long) -->
+                <table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+
+                <!-- global table is auto cloned to all defined data nodes ,so can join
+                        with any table whose sharding node is in the same data node -->
+                <table name="company" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <!-- random sharding using mod sharind rule -->
+                <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+                <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+                <table name="customer" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile">
+                        <childTable name="orders" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id">
+                                <childTable name="order_items" joinKey="order_id"
+                                                        parentKey="id" />
+                        </childTable>
+                        <childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
+                                                parentKey="id" />
+                </table>
+                <!-- <table name="oc_call" primaryKey="ID" dataNode="dn1$0-743" rule="latest-month-calldate"
+                        /> -->  
+        </schema>
+        <!-- <dataNode name="dn1$0-743" dataHost="localhost1" database="db$0-743"
+                /> -->  
+        <dataNode name="dn1" dataHost="mysql53" database="db1" />
+        <dataNode name="dn2" dataHost="mysql54" database="db2" />
+        <dataNode name="dn3" dataHost="mysql55" database="db3" />
+
+        <dataHost name="mysql53" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+             <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM1" url="192.168.4.53:3306" user="plj"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql54" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM2" url="192.168.4.54:3306" user="plj"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+        <dataHost name="mysql55" maxCon="1000" minCon="10" balance="0"
+                          writeType="0" dbType="mysql" dbDriver="native" switchType="1"  slaveThreshold="100">
+                <heartbeat>select user()</heartbeat>
+                <writeHost host="hostM3" url="192.168.4.55:3306" user="plj"
+                                   password="123qqq...A">
+                </writeHost>
+        </dataHost>
+
+</mycat:schema>
+
+-------------------------------------------------------------------------------------------------------
+
+mysql53> create database db1;
+mysql54> create database db2;
+mysql55> create database db3;
+mysql53/54/55 > grant all on  *.*  to  plj@"%" identified by "123qqq...A";
+
+
+]# /usr/local/mycat/bin/mycat --help
+Usage: /usr/local/mycat/bin/mycat { console | start | stop | restart | status | dump }
+
+启服务 ]# /usr/local/mycat/bin/mycat start
+Starting Mycat-server...
+
+]# netstat -tunlp | grep :8066
+tcp6    0     0 :::8066      :::*     LISTEN     1493/java      
+
+
+客户端 ]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+
+mysql> show databases;
++----------+
+| DATABASE |
++----------+
+| TESTDB   |
+
+
+mysql> show tables;
++------------------+
+| Tables in TESTDB |
++------------------+
+| company          |
+| customer         |
+| customer_addr    |
+| employee         |
+| goods            |
+| hotnews          |
+| orders           |
+| order_items      |
+| travelrecord     |
++------------------+
+
+
+
+jdk错误  rpm -qa  | grep -i jdk
+                 rpm -e --nodeps jdk   //删jdk
+
+
+]# vim /usr/local/mycat/conf/schema.xml    //配置文件
+                        //列名称
+ <table name="employee" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />     //指定规则文件位置
+
+
+]# vim /usr/local/mycat/conf/rule.xml
+                                                               //规则文件存储位置 查看规则 必要选项
+        <function name="hash-int"
+                class="io.mycat.route.function.PartitionByFileMap">
+                <property name="mapFile">partition-hash-int.txt</property>
+        </function>                        //指定的配置文件 位置
+
+
+
+
+]# vim /usr/local/mycat/conf/partition-hash-int.txt   修改规则配置文件
+
+10000=0     //数据储存到dn1库
+10010=1    //数据储存到dn2库
+10020=2    //数据储存到dn3库
+~             
+
+]# /usr/local/mycat/bin/mycat  stop            重启服务
+]# /usr/local/mycat/bin/mycat  start
+
+
+---------------------------------
+
+客户端]# mysql -h192.168.4.56 -P8066 -uroot -p123456
+
+mysql> show databases;
+
+mysql> use TESTDB
+
+mysql> create table employee ( ID int primary key auto_increment, sharding_id int, name char(10), sex enum("m","w"));
+
+mysql> desc employee;
+
++-------------+---------------+------+-----+---------+----------------+
+| Field       | Type          | Null | Key | Default | Extra          |
++-------------+---------------+------+-----+---------+----------------+
+| ID          | int(11)       | NO   | PRI | NULL    | auto_increment |
+| sharding_id | int(11)       | YES  |     | NULL    |                |
+| name        | char(10)      | YES  |     | NULL    |                |
+| sex         | enum('m','w') | YES  |     | NULL    |                |
++-------------+---------------+------+-----+---------+----------------+
+
+
+---------------------------------
+
+]# vim /usr/local/mycat/conf/schema.xml 
+
+     <table name="hotnews" primaryKey="ID" autoIncrement="true" dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />   设定了id号自加1  实际情况 不符合 多次使用 id号1 的话会 
+                                                    规则配置文件 位置                                                                               重复
+
+
+]# vim /usr/local/mycat/conf/rule.xml             查找规则
+
+ <tableRule name="mod-long">
+                <rule>
+                        <columns>id</columns>      默认 有id 列
+                        <algorithm>mod-long</algorithm>
+                </rule>
+  </tableRule>
+
+  <function name="mod-long" class="io.mycat.route.function.PartitionByMod">
+                <!-- how many data nodes -->
+                <property name="count">3</property>    //指定求模数字
+        </function>
+
+]# /usr/local/mycat/bin/mycat  stop            重启服务
+]# /usr/local/mycat/bin/mycat  start
+
+create table hotnews ( id int , title char(20),worker char(15), comment varchar(50), fb_time timestamp);
+
+mysql> insert into hotnews(id,title,worker,comment,fb_time) values (11,"mysql","plj","rdbms2",now());
+
+ 
+        vim /usr/local/mycat/conf/schema.xml    查看需求
+                                         |
+mysql> create table company ( ID int primary key auto_increment, gname char(10),money int, people char(10), gaddr char(50));
+
+
+insert into company (gname,money,people,gaddr) values ("jd",100000000,"hsy","beijing");
+
+insert into company (gname,money,people,gaddr) values ("albaba",100000000,"hsy","beijing");
+
+
+-----------------------------------------------------------------------------------------------------------
+
+   添加新库 新表代理服务器  配置文件
+
+
+]# vim /usr/local/mycat/conf/server.xml
+
+        <user name="root">
+                <property name="password">123456</property>
+                <property name="schemas">TESTDB,BBSDB</property>
+                                                                                  , 号间隔
+
+]# vim /usr/local/mycat/conf/schema.xml    增加 库 <schema name>     </schema>
+
+        <schema name="BBSDB" checkSQLschema="false" sqlMaxLimit="100">
+                <table name="company2" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+                <table name="hotnews2"  dataNode="dn1,dn2,dn3"
+                           rule="mod-long" />
+                <table name="employee2" primaryKey="ID" dataNode="dn1,dn2,dn3"
+                           rule="sharding-by-intfile" />
+        </schema>
+
+        <schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+
+
+]# /usr/local/mycat/bin/mycat  stop            重启服务
+]# /usr/local/mycat/bin/mycat  start
+
+
+
+
+
+
+
+
+
+
+
+
+
+

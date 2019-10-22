@@ -1,0 +1,325 @@
+
+binlog 日志文件 
+  server_id  与主机号关联 方便查看归类
+   log_bin    启动logbin日志文件  且可以指定文件存放位置
+                  同时要指定 文件名
+        like  log_bin=/mylod/db50
+                                               否则会报错     
+                               且要赋予mysql 读写权限
+   max_binlog_
+
+
+重启服务 systemctl restart mysqld
+mysql> show master status;
++---------------------+----------+--------------+------------------+-------------------+
+| File                | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++---------------------+----------+--------------+------------------+-------------------+
+| mysql450-bin.000003 |      154 |              |                  |                   |
++---------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+
+ls /var/lib/mysql    出现日志文件 且内容为乱码
+
+a.pem           db4             mysql                mysql.sock.lock     sys
+client-cert.pem  ib_buffer_pool  mysql450-bin.000001  performance_schema  webdb
+client-key.pem   ibdata1         mysql450-bin.000002  private_key.pem
+db1              ib_logfile0     mysql450-bin.000003  public_key.pem
+
+
+此 后 数据库中 所有除查看命令 之外所有命令 都将储存在指定文件中
+     binlog
+
+
+         手动生成新的日志文件
+
+  第一种
+       mysql> flush logs;
+       就会生成 新的日志文件  且 初始值都为154
+
+第二种 
+              重启服务生成新日志文件
+       systemctl restart mysqld   少用不科学
+第三种
+         数据备份同时生成新的日志文件
+    mysqldump -uroot -p123456  
+      --flush-logs db5 > /root/db5.sql
+
+          备份几个库 就会出现几个日志文件
+
+第四种
+       登录时 执行mysql的命令
+   mysql -uroot -p123456 -e "flush logs"
+
+
+
+      删除已有的日志文件
+
+  一   
+   mysql> purge master logs to "logbin日志文件";
+           删除 指定文件之前的所有日志文件 
+
+   二 
+         mysql>  reset master;
+
+  三
+             系统中
+    rm -rf /binlog日志文件存放处/*
+
+
+恢复数据
+            完全备份文件 + binlog日志文件
+
+]# mysqlbinlog + 日志文件  | mysql -uroot -p密码
+  重现命令
+
+第一步   导出完全备份
+   mysql> system mysqldump -uroot -p"123456" db3 > /root/db3.sql
+
+]# mysqldump -uroot -p123456 --master-data -B db5 ganmedb > /root/twodb.sql
+同时备份 多个库  导入时 直接导入该文件不用 添加空库
+    
+第二步 删除所有binlog文件
+    mysql> reset master ;
+        mysql> show master status;
+    
+第三部 做数据库中想要变动的   用以写入数据到binlog文件中
+mysql> create table db3.tea(name char(10));
+insert into db3.tea values ("tom"),("bob"),("liyaming");
+ mysql> show master status; 查看是否写入
+ mysql> select * from db3.tea;
+
+第四步  传输数据
+
+[root]# scp /root/db3.sql  root@192.168.4.51:/root/
+
+]# scp /mylog/db50.000001 root@192.168.4.51:/root/
+
+
+第五步  需恢复数据的数据库 
+               创建需要的库 导入完全备份数据
+
+mysql> show databases;
+mysql> create database db3;
+]# mysql -uroot -p123456 db3 < /root/db3.sql
+
+
+
+
+
+第六步   导入binlog数据
+
+]# mysqlbinlog /root/db50.000001 | mysql -uroot -p123456
+
+---------------------------------------------
+
+点评 
+        局限   
+            后面再加 的数据不好恢复
+       从头到尾 ---重来一遍  
+       binlog存储的是命令
+            库还在 表还在 恢复表数据  不太行
+
+---------------------------------------------
+   如何指定 恢复命令的执行
+      只要指定的 一两条 binlog中的命令
+
+查看binlog文件储存数据的数据形式  
+mysql> show variables like "binlog_format";
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | MIXED |
++---------------+-------+
+
+首先 修改binlog日志文件的 记录命令的格式
+    
+vim /etc/my.cnf
+
+加入一行 
+#       
+log_bin=/mylog/db51
+server_id=51
+#
+      binlog_format="mixed"
+
+重启服务
+     systemctl restart mysqld
+
+已有日志在此次修改后 并不会改变 但之后命令会直接储存到
+  binlong日志文件中
+
+
+mysqlbinlog /mylog/db51.000007 |grep -i insert
+insert into db3.tea values("a")
+insert into db3.tea values("b")
+insert into db3.tea values("c")
+
+
+读日志  指定范围  时间范围  
+
+ --start-datetime="yyyy-mm-dd hh:mm:ss"
+                    起始时间
+
+  --stop-datetome="yyyy-mm-dd hh:mm:ss"
+                     结束时间
+
+    --start-position=数字
+                       起始偏移量
+
+       --stop-position=数字
+                       末尾偏移量
+
+
+ mysqlbinlog /mylog/db51.000007 
+
+# at 4   记录的就是偏移量
+
+
+COMMIT/*!*/;   代表的是 数据库中的 回车键
+                   类似于 一段命令的结束
+
+
+
+mysqlbinlog --start-position=293  --stop-position=933  /mylog/db51.000007 | mysql -uroot -p123456
+
+
+
+
+
+
+]# mysqlbinlog  --start-datetime="2019-10-14 11:52:20"  --stop-datetime="2019-10-14 11:52:26"  /mylog/db51.000007 | mysql -uroot -p123456
+
+结束时间不指定  默认到末尾
+起始时间不指定 默认从头开始
+
+
+
+
+
+.mysql 备份工具分析
+  
+   物理
+    跨平台差
+   备份时间长 浪费存储空间 冗余备份
+ 
+ mysqldump
+      效率低 备份还原速度慢  锁表
+      备份过程 数据插入修改被阻
+
+ XtraBackup 工具
+   在线热备份
+
+  组件
+      xtrabackup
+ 
+     innobackupex 
+
+   软件开元
+
+1  安装 percona
+
+rpm -ivh libev-4.15-1.el6.rf.x86_64.rpm 
+
+ yum -y install
+   percona-xtrabackup-24-2.4.7-1.el7.x86_64.rpm 
+
+2 完全备份与恢复
+3 在完全备份恢复单张表数据
+4 增量备份与恢复
+
+
+
+1  安装 percona
+
+   --host  主机名
+    --user  用户名
+   --port 端口号
+   --password 密码
+     --databases 
+      --no-timestamp  取消默认创建的存储文件
+                        取消的是创建的文件名 默认为当前系统时间
+            指定的备份位置 不用提前创建
+
+                完全备份式
+   
+  ]# innobackupex -user 用户名 --password 密码
+ 备份目录名 --no-timestamp
+
+]# innobackupex --user root --password 123456  /allbak  --no-timestamp
+
+
+
+                         服务完全备份恢复完全备份
+停服务
+   systemctl stop mysqld
+
+
+]# innobackupex --apply-log /tmp/allbak/
+
+
+cat  /tmp/allbak/xtrabackup_checkpoints
+ 查看 配置文件是否 由full-backup 改为full-prepared
+
+]# innobackupex --copy-back /tmp/allbak/
+          复制文件到mysql文件夹下
+]# chown -R mysql:mysql /var/lib/mysql
+修改文件内容的权限
+
+启服务     进数据库
+
+
+
+
+
+             恢复单张表
+
+
+
+/var/lib/mysql/库民/表名.idb
+idb  存放数据   表空间文件
+
+外部复制较麻烦
+     用mysql 内部命令
+
+删除表空间 
+alter table db5.b  discard tablespace;
+
+
+]# innobackupex --apply-log --export /tmp/allbak/
+
+
+导入数据时 仅xx.idb 文件是不够的  还需要xx.cfg xx.exp文件
+cp /tmp/allbak/db5/b.{cfg,exp,ibd} /var/lib/mysql/db5/
+
+修改文件权限 否走mysql 不能查看修改
+]# chown mysql:mysql /var/lib/mysql/db5/b.*
+
+mysql中 导入数据  命令导入  不用停服务
+mysql> alter table db5.b import tablespace;
+
+导入数据后 可以删除 两个 .cfg .exp文件
+
+]# rm -rf /var/lib/mysql/db5/b.exp
+]# rm -rf /var/lib/mysql/db5/b.cfg 
+
+
+
+-----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

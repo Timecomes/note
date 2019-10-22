@@ -1,0 +1,62 @@
+virtual start 虚拟机名
+ssh-keygen
+ssh-copy-id root@192.168.4.72
+
+pxc 集群 (mysql)
+自动实现 服务的主从
+3306 数据库
+4567 集群通信  4444 SST端口 4568 IST端口 
+                              全量同步           增量同步   (对应数据同步时开启)
+
+
+第一步 主机名映射 修改hosts文件
+
+]# vim /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+
+8 wsrep_cluster_address=gcomm://
+8 wsrep_cluster_address=gcomm://192.168.4.71,192.168.4.72,192.168.4.73
+                                                       //集群成员
+27 wsrep_cluster_name=pxc-cluster   //集群名称   统一
+
+25 #wsrep_node_address=192.168.70.63
+25 wsrep_node_address=192.168.4.71  //本机ip
+
+30 wsrep_node_name=my71   //本机主机名
+
+39 wsrep_sst_auth="sstuser:123qqq...A"  做全量同步的 用户名 密码
+
+
+第二步  启服务
+
+]# systemctl start mysql@bootstrap.service
+                   主服务器
+
+]# systemctl start mysql
+                    从服务器
+
+
+服务器 停止后重启 可以自动同步未写入数据
+
+如果 配置文件 查不出错 且主服务器 集群中只有自己
+停止所有服务器 
+    删除从服务器 mysql下所有文件(数据)
+重启主服务器--重启从服务器 从新载入配置文件
+
+
+
+数据库引擎
+
+mysql> alter table db5.d engine=innodb;
+
+mysql> show engines;
+
+mysql> show status like "table_lock%";
+
+自动提交数据   (表格式.无关)
+mysql> show variables like "autocommit";
+
+
+
+
+
+

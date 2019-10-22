@@ -1,0 +1,56 @@
+create table db1.stuinfo(name char(15));
+
+insert into db1.stuinfo values ("bob","USA");
+
+select * from db1.stuinfo;
+
+delete from 表名     //只删除表中数据
+
+drop database 库名  //删库
+
+delete from mysql.user where user = "yaya888";  //删用户
+
+show grants for yaya998@"%";  //查看用户权限
+
+alter user root@"localhost" identified by "123456";   //修改密码
+
+grep password /var/log/mysqld.log    //查找 初始密码
+
+   >>  create index xxx on db1.t3(name);   //索引
+   >>  show index from db1.t3 \G;
+   >>  drop index xxx on db1.t3;
+
+
+mysql> alter table db2.t4 modify id int not null; //数据不允许为空
+
+mysql> alter table db2.t4 drop primary key;       // 主键
+
+
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user1.txt";               //导出数据
+                                         
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user2.txt" fields terminated by "$$$$";
+
+
+update db2.yg  set  yg_id=8 where yg_id=1;  //修改值    
+
+mysql> grant all on db4.* to yaya@"%" identified by "123qqq...A" ;                  //"%" 网络中 所有主机  创建用户授权
+
+
+show grants for 用户名@"客户端地址"     //查看用户详细信息
+
+drop user yaya@"%";    //删除用户
+
+
+grant select on *.*  to  root2@"localhost" identified by "123456";
+                                                        //赋予权限
+update mysql.tables_priv set table_priv="select,insert,update,delete" where user="admin";
+                                                        //修改权限
+revoke all on *.* from root@"localhost";
+                                                        //撤销权限
+
+
+
+
+
+
+

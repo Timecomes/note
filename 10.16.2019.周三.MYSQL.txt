@@ -1,0 +1,280 @@
+修改复制模式
+                           主从结构  一般 异步复制
+
+
+     主服务器   改为半同步复制模式
+        从服务    改半同步复制模式
+
+
+    加载模块   ---   启用模块(命令行/配置文件)
+
+
+    第一步   查看 系统是否允许 加载模块
+mysql> show  variables  like  'have_dynamic_loading';
+
+| Variable_name        | Value |
++----------------------+-------+
+| have_dynamic_loading | YES   |
+
+
+         输出值为 YES
+
+
+    第二步   加载模块   一个mysql可以加载 (主+从)模块
+mysql> install  plugin   rpl_semi_sync_master   SONAME   "semisync_master.so";   主
+
+mysql> install  plugin   rpl_semi_sync_slave SONAME  'semisync_slave.so';     从
+
+配置文件中 开启自动加载模块(永久有效)
+vim /etc/my.cnf
+[mysqld]
+plugin-load="rpl_semi_sync_master=semisync_master.so; rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled = 1      启动主
+rpl-semi-sync-slave-enabled = 1       启动从
+
+
+
+查看是否加载成功    (ACTIVE)
+mysql> select  plugin_name, plugin_status from  information_schema.plugins  where plugin_name like '%semi%';
+
+
+| plugin_name          | plugin_status |
++----------------------+---------------+
+| rpl_semi_sync_master | ACTIVE        |
+| rpl_semi_sync_slave  | ACTIVE        |
+
+
+    第三步  启用模块
+
+mysql> set  global rpl_semi_sync_master_enabled = 1; 
+                                       主
+mysql> set  global rpl_semi_sync_slave_enabled = 1;
+                                       从
+查看模块是否启用    ( ON/OFF )
+
+mysql>  show  variables  like  "rpl_semi_sync_%_enabled";
+
+
+| Variable_name                | Value |
++------------------------------+-------+
+| rpl_semi_sync_master_enabled | ON    |
+| rpl_semi_sync_slave_enabled  | ON    |
+
+
+-==-=-=--=-=-=====================================
+
+                         数据库 读写分离
+  
+     直接使用代理服务器  实现  读写分离 (  select/insert )
+      maxscale 软件   (服务程序 + 命令)
+
+
+  确保后端数据库 是否是主从结构 并且主从启动无误
+     mysql> show slave status \G;
+
+                 
+  [root@my57 ~]# max
+maxadmin        maxbinlogcheck  maxpasswd       
+maxavrocheck    maxkeys         maxscale    
+
+
+[root@my57 ~]# ls /etc/maxscale.     (主配置文件)
+maxscale.cnf (配置文件)    maxscale.cnf.template  maxscale.modules.d/
+
+
+日志文件
+  ]# ls /var/log/maxscale/  (启动服务后自动存放)
+  9 [maxscale]
+ 10 threads=1/auto     程序启动后 线程启动数
+
+                     指定服务器 的ip和端口(让代理知道数据库)
+ 18 [server1]           服务器名字
+ 19 type=server
+ 20 address=192.168.4.51      数据库服务器地址
+ 21 port=3306                    端口号
+ 22 protocol=MySQLBackend
+ 23 
+ 24 [server2]             服务器名字
+ 25 type=server
+ 26 address=192.168.4.52
+ 27 port=3306
+ 28 protocol=MySQLBackend
+
+
+ 35 [MySQL Monitor]             监视
+ 36 type=monitor
+ 37 module=mysqlmon
+ 38 servers=server1,server2    监视谁
+ 39 user=myuser            连接数据库所用用户(随意).需添加
+ 40 passwd=mypwd
+ 41 monitor_interval=10000
+
+52 [Read-Only Service]   只读服务 (读写分离不需要   注释掉)
+ 53 type=service
+ 54 router=readconnroute:;
+ 55 servers=server1
+ 56 user=myuser
+ 57 passwd=mypwd
+ 58 router_options=slave
+
+63 [Read-Write Service]     读写--分离服务
+ 64 type=service
+ 65 router=readwritesplit
+ 66 servers=server1,server2
+ 67 user=maxscalerouter      检查连接时用户是否存在(账户密码) sv1,sv2
+       相当于 另出一个账户 来检查 连接时指定的用户是否存在于  sv1,sv2
+ 68 passwd=123qqq...A
+ 69 max_slave_connections=100%
+
+
+ 75 [MaxAdmin Service]    管理服务
+ 76 type=service
+ 77 router=cli
+
+
+ 85 #[Read-Only Listener]    只读服务 监听端口  注释掉
+ 86 #type=listener
+ 87 #service=Read-Only Service
+ 88 #protocol=MySQLClient
+ 89 #port=4008
+
+ 91 [Read-Write Listener]        读写分离 使用的端口
+ 92 type=listener
+ 93 service=Read-Write Service
+ 94 protocol=MySQLClient
+ 95 port=4006
+
+ 97 [MaxAdmin Listener]          管理服务 监听端口
+ 98 type=listener
+ 99 service=MaxAdmin Service
+100 protocol=maxscaled
+101 socket=default                 
+port=4016          端口号 可以自己指定   添加 一行 端口号 
+
+]# sed -i ' /#/d' /etc/maxscale.cnf    删除注释
+
+
+授权 给后端服务器 
+
+mysql> grant replication slave,replication client on *.* to  maxscalemon@'%' identified by "123qqq...A"; 
+                              //授权监控用户
+
+mysql> grant select on mysql.* to maxscalerouter@"%" identified by "123qqq...A"; 
+                            //授权读写用户
+
+用户错误  权限错误 删除
+mysql> drop user maxscalemon@"%";
+
+
+       启服务
+]# maxscale -f /etc/maxscale.cnf
+
+出错  杀死进程
+]# killall -9 1309
+
+进入 代理服务器 管理系统上
+]# maxadmin -uadmin -pmariadb -P4016
+
+查看真实数据库状态
+MaxScale> list servers
+Server             | Address         | Port  | Connections | Status              
+-------------------+-----------------+-------+-------------+--------------------
+server1            | 192.168.4.51    |  3306 |           1 | Master, Running
+server2            | 192.168.4.52    |  3306 |           1 | Slave, Running
+
+
+
+检验效果    到其他机器上 访问代理服务器
+]# mysql -h192.168.4.57 -P4006 -uyaya888 -p123qqq...A
+
+
+---------------------------------------------------
+   
+       多实例服务 
+                     一台服务器上 跑多个mysql服务
+
+     ]# rpm -q libaio
+  ]# yum -y install libaio
+]# useradd mysql
+]# tar -zxvf mysql-5.7.20-linux-glibc2.12-x86_64.tar.gz 
+]# mv mysql-5.7.20-linux-glibc2.12-x86_64 /usr/local/mysql
+]# PATH=/usr/local/mysql/bin:$PATH
+     临时变量
+]# vim /etc/bashrc
+export PATH=/usr/loacl/mysql/bin:$PATH
+            加入全局变量
+
+
+]# vim /etc/my.cnf     该文件不存在 没有内容手动加的
+[mysqld_multi]        //启用多实例
+mysqld = /usr/local/mysql/bin/mysqld_safe        //指定进程文件路径
+mysqladmin = /usr/local/mysql/bin/mysqladmin    //指定管理命令路径
+user = root        //指定进程用户
+
+[mysqld1]        //实例进程名称
+port=3307        //端口号
+datadir=/dir1        //数据库目录 ，要手动创建
+socket=/dir1/mysqld1.sock        //指定sock文件的路径和名称
+pid-file=/dir1/mysqld1.pid        //进程pid号文件位置
+log-error=/dir1/mysqld1.err        //错误日志位置 
+
+[mysqld2]
+port=3308
+datadir=/dir2
+socket=/dir2/mysqld2.sock
+pid-file=/dir2/mysqld2.pid
+log-error=/dir2/mysqld2.err 
+
+
+    ]# mkdir  /dir2
+    ]# mkdir  /dir1
+
+]# mysqld_multi  start 1       //启动实例1
+
+
+mysql -uroot -p'ly#LryiFE5fT' -S /dir1/mysqld1.sock
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

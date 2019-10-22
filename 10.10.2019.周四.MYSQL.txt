@@ -1,0 +1,339 @@
+
+外键使用  限制字段赋值
+  插入记录时 字段值在另一个表字段值范围内选择  
+     不可超出指定字段的范围    
+       表A      表B
+       4个id     只能有4个 对应的数据
+                      想要增加 B表中的个数
+       只能先增加表A的个数  
+                      才能加B表个数 
+ 字段一致
+ 字段不可重复(参考表要存在)
+
+插入字段 还是要给外键行赋值的 应为值可以为 NUll
+此处 是一个bug 相同外键可以重复出现
+整理数据 给表添加唯一主键  可以避免 重复与 值为 NULL
+alter table gz add primary key (gz_id);
+
+
+外键命令格式
+   create table 表名 (
+        字段名列表 ,
+    foreign key (字段名) references 表名(字段名)
+                                           定义外键母文件
+     on update cascade   同步增加
+     on delete cascade   同步删除
+    )engine=innodb;  存储引擎必须条件
+
+
+
+
+
+mysql> create table db2.yg(yg_id int primary key auto_increment, yg_name char(10))engine=innodb;
+Query OK, 0 rows affected (0.51 sec)
+mysql> desc yg;
++---------+----------+------+-----+---------+----------------+
+| Field   | Type     | Null | Key | Default | Extra          |
++---------+----------+------+-----+---------+----------------+
+| yg_id   | int(11)  | NO   | PRI | NULL    | auto_increment |
+| yg_name | char(10) | YES  |     | NULL    |                |
++---------+----------+------+-----+---------+----------------+
+
+mysql> insert into yg(yg_name) values ("bob"),("bob"),("lisi");
+Query OK, 3 rows affected (0.06 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select * from yg;
++-------+---------+
+| yg_id | yg_name |
++-------+---------+
+|     1 | bob     |
+|     2 | bob     |
+|     3 | lisi    |
++-------+---------+
+3 rows in set (0.01 sec)
+
+
+mysql> create table gz(gz_id int , gz float(7,2) ,foreign key(gz_id) references yg(yg_id) on update cascade on delete cascade )engine=innodb;
+Query OK, 0 rows affected (0.38 sec)
+
+mysql> insert into gz1 values (1,2000);
+Query OK, 1 row affected (0.06 sec)
+
+mysql> insert into gz1 values (2,3000);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into gz1 values (3,4000);
+Query OK, 1 row affected (0.05 sec)
+
+mysql> insert into gz1 values (4,5000);
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into gz1 values (5,6000);
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`db2`.`gz1`, CONSTRAINT `gz1_ibfk_1` FOREIGN KEY (`gz_id`) REFERENCES `yg` (`yg_id`) ON DELETE CASCADE ON UPDATE CASCADE)
+mysql> select *from gz1;
++-------+---------+
+| gz_id | gz      |
++-------+---------+
+|     1 | 2000.00 |
+|     2 | 3000.00 |
+|     3 | 4000.00 |
+|     4 | 5000.00 |
++-------+---------+
+4 rows in set (0.00 sec)
+
+
+mysql> delete from yg where yg_id = 1;
+   删除 外键源 数据 
+mysql> update db2.yg set yg_id=8 where yg_id = 2 ;
+   修改 外键源 数据
+
+查看外键 创建信息
+ show create table gz \G;
+alter table gz drop foreign key gz_ibfk_1; 
+   删除 表的外键    之后 所有数据不受 外键 源约束
+
+
+
+表 + 结构 + 数据
+
+
+数据库 第三天
+  1 数据库导入导出
+  数据导入导出 默认检索路径  /var/lib/mysql-files
+   导入
+    show variables like "%file%" / "secure_file_priv"
+    导出
+
+  修改默认检索路径
+     vim /etc/my.cnf
+           secure_file_priv="/目录位置"
+                文件存在 mysql有写入权限
+  导入 系统文件存储到 数据库表中
+  导出 把数据库表里的记录 保存到系统文件
+
+
+
+
+[root@mysql450 ~]# vim /etc/my.cnf
+[root@mysql450 ~]# mkdir /myload
+[root@mysql450 ~]# chown mysql /myload
+[root@mysql450 ~]# systemctl restart mysqld
+[root@mysql450 ~]# mysql -uroot -p123456
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show variables like "secure_file_priv";
++------------------+----------+
+| Variable_name    | Value    |
++------------------+----------+
+| secure_file_priv | /myload/ |
++------------------+----------+
+1 row in set (0.00 sec)
+
+
+
+
+  -----------------------数据导入 真
+   步骤
+          默认只有root有导入权限
+          建表
+         导数据
+                                导入文件 是有序可循的
+                                     不能是杂乱无章的
+1把系统文件拷贝到检索目录下
+ 2 创建存储数据的表和 库
+ 3 导入数据
+  4 查看数据
+
+mysql登录状态下 使用 shell系统命令
+   system cp /xx/  /xx
+
+mysql> create table user (
+    -> name char(50), password char(1),
+    -> uid int, gid int , comment char(150),
+    -> homedir char(150), shell char(100)
+    -> );
+Query OK, 0 rows affected (0.24 sec)
+
+mysql> load data infile "/myload/passwd" into table db3.user fields terminated by ":" lines terminated by "\n" ;
+
+
+mysql> alter table user add id int primary key auto_increment first;
+Query OK, 0 rows affected (0.47 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+---------------------------------------------------------------------------
+
+----------------导出 数据
+
+select命令 into outfile "目录名/文件名"   文件名自定义
+    相当于 查询命令 不输出在屏幕上 而是放到文件中 类似echo写入txt
+指定 行 /列 分隔符
+
+   导出的只有表记录 没有标题(表头)
+   自动创建存储的文件 
+   文件有唯一性
+
+------------------------------
+
+mysql> select name,uid,homedir from db3.user where id <= 3;
++--------+------+---------+
+| name   | uid  | homedir |
++--------+------+---------+
+| root   |    0 | /root   |
+| bin    |    1 | /bin    |
+| daemon |    2 | /sbin   |
++--------+------+---------+
+3 rows in set (0.00 sec)
+
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user1.txt";
+Query OK, 3 rows affected (0.00 sec)
+
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user2.txt" fields terminated by "$$$$";
+Query OK, 3 rows affected (0.01 sec)
+
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user2.txt" fields terminated by "$$$$" lines terminated by "!!!!!";
+ERROR 1086 (HY000): File '/myload/user2.txt' already exists
+mysql> select name,uid,homedir from db3.user where id <= 3 into outfile "/myload/user3.txt" fields terminated by "$$$$" lines terminated by "!!!!!";
+Query OK, 3 rows affected (0.00 sec)
+
+输出结果:
+
+mysql> system cat /myload/user1.txt
+root	0	/root
+bin	1	/bin
+daemon	2	/sbin
+mysql> system cat /myload/user2.txt
+root$$$$0$$$$/root
+bin$$$$1$$$$/bin
+daemon$$$$2$$$$/sbin
+mysql> system cat /myload/user3.txt
+root$$$$0$$$$/root!!!!!bin$$$$1$$$$/bin!!!!!daemon$$$$2$$$$/sbin!!!!!mysql> 
+
+--------------------------
+
+
+
+
+  2 管理表记录
+
+    插入表记录
+         默认添加到已有记录的末尾 可以插入多条记录 ( ) , ( )
+  不指定字段名 全都要赋值 指定字段名 只给指定值赋值 
+                    没指定赋值的使用默认值
+
+    更新表记录
+   修改行某列的值  update
+     1修改所有行
+
+  update db3.user set password="x",
+
+  update db2.yg  set  yg_id=8 where yg_id=1;
+
+     2修改指定行
+
+字符类型 ""
+不加where 会更新每一行
+
+
+    查询表记录
+    select 字段1,字段2...字段N from 库名.表名
+    给条件只输出条件  显示行的个数   where  
+
+    删除表记录
+
+
+---------------------------
+查
+mysql> select name,uid,shell from db3.user;
+mysql> select * from db3.user;
+mysql> select * from db3.user where id <= 3;
+mysql> select name,uid,shell from user where id <= 3;
+
+
+
+
+
+
+
+
+
+  3 匹配条件
+   基本匹配条件  (select/ update / delete) 
+    数值比较 (> < =)
+    字符比较 = !=
+     is null
+     is not null
+   4 逻辑匹配 多个条件判段 
+     or   多个判断条件某个;成立即可
+     and  多个判断必须同时成立
+     逻辑非  取反 ! not
+  5 范围匹配
+      in  (  条件 ) 
+      not in   () 
+      between   在...之间
+      distinct  去重显示  如有重复只显示第一次出现
+
+   高级匹配条件   (select/ update / delete) 
+      
+       模糊查询   like '表达式'
+                 _ 表示 一个字符
+                 % 表示0~多个
+        正则表达式   where 字段名 regexp '正则表达式'
+
+         四则运算 + - * / %
+
+   操作查询结果 (对查询出来的结果再做处理)
+       聚集函数 mysql服务内内置的数据统计函数
+           
+   -avg(字段名)      //统计字段平均值
+   -sum(字段名)      //字段之和
+   -min(字段名)      //最小值
+   -max(字段名)      //字段中最大值
+   -count(字段名)    //统计字段个数
+ count(*)  统计总共有多少行
+  order by 字段名    (desc); 根据那一字段排序 升序
+                                 可选 降序排列
+   group by 字段名        与distinct相似 结果相同 过程不同
+             重复不出现排序  分组
+
+mysql> select sum(uid) from user;
+mysql> select count(*) from user;
+
+查询结果 再做查找
+      select name from user where id < 5 having name = "sync" ;
+ 
+where  > 表里找结果
+having > 从结果中查找
+
+mysql> select name from user where uid > 5 having name in ("mysql","shutdown");
+mysql> select name from user where uid > 5 having name = "root";
+
+
+限制查询结果显示行数   (全局行数)
+
+             limit 数字;
+范围             limit 数字1 , 数字2   1 起始行 /2 总行数
+                                             (0代表第一行)
+
+
+ 4 MYSQL管理工具
+  查看建表命令 show create table 表名 \G;
+
+
+     -phpmyadmin
+
+navicat 图形 windos
+phpmyadmin 浏览器 跨平台
+
+cp config.sample.inc.php config.inc.php
+主配置文件
+
+
+
+
+
+
+
+
