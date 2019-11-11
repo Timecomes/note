@@ -1,0 +1,300 @@
+
+外网 
+  git clone git://43.254.90.134/nsd1907.git
+ 
+
+   yum -y install git
+
+git pull
+
+    base-vm + 虚拟机名
+
+]$ virsh list --all         //查看虚拟机
+]$ virsh start web1         //启动虚拟机
+]$ virsh console web1       //连接到虚拟机
+free -m
+
+root
+a
+
+ps -efww  //详细参数
+libvirt  >> 转换 qemu程序
+用户接口
+
+kvm   底层
+qemu  为底层提供支持
+libvirt  管理程序
+
+配置文件
+ /etc/libvirt/qemu/
+磁盘文件
+ /var/lib/libvirt/
+
+yum -y install qemu-kvm libvirt-daemon libvirt-client \
+libvirt-daemon-driver-qemu
+
+systemctl start libvirtd
+
+
+
+--------------------------
+virsh
+ virsh list [--all]
+       start|shutdown|reboot
+       destory  强制关机
+       define|undefine  创建/删除虚拟机 只删除配置文件 不删除硬盘
+       console  连接虚拟机 与图形界面冲突  
+       edit  + 主机名   修改虚拟机配置   关机后修改 
+       autostart    自启动
+       domiflist    查看网卡信息
+       domblklist   硬盘信息
+       logout   退出
+
+eip + 最后一位的ip
+
+虚拟网络管理   网络设备 类似于交换机
+virsh net-list [--all]  //后不接任何东西 
+       net-start   
+       net-destory  强制关闭
+       net-define
+       net-undefine  删除虚拟设备  
+       net-edit  + 设备   
+       net-autostart    自启动
+
+net-edit
+ >dhcp      //dhcp服务
+ >forward   //上网
+
+qcow2
+
+]$ virsh domblklist centos7.0
+     可查看前端盘
+
+]$ cd /var/lib/libvirt/images/
+]$ qemu-img info .node_tedu.qcow2   查看前端盘的后端盘
+
+
+前段 套前段 套前段 但最终 底层一定是后端盘
+
+
+
+
+
+ .node_base.qcow2  磁盘
+ .node_base.xml   配置文件
+
+
+]$ cd /var/lib/libvirt/images/
+]$ qemu-img create -b .node_base.qcow2 -f qcow2 node22.img 20G
+
+
+]$ cp .node_base.xml /etc/libvirt/qemu/node22.xml
+]$ vim node22.xml
+02
+26
+
+]$ virsh define /etc/libvirt/qemu/node22.xml 
+]$ virsh start node22
+]$ virsh console node22
+
+]$  ctrl+] 退出
+
+
+
+]$ virsh list
+]$ virsh blockresize --path /var/lib/libvirt/images/node21.img --size 50G node21
+]$ virsh console node21
+]# echo $LANG
+]# LANG=C        //系统英文
+]# lsblk
+]# growpart /dev/vda 1
+]# xfs_growfs /
+]# df -h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

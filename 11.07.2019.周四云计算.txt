@@ -1,0 +1,295 @@
+  git clone git://43.254.90.134/nsd1907.git
+ 
+
+   yum -y install git
+
+git pull
+
+    base-vm + 虚拟机名
+
+]$ virsh list --all         //查看虚拟机
+]$ virsh start web1         //启动虚拟机
+]$ virsh console web1       //连接到虚拟机
+
+
+root
+a
+
+----------------------------------------
+
+Horizon  管理各种服务 基于web   apach
+
+nova  运行真实虚拟机  各项配置
+
+Glance   (后端盘)   服务 >> 存储后端盘 >> 其他机器网络连接glance 
+                                                             网络安装软件  
+
+swift  对象存储  存贮云 文件分布式存储(特殊情况)
+
+Quantum   网络组件
+一个主机中 多台虚拟主机 且 多台虚拟主机在不同主机间 实现互联互通 或真机中虚拟主机不互通
+
+划分 vlan sdn软件定义网络
+
+
+cinder  逻辑卷  逻辑卷挂到云主机中
+
+keystone 认证集中认证
+
+
+创建用户
+
+
+主机 dns 配置
+        ]# vim /etc/resolv.conf
+               去掉search开头的所有行
+
+
+]# vim /etc/chrony.conf 
+server 192.168.1.254 iburst
+
+]# chronyc sources -v    查看chrony信息
+  * 代表NTP可用
+
+
+配置yum源
+
+安装 装openstack必要的软件
+  测试 firewalld | network  是否关启 
+ rpm -qa  | grep -i "NetworkManager|firewall"
+  chrony 服务是否启动 ]# chronyc  sources -v
+  ip地址是否正确  是否是静止ip 
+ ]# cat /etc/sysconfig/network-scripts/ifcfg-eth0 
+   yum仓库是否正确
+     主机名必须能互相ping通 ]# ping nova01
+  /etc/resolvconf 不能有 search 开头行
+
+
+安装 openstack应答安装文件
+ yum -y install openstack-packstack
+
+
+]# packstack --gen-answer-file=answer.ini
+       脚本创建文件
+
+]# vim answer.ini
+42  CONFIG_SWIFT_INSTALL=n
+45  CONFIG_CEILOMETER_INSTALL=n        //计费相关模块
+49  CONFIG_AODH_INSTALL=n              //计费相关模块
+53  CONFIG_GNOCCHI_INSTALL=n           //计费相关模块
+75  CONFIG_NTP_SERVERS=192.168.1.254   //时间服务器的地址
+98  CONFIG_COMPUTE_HOSTS=192.168.1.11
+102 CONFIG_NETWORK_HOSTS=192.168.1.10,192.168.1.11
+333 CONFIG_KEYSTONE_ADMIN_PW=a         //修改管理员的密码
+840 CONFIG_NEUTRON_ML2_TYPE_DRIVERS=flat,vxlan   //驱动类型
+876 CONFIG_NEUTRON_ML2_VXLAN_GROUP=239.1.1.5  
+//设置组播地址,最后一个随意不能为0和255,其他固定
+
+910 CONFIG_NEUTRON_OVS_BRIDGE_MAPPINGS=physnet1:br-ex  
+                                                                     //物理网桥的名称
+921 CONFIG_NEUTRON_OVS_BRIDGE_IFACES=br-ex:eth0   
+       //br-ex桥的名称与eth0连接，管理eth0,网桥与哪个物理网卡连接
+1179 CONFIG_PROVISION_DEMO=n           //DEMO是否测试
+
+]# packstack --answer-file=answer.ini 
+
+安装完后  http文件有错
+]# vim /etc/httpd/conf.d/15-horizon_vhost.conf
+ WSGIProcessGroup apache
+  WSGIApplicationGroup %{GLOBAL}   //添加一行
+重启 httpd服务
+网页访问 主机10
+
+
+ls ~
+  keystonerc_admin   登录环境文件
+默认拥有 用户名 密码
+
+
+认证登录
+]# source keystonerc_admin  不登录openstack命令不可用
+
+~(keystone_admin)]# openstack user list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

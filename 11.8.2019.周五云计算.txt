@@ -1,0 +1,310 @@
+  git clone git://43.254.90.134/nsd1907.git
+ 
+
+   yum -y install git
+
+git pull
+
+    base-vm + 虚拟机名
+
+]$ virsh list --all         //查看虚拟机
+]$ virsh start web1         //启动虚拟机
+]$ virsh console web1       //连接到虚拟机
+
+watch -n 1   >>>>> 每秒做一次动作
+
+vim -o  可同时开多屏
+
+screen  切屏  两屏
+
+root
+a                             以上是基础命令
+------------------------------------------------------------------------------------------------
+
+云计算 用户
+ 修改 user(其他用户)密码
+    openstack user set --password redhat user2
+                                                             密码       用户名
+
+
+]$ qemu-img info /linux-soft/04/openstack/small.qcow2
+
+
+
+openstack服务器 ----- 后端真机--虚拟机介质
+
+               网络(外部)
+外部网络 --------openstack -------
+                                         网络(内部局域网)
+
+
+管理用户 
+          增加镜像文件
+          文件--openstack本机或共享的 镜像源文件 后端盘
+           镜像格式 --- 与后端盘文件类型一致
+         可见性  由于是
+
+
+
+
+
+
+
+
+vim /etc/nova/nova.conf   如果解析的域名 openstack  
+ 8430 vncserver_proxyclient_address= //openstack识别的主机名
+  由于openstack配置文件过多 
+  只能修改 /etc/hosts 识别主机名
+
+
+
+
+
+
+                                  添加openstack 节点
+
+安装 软件
+     
+yum -y install qemu-kvm libvirt-daemon libvirt-client \
+libvirt-daemon-driver-qemu
+
+
+
+做相同安装时的检查
+
+    主机 dns 配置
+        ]# vim /etc/resolv.conf
+               去掉search开头的所有行
+
+
+  ]# vim /etc/chrony.conf 
+    server 192.168.1.254 iburst
+
+  ]# chronyc sources -v    查看chrony信息
+       * 代表NTP可用
+
+
+   配置yum源
+
+   安装 装openstack必要的软件
+      测试 firewalld | network  是否关启 
+     rpm -qa  | grep -i "NetworkManager|firewall"
+     chrony 服务是否启动 ]# chronyc  sources -v
+
+    ip地址是否正确  是否是静止ip 
+   ]# cat /etc/sysconfig/network-scripts/ifcfg-eth0 
+     yum仓库是否正确
+         主机名必须能互相ping通 ]# ping nova01
+     /etc/resolvconf 不能有 search 开头行
+
+
+
+安装 openstack应答安装文件
+     yum -y install openstack-packstack
+
+拷贝 openstcak第一次生成的 ini文件   并修改两行配置
+   98  CONFIG_COMPUTE_HOSTS=192.168.1.11
+   102 CONFIG_NETWORK_HOSTS=192.168.1.10,192.168.1.11
+
+运行自动应答文件 安装openstack
+
+
+修改 openstack控制服务器 的 http文件 此文件在 再次安装时重置
+
+查看>> 管理员用户登录 >> 管理员界面>>系统>>主机聚合查看
+------------------------------
+
+迁移云主机
+
+admin >> 云主机数量 >> 云主机热迁移 >> 指定迁移位置 >> 块设备
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

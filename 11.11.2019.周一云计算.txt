@@ -1,0 +1,276 @@
+  git clone git://43.254.90.134/nsd1907.git
+ 
+
+   yum -y install git
+
+git pull
+
+    base-vm + 虚拟机名
+
+]$ virsh list --all         //查看虚拟机
+]$ virsh start web1         //启动虚拟机
+]$ virsh console web1       //连接到虚拟机
+
+
+root
+a
+
+
+
+--------------------
+
+
+                 Docker容器
+ 
+
+yum -y install docker
+
+]# docker images    查看镜像
+
+
+下载docker镜像 
+]# docker search centos     //查找 docker可用的centos包
+
+ OFFICIAL 
+ [ ok ]    //是否是 官方
+
+
+]# docker pull docker.io/busybox   //下载
+                    //要下的文件名
+
+]# docker push                     //上传
+
+]# man docker-pull    //man帮助
+]# docker rmi  docker.io/nginx    //删除
+
+
+备份 
+名称 + 标签 == 唯一
+文件名
+      路径
+]# docker images            
+REPOSITORY  //名称       TAG //标签        IMAGE ID            CREATED             SIZE
+docker.io/busybox      latest           020584afccce        11 days ago         1.22 MB
+
+
+id 为 名称+ id 的 hash值   id唯一 
+
+    备份                              -o /output
+]# docker save docker.io/busybox:latest -o f1 
+               名称：id               //文件名
+
+scp fi
+]# docker load -i busybox.tar  //导入
+
+
+]# for i in *;do docker load -i ${i}; done
+
+
+启动docker容器    屏风               格式          
+  docker run -it(交互式)  docker.io/centos:lates /bin/bash
+                                       // lates默认值 可省略
+
+启动docker容器的命令必须接 一条容器内命令  空着时使用默认 命令
+
+nginx redis 等docker 启动的是守护进程 没有交互界面
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
