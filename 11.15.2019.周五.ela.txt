@@ -1,0 +1,248 @@
+  git clone git://43.254.90.134/nsd1907.git
+ 
+
+   yum -y install git
+
+git pull
+
+
+https://mp.weixin.qq.com/s/RSod4XWxyzL32eNcrXLjUQ ????
+
+        大神博客
+
+
+---------------
+
+  LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+
+httpd 定义的日志文件内容   查看httpd的配置文件可看到
+
+   金布国   官方手册
+
+使用ansible 安装启用elasticsearch
+
+]# vim /root/ansiblecfg/ansible.cfg     
+                              //这几段拿出来可以作自定意ansible配置文件
+[defaults]                   //由软件特性 可得 在当前文件夹下 
+                            //  ansible配置文件为第二 顺位
+inventory      = myhost    //定义查看的地址文件
+host_key_checking = False
+
+
+
+
+]# vim /root/ansiblecfg/myhost
+
+[app]
+ela1
+ela2
+ela3
+ela4
+ela5
+[all:vars]
+ansible_ssh_private_key_file="/root/.ssh/key"    
+    #此处定义的是密钥位置   需要先传密钥给其他主机
+~                                                  
+
+
+   自建密钥对 
+  
+      ]# cd /root/.ssh/
+
+      ]# ssh-keygen -t rsa -b 2048 -N ''  -f key //创建密钥
+
+      ]#  ssh-copy-id -i key.pub  主机名称
+
+
+
+]# vim /root/ansiblecfg/createela.yml
+---
+- hosts: app            #定义上方 地址的集和
+  tasks:
+    - name: modify elasticsearch
+      yum:
+        name: java-1.8.0-openjdk.x86_64
+        state: latest
+    - yum:
+        name: elasticsearch-2.3.4.rpm
+        state: latest
+    - copy:
+        src: elasticsearch.yml
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: elasticsearch
+        mode: 0644
+    ##写到这 只有安装 并没有其服务 配置文件没改
+
+----------------------------------------------
+       elasticsearch 集群需要修改四行配置文件
+]# vim /etc/elasticsearch/elasticsearch.yml
+
+cluster.name: NSD1907      # 17
+
+node.name: ela1            #23
+
+network.host: 0.0.0.0     #54
+
+discovery.zen.ping.unicast.hosts: ["ela1", "ela3", "ela5"]
+                          #68    中间值 不用定义所有主机
+-----------------------------------------------
+
+vim /root/ansiblecfg/start.yml    #其服务
+---
+- hosts: app
+  tasks:
+    - service:
+        name: elasticsearch.service
+        state: started
+        enabled: yes
+
+
+
+
+
+
+
+
+
+                   elasticsearch安装插件    
+   安装在那台主机 才能在主机该主机上使用
+      集群不共享
+
+
+]# cd /usr/share/elasticsearch/bin/
+]# ./plugin list
+Installed plugins in /usr/share/elasticsearch/plugins:
+    - No plugin detected
+
+]# ./plugin install file:///root/elasticsearch-head-master.zip
+]# ./plugin install file:///root/elasticsearch-kopf-master.zip
+]# ./plugin install file:///root/bigdesk-master.zip
+]# ./plugin  install  \ 
+   ftp://192.168.1.254/elk/elasticsearch-head-master.zip     //安装head插件
+]# ./plugin list
+Installed plugins in /usr/share/elasticsearch/plugins:
+    - head
+    - kopf
+    - bigdesk
+
+
+        添加index集
+]# curl -XPUT "http://192.168.1.54:9200/aa" -d '
+> { "settings":{
+>      "index":{
+>         number_of_shards: 5,
+>         number_of_replicas: 2
+>        }
+>    }
+> }'
+
+---------------------------
+                   增加数据
+]# curl -XPUT "http://192.168.1.54:9200/tedu/teacher/5" -d '
+{ "姓名": "xx",
+ "爱好": "女", "阶段": "4" 
+}'
+
+                    修改数据
+]# curl -XPOST "http://es5:9200/tedu/teacher/1/_update" -d '
+{"doc":{"爱好":"做头发"}}'
+
+                    查询数据
+]# curl -XGET "http://ela5:9200/tedu/tesacher/4?pretty"
+
+                   删除数据          索引/类型/行数据
+]# curl -XDELETE "http://ela5:9200/tedu/tesacher/4"  删表
+]# curl -XDELETE "http://ela5:9200/tedu"   删库
+
+
+--------------------------------------------------
+
+
+
+      kibana   
+       查看并分析elasticsearch存储的数据
+
+]# vim /opt/kibana/config/kibana.yml 
+server.port: 5601
+server.host: "0.0.0.0"
+elasticsearch.url: "http://ela1:9200"
+kibana.index: ".kibana"
+kibana.defaultAppId: "discover"
+elasticsearch.pingTimeout: 1500
+elasticsearch.requestTimeout: 30000
+elasticsearch.startupTimeout: 5000
+
+图形界面操作
+
+
+-----------------------
+    Logstash 日志记录      单独使用一台机器日志记录和传输
+    往数据库写入数据
+默认没有 配置文件
+要自建
+
+vim /etc/
+定义区域  input  filter  output
+
+
+stdin{}  标准输入   >>> 键盘数据输入
+
+stdout{}  标准输出  >>> 输出到那
+
+plugin    标准命令(插件信息) 
+如何查看   命令(插件)语法   ----官方手册  
+
+---------------------------------
+
+
+input {
+  stdin{}
+}
+
+filter {
+}
+
+output {
+  stdout{}
+}
+
+---------------------------------
+
+]# vim logstash.conf 
+
+input {
+  file {
+    path => ["/tmp/a.log"]
+    start_position => "beginning"
+    sincedb_path => "/var/lib/logstash/since.db"
+    type => "ooxx"
+  }
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if [type] == "apache_log" {
+  grok {
+    match => { "message" => "%{COMBINEDAPACHELOG}" }
+  }}
+}
+
+output {
+  #stdout{ codec => "rubydebug" }     #没做验证时 使用debug验证命令是否出错
+  if [type] == "apache_log" {
+  elasticsearch {
+    hosts => ["es1:9200", "es3:9200", "es5:9200"]
+    index => "weblog"
+    flush_size => 2000
+    idle_flush_time => 10
+  }}
+}
+
+
+
+
+
+
