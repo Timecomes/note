@@ -1,0 +1,125 @@
+
+                                 ansible
+
+  模块化设计
+
+ansible-doc man
+
+ansible 配置文件    
+vim /etc/ansible/ansible.cfg 
+
+主机分组配置文件 读取顺序
+1 环境变量
+2 当前文件夹下的 ansible.cfg 文件
+3 当前用户家目录下 ansible.cfg 文件
+4 最后检查 /etc/ansible/ansible.cfg 文件
+
+
+14 inventory  = /etc/ansible/hosts   定义分组
+61 host_key_checking = False   应答第一次远程时的yes
+
+
+
+
+列出要执行的主机
+
+ansible all --list-hosts
+
+
+      密钥文件
+ssh-keygen -t rsa -b 2048 -N '' -f key
+             加密类型 最大字符 密码  文件名
+ssh-copy-id -i key.pub cache
+       传输秘钥 指定密钥 指定主机
+
+ssh连接时 指定私钥key
+ssh -i key web1
+   此时ansible 还是不能直接 使用此密钥
+     得修改配置文件/ansible/hosts
+
+]# vim /etc/ansible/hosts
+[web]
+web1
+web2
+
+[db]
+db[1:2]
+
+[other]
+cache ansible_ssh_port=222  可以指定 端口
+
+[all:vars]     //可以单独定义组或者主机
+ansible_ssh_private_key_file="/root/.ssh/key"
+      定义密钥位置
+
+[app:children]    //定义下方的是组而不是主机
+web                //组套组
+db
+
+
+---------------------------
+ 模块 command 远程命令  有限制 “<,>,|,&” 都不可用
+默认模块
+]# ansible web -m command -a 'uptime'  //负载
+                               命令
+
+    shell 模块  可执行任意命令  执行两次解析
+]# ansible web -m shell -a "ps -ef | grep sshd" 
+
+ansible web -m shell -a "echo ${HOSTNAME}"
+hostname 会在本机解析完再转发给其他机器
+
+ansible web -m shell -a 'echo ${HOSTNAME}'
+本机不解析 直接发送命令
+
+    script 模块 本地脚本 传输给指定主机 并运行脚本
+]# vim urscript
+]# ansible all -m script -a '/root/urscript'
+                               指定脚本位置
+
+
+   yum 模块 安装软件
+]# ansible db -m yum -a 'name="mariadb-server" state=installed'
+                                  包名           动作   下载
+  service模块 设制开机启动
+]# ansible db -m service -a 'name="mariadb" enabled=yes state="started"'
+                                               开机自起    
+ 
+
+考过来 在盖回去  修改配置文件
+
+   copy 模块 传输文件/目录
+
+]# ansible all -m copy -a 'src=/root/resolv.conf dest=/etc/resolv.conf'
+
+]# ansible all -m copy -a 'src=/etc/yum.repos.d/ dest=/etc/yum.repos.d/'
+
+]# scp db1:/etc/my.cnf /root/
+]# vim my.cnf
+]# ansible db -m copy -a 'src=/root/my.cnf dest=/etc/my.cnf'
+
+
+   lineinfile 模块 修改文件中数据类似sed替换
+                匹配的是一整行 修改的也是一整行
+]# ansible db -m lineinfile -a 'path="/etc/my.cnf" regexp="^binlog" line="binlog-format=row"'
+
+
+    replace 模块 类似sed  修改的是匹配的字符
+
+]# ansible db -m replace -a 'path="/etc/my.cnf" regexp="=row$" replace="=mixed"'
+
+
+    setup 模块 获取主机详细信息
+
+]# ansible cache -m setup -a 'filter=ansible_eth0' 
+      查看cache 的eth0网卡
+
+
+
+
+
+
+
+docs/intro/install.txt
+
+
