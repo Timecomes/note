@@ -1,0 +1,202 @@
+
+
+                        HDFS
+
+                   多机器 拿出空间 组成一个虚拟盘(空间)
+
+      把数据切块:128MB/块
+        切出来的数据  由NameNode 统一均衡调度 交给 Datenode存储
+
+
+
+          询问数据存放在那                          查询修改的文件(时限存储)
+client    ------------------->  1   NameNode   <------------------> Secondary   类似于小秘
+   |                                  |          整合修改后的文件返回  NameNode     整理文件
+   |      <-------------------  2     |  返回实际存储位置  
+   |        回复应存储位置              |       4
+   |                                  |
+   |------->  Datenode   ------------->
+           实际最终存储位置 3
+
+
+
+
+                               单机 Hadoop
+
+]# yum -y install java-1.8.0-openjdk-devel
+]# tar -xf hadoop-2.7.7.tar.gz 
+]# mv hadoop-2.7.7 /usr/local/hadoop
+]# ./hadoop version
+Error: JAVA_HOME is not set and could not be found.
+  hadoop 不知道 JAVA程序安装到那了
+
+rpm -ql java-1.8.0-openjdk
+/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre
+
+
+]# vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh   //修改配置文件 
+
+export HADOOP_CONF_DIR=${HADOOP_CONF_DIR:-"/usr/loacl/hadoop/etc/hadoop"}
+
+# The java implementation to use.
+export JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.161-2.b14.el7.x86_64/jre"
+
+
+/usr/local/hadoop/bin
+]# ./hadoop version   查看hadoop版本
+
+
+
+
+           伪分布式 (学习测试)                完全分布式 
+    所有角色安装在一台机器上               按角色区分 不同角色不同主机
+所有角色 一个ip
+
+
+
+
+-xml      ##文件格式 完全相同   配置文件中没有任何数据需要查看官方文档
+   
+      <property>
+           <name>关键字</name>
+           <value>变量值</value>
+           <description>描述</description>     ##注释 可以不要
+      </property>
+
+
+
+Hadoop 官网   /docs/   匹配本机 Hadoop版本
+最下方 官方文档   子段一一对应  value 默认值(唯一可修改)   	description  注释信息
+-------------------------------
+
+       完全分布式
+四台主机  一台 NameNode 服务器安装的Hadoop
+
+         三台 Node 存储文件的主机
+
+ 
+   环境配置文件 hadoop-env.sh
+   核心配置文件 core-site.xml 
+   HDFS配置文件 hdfs-site.xml
+   节点配置文件 slaves                 配置干活节点(主机)
+
+
+
+每台主机都需要安装 java   java-1.8.0-openjdk-devel && Hadoop
+
+]# vim /etc/ssh/ssh_config 
+Host *
+        GSSAPIAuthentication yes
+        StrictHostKeyChecking no   #ssh时不会再次询问 yes
+
+]# ssh-keygen
+]# for i in { nn01 node1 node2 node3 };do ssh-copy-id  $i; done
+
+
+
+]# vim /usr/local/hadoop/etc/hadoop/core-site.xml     核心配置文件
+      <property>
+           <name>fs.defaultFS</name>
+           <value>hdfs://nn01:9000</value> 
+      存储到虚拟的hdfs 硬盘   要存储的主机名:服务默认使用9000端口    #file:///  本机硬盘
+      </property>
+      <property>
+         <name>hadoop.tmp.dir</name>    #存放hadoop所有文件的根目录
+         <value>/var/hadoop</value>     ##单独创建文件夹
+      </property>                   每个机器意义不同
+                                   namenode文件为存放
+
+
+
+
+
+]# vim hdfs-site.xml 
+
+<configuration>
+      <property>
+           <name>dfs.namenode.http-address</name>
+                     地址声明
+           <value>nn01:50070</value>
+      </property>
+      <property>
+           <name>dfs.namenode.secondary.http-address</name>
+                       地址声明
+           <value>nn01:50090</value>
+      </property>
+      <property>
+           <name>dfs.replication</name>
+               文件冗余份数
+           <value>2</value>
+      </property>
+</configuration>
+
+
+]# vim slaves 
+node1
+node2
+node3
+~          
+
+]# vim core-site.xml 
+]# vim hdfs-site.xml 
+]# vim slaves 
+
+
+
+把文件 hadoop所有文件 传给所有slaves主机  
+]# for i in node{1..3};do scp -r /usr/local/hadoop $i:/usr/local/; done
+只需要在 namenod主机上执行
+创建 hadoop文件夹
+]# mkdir /var/hadoop
+格式化
+]# cd /usr/local/hadoop/
+]# ./bin/hdfs namenode -format
+启服务
+]# ./sbin/start-all.sh    # 由于 我们是将hdfs存储 和JobTracker命令执行放在一起的
+所以用的 start-all 命令
+
+
+]# ./bin/hdfs dfsadmin -report     验证集群是否成功
+-------------------------------------------------
+Live datanodes (3):     集群三个  成功
+
+
+
+cd /usr/local/hadoop/logs/    查看日志
+
+hadoop-root-namenode-nn01.log  志日
+hadoop-root-namenode-nn01.out  标准输出
+软件-root用户启动-角色-哪台主机启动的 
+   
+
+
+启动Hadoop                官方中文文档
+
+启动Hadoop集群需要启动HDFS集群和Map/Reduce集群。
+
+格式化一个新的分布式文件系统：
+$ bin/hadoop namenode -format
+
+在分配的NameNode上，运行下面的命令启动HDFS：
+$ bin/start-dfs.sh
+
+bin/start-dfs.sh脚本会参照NameNode上${HADOOP_CONF_DIR}/slaves文件的内容，在所有列出的slave上启动DataNode守护进程。
+
+在分配的JobTracker上，运行下面的命令启动Map/Reduce：
+$ bin/start-mapred.sh
+
+bin/start-mapred.sh脚本会参照JobTracker上${HADOOP_CONF_DIR}/slaves文件的内容，在所有列出的slave上启动TaskTracker守护进程。
+停止Hadoop
+
+在分配的NameNode上，执行下面的命令停止HDFS：
+$ bin/stop-dfs.sh
+
+bin/stop-dfs.sh脚本会参照NameNode上${HADOOP_CONF_DIR}/slaves文件的内容，在所有列出的slave上停止DataNode守护进程。
+
+在分配的JobTracker上，运行下面的命令停止Map/Reduce：
+$ bin/stop-mapred.sh
+
+bin/stop-mapred.sh脚本会参照JobTracker上${HADOOP_CONF_DIR}/slaves文件的内容，在所有列出的slave上停止TaskTracker守护进程。
+
+
+
